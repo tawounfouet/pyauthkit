@@ -6,7 +6,6 @@ No production authenticator is provided in M2.
 """
 
 from pyauthkit.domain._verified import VerifiedSubject
-from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.identity import PrincipalType, ScopedSubjectRef
 from pyauthkit.domain.outcome import VerifiedOutcome
 from pyauthkit.domain.result import Authenticated
