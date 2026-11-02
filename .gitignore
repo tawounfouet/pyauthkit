@@ -12,3 +12,5 @@ build/
 !.env.example
 *.pem
 *.key
+.audit-venv/
+.secret-scan.json
