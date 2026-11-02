@@ -18,6 +18,8 @@ def main() -> int:
     if count:
         for name, values in sorted(findings.items()):
             print(f"Potential secret in {name}: {len(values)} finding(s)")
+            for finding in values:
+                print(f"  line={finding.get('line_number', '?')} detector={finding.get('type', 'unknown')}")
         print("Review findings; do not bypass this gate without security approval.")
         return 1
     return 0
