@@ -1,7 +1,7 @@
 """Verifier outcomes are not final authentication decisions.
 
-An authenticator may only supply verified evidence, not bypass the
-AuthenticationPolicyGate. The verified variant has no constructor in M1.
+A positive result must be bound to the exact engine attempt and the final gate.
+The constructor remains blocked from the normal public Python API.
 """
 
 from dataclasses import dataclass, field
@@ -14,15 +14,20 @@ from .temporal import CorrelationId
 
 
 class VerifiedOutcome:
-    """Reserved verified outcome, only for a future approved verifier."""
+    """Internal proof result, never itself a final authentication grant."""
 
-    __slots__ = ("status", "subject")
+    __slots__ = ("status", "subject", "correlation_id", "_attempt_token")
 
     status: Literal["VERIFIED"]
     subject: VerifiedSubject
+    correlation_id: CorrelationId
+    _attempt_token: object
 
     def __new__(cls, *_args: object, **_kwargs: object) -> Never:
         raise TypeError("verified outcomes require an approved authenticator")
+
+    def __repr__(self) -> str:
+        return "VerifiedOutcome(<redacted, internal>)"
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +51,7 @@ class ErrorOutcome:
 
     def __post_init__(self) -> None:
         if not isinstance(self.error_code, TechnicalErrorCode):
-            raise ValueError("invalid technical error code")
+            raise ValueError("invalid error code")
 
 
 type AuthenticatorOutcome = VerifiedOutcome | RejectedOutcome | ErrorOutcome
@@ -55,12 +60,7 @@ type AuthenticatorOutcome = VerifiedOutcome | RejectedOutcome | ErrorOutcome
 def normalize_non_success(
     outcome: AuthenticatorOutcome, *, correlation_id: CorrelationId
 ) -> Rejected | AuthError:
-    """Convert only negative outcomes. Positive conversion needs M2 policy.
-
-    [ARCH: Explicit Transition] An unknown or verified outcome is rejected,
-    never interpreted as an implicit success or an arbitrary default.
-    """
-
+    """Convert only negative outcomes; a positive must pass through final policy."""
     if isinstance(outcome, RejectedOutcome):
         return Rejected(correlation_id=correlation_id, reason_code=outcome.reason_code)
     if isinstance(outcome, ErrorOutcome):
