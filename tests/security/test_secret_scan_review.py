@@ -42,17 +42,20 @@ def test_unchanged_reviewed_spec_examples_are_recognized(tmp_path: Path) -> None
 
 
 def test_new_finding_is_blocked(tmp_path: Path) -> None:
-    changed: dict[str, object] = {**BASELINE, "src/pyauthkit/domain/scope.py": [
-        {"line_number": 1, "type": "Secret Keyword"}
-    ]}
+    changed: dict[str, object] = {
+        **BASELINE,
+        "src/pyauthkit/domain/scope.py": [{"line_number": 1, "type": "Secret Keyword"}],
+    }
     response = invoke(tmp_path, changed)
     assert response.returncode == 1
     assert "UNREVIEWED" in response.stdout
 
 
 def test_wrong_detector_on_reviewed_line_is_blocked(tmp_path: Path) -> None:
-    changed = {"docs/specs/07_PYAUTHKIT_DOMAIN_INVARIANTS_AND_BUSINESS_RULES.md": [
-        {"line_number": 1607, "type": "High Entropy String"}
-    ]}
+    changed = {
+        "docs/specs/07_PYAUTHKIT_DOMAIN_INVARIANTS_AND_BUSINESS_RULES.md": [
+            {"line_number": 1607, "type": "High Entropy String"}
+        ]
+    }
     response = invoke(tmp_path, changed)
     assert response.returncode == 1

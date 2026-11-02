@@ -15,14 +15,26 @@ ROOT = Path(__file__).resolve().parents[1]
 # These examples are documented in docs/security/SECRET_SCAN_TRIAGE.md.
 # A maintainer must review the scoped exceptions before merging PR-02.
 REVIEWED_EXAMPLES = {
-    ("docs/specs/07_PYAUTHKIT_DOMAIN_INVARIANTS_AND_BUSINESS_RULES.md", 1607, "Secret Keyword"):
-        "47f08a5ebb2ea8a4a704819e7fa506cade84456593cc26ce82691fa92a4c631d",
-    ("docs/specs/10_PYAUTHKIT_AUTHENTICATOR_AND_CREDENTIAL_MODEL.md", 1154, "Secret Keyword"):
-        "3d3d7056eead814a05d60f978d9929b02ae31876df3264da8a9ca3fb29920373",
-    ("docs/specs/10_PYAUTHKIT_AUTHENTICATOR_AND_CREDENTIAL_MODEL.md", 1155, "Secret Keyword"):
-        "f8de390d58af8b1a6ebe4c24a54e56c8bfb82aae9e694f776053d68aca254fb8",
-    ("docs/specs/28_PYAUTHKIT_IMPLEMENTATION_BOOTSTRAP_PLAN.md", 423, "Secret Keyword"):
-        "b2a2793bea726d2e5a203d7576e79c5df7105082d545b7be738d4230df7107a5",
+    (
+        "docs/specs/07_PYAUTHKIT_DOMAIN_INVARIANTS_AND_BUSINESS_RULES.md",
+        1607,
+        "Secret Keyword",
+    ): "47f08a5ebb2ea8a4a704819e7fa506cade84456593cc26ce82691fa92a4c631d",
+    (
+        "docs/specs/10_PYAUTHKIT_AUTHENTICATOR_AND_CREDENTIAL_MODEL.md",
+        1154,
+        "Secret Keyword",
+    ): "3d3d7056eead814a05d60f978d9929b02ae31876df3264da8a9ca3fb29920373",
+    (
+        "docs/specs/10_PYAUTHKIT_AUTHENTICATOR_AND_CREDENTIAL_MODEL.md",
+        1155,
+        "Secret Keyword",
+    ): "f8de390d58af8b1a6ebe4c24a54e56c8bfb82aae9e694f776053d68aca254fb8",
+    (
+        "docs/specs/28_PYAUTHKIT_IMPLEMENTATION_BOOTSTRAP_PLAN.md",
+        423,
+        "Secret Keyword",
+    ): "b2a2793bea726d2e5a203d7576e79c5df7105082d545b7be738d4230df7107a5"
 }
 
 
