@@ -1,0 +1,140 @@
+name: Bootstrap GitHub planning (idempotent)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/bootstrap-planning.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Seed milestones, labels and work-package associations
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          import urllib.error
+          import urllib.request
+
+          repo = os.environ["GH_REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          base = f"https://api.github.com/repos/{repo}"
+          headers = {
+              "Accept": "application/vnd.github+json",
+              "Authorization": f"Bearer {token}",
+              "X-GitHub-Api-Version": "2022-11-28",
+              "User-Agent": "pyauthkit-backlog-seed",
+          }
+
+          def request(method, path, payload=None):
+              data = None if payload is None else json.dumps(payload).encode("utf-8")
+              req = urllib.request.Request(base + path, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as resp:
+                      raw = resp.read().decode("utf-8")
+                      return json.loads(raw) if raw else None
+              except urllib.error.HTTPError as exc:
+                  print(f"ERROR {method} {path}: {exc.code} {exc.read().decode('utf-8')[:500]}")
+                  raise
+
+          def paged(path):
+              results = []
+              for page in range(1, 20):
+                  sep = "&" if "?" in path else "?"
+                  chunk = request("GET", f"{path}{sep}per_page=100&page={page}")
+                  results.extend(chunk)
+                  if len(chunk) < 100:
+                      break
+              return results
+
+          titles = [
+              "Bootstrap & Repository Foundation",
+              "Domain Kernel & Invariants",
+              "Authentication Engine & Ports",
+              "Password Authentication",
+              "API Key Authentication",
+              "JWT Bearer Verification",
+              "Configuration, Secrets & Audit",
+              "Public SDK & Plugin Architecture",
+              "Security Qualification & Release Candidate",
+              "MVP Release & GO/NO-GO",
+          ]
+          existing_milestones = {m["title"]: m for m in paged("/milestones?state=all")}
+          milestones = {}
+          for index, title in enumerate(titles):
+              code = f"M{index}"
+              name = f"{code} - {title}"
+              if name in existing_milestones:
+                  milestone = existing_milestones[name]
+              else:
+                  milestone = request("POST", "/milestones", {
+                      "title": name,
+                      "description": f"PyAuthKit MVP | {code} | Exit gate GATE27-{index+1:02d} | Source: roadmap 27, proposed scope",
+                      "state": "open",
+                  })
+                  print("CREATED milestone", name, milestone["number"])
+              milestones[code] = milestone["number"]
+
+          desired = {
+              "priority:P0": ("B60205", "MVP required work"),
+              "priority:P1": ("FBCA04", "Next priority, not automatically MVP blocking"),
+              "priority:P2": ("0E8A16", "Deferred enhancement"),
+              "type:work-package": ("1D76DB", "Roadmap WP27 work package"),
+          }
+          for index in range(10):
+              desired[f"milestone:m{index}"] = ("D4C5F9", f"Roadmap phase M{index}")
+          issues = [
+              item for item in paged("/issues?state=open")
+              if "pull_request" not in item and re.match(r"^\[WP27-(\d{3})\]\[M[0-9]\]", item["title"])
+          ]
+          selected = []
+          for issue in issues:
+              matched = re.match(r"^\[WP27-(\d{3})\]\[(M[0-9])\]", issue["title"])
+              if not matched or int(matched.group(1)) > 53:
+                  continue
+              stage = matched.group(2)
+              category = None
+              for line in (issue.get("body") or "").splitlines():
+                  if any(key in line for key in ("Track / catégorie", "Catégorie", "Category")):
+                      parts = re.findall(r"`([a-zA-Z]+)`", line)
+                      if parts:
+                          category = parts[0].lower()
+                      else:
+                          category = line.strip().split()[-1].lower()
+                      break
+              category = category or "planning"
+              desired[f"category:{category}"] = ("C2E0C6", f"Work package category: {category}")
+              selected.append((issue, stage, category))
+
+          existing_labels = {label["name"] for label in paged("/labels")}
+          for name, (color, description) in sorted(desired.items()):
+              if name not in existing_labels:
+                  request("POST", "/labels", {"name": name, "color": color, "description": description})
+                  print("CREATED label", name)
+          for issue, stage, category in selected:
+              labels = set(label["name"] for label in issue.get("labels", []))
+              labels.update((f"category:{category}", "priority:P0", "type:work-package", f"milestone:{stage.lower()}"))
+              if issue.get("milestone", None) and issue["milestone"]["number"] == milestones[stage] and labels == {l["name"] for l in issue["labels"]}:
+                  continue
+              request("PATCH", f"/issues/{issue['number']}", {
+                  "milestone": milestones[stage],
+                  "labels": sorted(labels),
+              })
+              print("ASSIGNED", issue["number"], stage, category)
+          print("SYNC COMPLETE | milestones:", len(milestones), "| open WP27 issues:", len(selected))
+          if len(selected) != 53:
+              raise SystemExit(f"Expected 53 distinct MVP work packages, found {len(selected)}")
+          PY
