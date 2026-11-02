@@ -15,8 +15,8 @@ scans also need their own evidence.
 
 - GitHub workflow `pull_request` plus `push: main` and manual dispatch.
 - Workflow `permissions: contents: read` with no release secrets or OIDC.
-- `actions/checkout` v4.3.0 SHA
-  `08eba0b27e820071cde6df949e0beb9ba4906955`, and
+- `actions/checkout` v5.0.1 SHA
+  `93cb6efe18208431cddfb8368fd83d5badbf9bfd`, and
   `actions/setup-python` v6.0.0 SHA
   `e797f83bcb11b83ae66e0230d6156d7c80228e7c`, verified against GitHub
   tag refs on 2026-11-02. Review their updates before rotation.
@@ -24,7 +24,7 @@ scans also need their own evidence.
 - Candidate wheel matrix: Linux 3.12/3.13/3.14, macOS 3.12,
   Windows 3.12. This is **not** the full OS x Python cross product.
 - Build both wheel and sdist and run an isolated wheel import with no extras.
-- Run dependency audit of isolated dev+security tooling, Bandit on runtime
+- Run dependency audit of isolated dev+security tooling (skipping the editable, unpublished local package), Bandit on runtime
   source, and detect-secrets over checked-in files. Review false positives,
   never assume a scanner replaces protocol-specific negative test vectors.
 - Scan scripts are structural tools only. Neither SAST nor AST checks establish
