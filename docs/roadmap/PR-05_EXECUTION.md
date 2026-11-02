@@ -1,7 +1,12 @@
 # PR-05 Execution - M2 Authentication Engine & Ports
 
-- Status: IMPLEMENTATION CANDIDATE / REVIEW PENDING
+- Status: MERGED + QUALIFIED FOR M2 ENGINE/PORTS SCOPE (GATE FORMAL SIGN-OFF PENDING)
 - Pull Request: https://github.com/tawounfouet/pyauthkit/pull/71
+- Reviewed HEAD: 1eb1f277a99e65f7b01a2b2c3c6986766c26dace
+- Merge on main: 2992c359d29f992c822e595ef9ef3babaed1d856
+- PR CI: https://github.com/tawounfouet/pyauthkit/actions/runs/41452347496 - 7/7 + GitGuardian PASS, 102 pytest PASS
+- Post-merge main CI: https://github.com/tawounfouet/pyauthkit/actions/runs/41452679229 - 7/7 mandatory PASS
+- Security architecture COMMENT review: PR #71 review 5737198967
 - Baseline: main `8b2f2df35aecfe8e85cf0300606a2ce482514c1f`
 - Gate: https://github.com/tawounfouet/pyauthkit/issues/70
 - Maturity: NO PRODUCTION VERIFIER, NO AUTHENTICATION RELEASE
@@ -22,14 +27,14 @@
 
 ## Required before PR-05 GO
 
-- [ ] Ruff lint and format pass on the latest PR SHA.
-- [ ] Strict mypy, pytest (including negative/property tests) pass.
-- [ ] Architecture fitness, five wheel/sdist matrix jobs and secrets scanning pass.
-- [ ] All M2-T01..24 cases tagged PASS, N/A with rationale, or explicitly blocked.
-- [ ] Adversarial security review with no unresolved P0.
-- [ ] Explicit merge under protected ruleset, without admin bypass.
-- [ ] 7/7 protected main CI checks pass after merging.
-- [ ] GATE27-03 formal decision with proof links and residual risks.
+- [x] Ruff lint and format PASS on qualified PR SHA.
+- [x] Strict mypy, 102 pytest (negative/property/contract) PASS.
+- [x] Architecture fitness, five wheel/sdist matrix jobs and secret scans PASS.
+- [x] M2-T01..24 traced to independent evidence in qualification/GATE27-03 report (closure tests awaiting additional CI).
+- [x] Adversarial engineering review with no unresolved M2-scoped P0 on PR #71.
+- [x] Normal squash merge into protected main at 2992c359d29f.
+- [x] 7/7 protected main CI PASS on run 41452679229.
+- [ ] GATE27-03 administrative sign-off / closure PR integration and issue #70 decision pending.
 
 ## Non-goals
 
