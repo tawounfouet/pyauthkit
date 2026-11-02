@@ -27,8 +27,7 @@ the gate. The output prints **no raw values**. No `docs/specs` subtree is
 excluded from the scanner. Only generated virtual environments, transient
 scanner output and `.git` metadata are outside the scan.
 
-The four SHA-256 digests are in the script and represent literal source lines,
-not a proof of secret safety by themselves. A reviewer must consider the context.
+The four SHA-256 digests in the script represent literal source lines. Each digest has a scoped scanner allowlist comment so its checksum is not mistaken for a credential. These annotations are not proof of secret safety by themselves. A reviewer must consider the context.
 `GATE27-01` still requires a security review, a main ruleset and a validated
 license/disclosure decision.
 
