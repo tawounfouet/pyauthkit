@@ -1,33 +1,38 @@
 # PR-04 - M2 Host Trust Context and Policy Preflight
 
-- **State:** IMPLEMENTING / PR under review
-- **Scope:** WP27-017 and first half of WP27-016
-- **Next PR:** PR-05 for WP27-013..015, WP27-018 and final policy transition
-- **Exit gate:** GATE27-03 applies to full M2, not to PR-04 alone
+- **State:** MERGED / REVIEWED / CI QUALIFIED FOR PR-04 ONLY
+- **PR:** https://github.com/tawounfouet/pyauthkit/pull/69
+- **Head qualified:** `1b87ee1596af21744928bb69123d9043fde0c5b7`
+- **Squash merge on main:** `8b2f2df35aecfe8e85cf0300606a2ce482514c1f`
+- **PR CI:** https://github.com/tawounfouet/pyauthkit/actions/runs/41440351266
+- **Post-merge main CI:** https://github.com/tawounfouet/pyauthkit/actions/runs/41449081791
+- **Scope:** WP27-017 and preflight portion of WP27-016
+- **M2 gate:** https://github.com/tawounfouet/pyauthkit/issues/70 remains OPEN.
 
-## Implemented
+## Implemented and qualified in this limited slice
 
-- `HostBinding`: explicit approved route, scope, profile and method set
-- `HostTrustCatalog`: immutable, no default route, duplicate/collision guard
-- `TrustedEntryContext`: catalog-issued and checked by identity
-- `AuthenticationPolicyGate.preflight`: denies non-catalog entries, foreign
-  tenant claims and disabled methods; returns a verification-only admission
-  without a principal, NEVER `AUTHENTICATED`.
-- Adversarial and negative tests under `tests/security` and `tests/unit`.
+- [x] Explicit operator-approved HostBinding + HostTrustCatalog with immutable snapshot.
+- [x] No unknown/default route, duplicate binding or scope/profile mismatch.
+- [x] Catalog-issued TrustedEntryContext and foreign-context rejection.
+- [x] AuthenticationPolicyGate.preflight only permits verification attempt.
+- [x] No Authenticated principal or positive verifier exposed by PR-04.
+- [x] Ruff, mypy strict, 75 pytest tests, architecture fitness checks on PR head.
+- [x] Seven required GitHub Actions jobs and GitGuardian positive check on PR.
+- [x] Post-merge CI on main: seven required jobs successful.
+- [x] Security design review on PR #69: https://github.com/tawounfouet/pyauthkit/pull/69.
+- [x] Squash-merged normally under active main ruleset; no bypass.
 
-## Required qualification
+## Trust boundary and residual exposure
 
-- [ ] Ruff, mypy strict, pytest and architecture fitness on all PR code
-- [ ] All seven required GitHub checks, five packaging matrices, GitGuardian
-- [ ] Provenance, trust hints and policy-bypass review
-- [ ] Explicit PR-04 acceptance without GATE27-03 or automatic merge
+The host adapter is REQUIRED to establish route provenance from an approved
+server-side mapping. Raw Host, Forwarded, X-Forwarded-Host, X-Tenant, JWT iss/kid,
+query or claims are never sufficient authority. The PR-04 tests prove the
+library-level catalog/preflight behavior, NOT a real HTTP proxy integration.
 
-## PR-05 must add
+The catalog's Python object-identity model is a misuse guard, not sandboxing
+against privileged arbitrary Python code. VerificationPermitted alone is not
+a final decision; PR-05 must re-run the preflight inside the engine. The
+positive policy gate and all real cryptographic authenticators remain outside
+the PR-04 qualification scope.
 
-- Async engine with an explicit sequenced pipeline
-- Authenticator SPI, immutable registry and test-only fake
-- Genuine verifier outcome provenance and final policy transition
-- Timeout/cancellation and dependency failure semantics
-- Tests showing no authenticator can alone issue a final principal
-
-**No production verifier or release is included in PR-04.**
+**Result: GO PR-04 ONLY. No M2 GO, no release, no production authentication.**
