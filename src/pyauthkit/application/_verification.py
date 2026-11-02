@@ -5,6 +5,8 @@ Only explicitly admitted authenticators may legitimately emit verified outcomes.
 No production authenticator is provided in M2.
 """
 
+from typing import cast
+
 from pyauthkit.domain._verified import VerifiedSubject
 from pyauthkit.domain.identity import PrincipalType, ScopedSubjectRef
 from pyauthkit.domain.outcome import VerifiedOutcome
@@ -33,7 +35,9 @@ def _issue_verified_outcome(
         or subject.scope_ref != context.scope_ref
     ):
         raise ValueError("invalid verified outcome context")
-    verified = object.__new__(VerifiedSubject)
+    verified: VerifiedSubject = cast(
+        VerifiedSubject, object.__new__(cast(type[object], VerifiedSubject))
+    )
     object.__setattr__(verified, "subject", subject)
     object.__setattr__(verified, "principal_type", principal_type)
     object.__setattr__(verified, "method", context.method)
@@ -49,7 +53,9 @@ def _issue_verified_outcome(
 
 def _issue_authenticated(subject: VerifiedSubject, correlation_id: CorrelationId) -> Authenticated:
     """Only final policy may call; not part of the public SDK."""
-    authenticated = object.__new__(Authenticated)
+    authenticated: Authenticated = cast(
+        Authenticated, object.__new__(cast(type[object], Authenticated))
+    )
     object.__setattr__(authenticated, "status", "AUTHENTICATED")
     object.__setattr__(authenticated, "principal", subject)
     object.__setattr__(authenticated, "correlation_id", correlation_id)
