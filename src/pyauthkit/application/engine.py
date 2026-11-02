@@ -33,6 +33,12 @@ class AuthenticationEngine:
 
     __slots__ = ("_policy", "_registry", "_timeout_seconds", "_monotonic", "_sink")
 
+    _policy: AuthenticationPolicyGate
+    _registry: AuthenticatorLookup
+    _timeout_seconds: float
+    _monotonic: Callable[[], float]
+    _sink: AuthenticationEventSink | None
+
     def __init__(
         self,
         *,
