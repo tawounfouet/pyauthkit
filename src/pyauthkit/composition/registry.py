@@ -16,6 +16,8 @@ class AuthenticatorRegistry:
 
     __slots__ = ("_entries",)
 
+    _entries: MappingProxyType[EvidenceMethod, Authenticator]
+
     def __init__(self, entries: Mapping[EvidenceMethod, Authenticator]) -> None:
         if not entries:
             raise ValueError("empty authenticator registry")
