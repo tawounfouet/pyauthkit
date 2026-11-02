@@ -49,6 +49,13 @@ class PasswordAuthenticator:
 
     __slots__ = ("_resolver", "_hash_verifier", "_workers", "_dummy_hash", "_clock", "_guard")
 
+    _resolver: PasswordCredentialResolver
+    _guard: PasswordAttemptGuard
+    _hash_verifier: PasswordHashVerifier
+    _workers: KDFWorkerPool
+    _dummy_hash: str
+    _clock: Clock
+
     def __init__(
         self,
         *,
