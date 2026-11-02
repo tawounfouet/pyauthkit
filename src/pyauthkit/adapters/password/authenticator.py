@@ -25,6 +25,7 @@ from pyauthkit.password.records import (
 )
 from pyauthkit.ports.authenticator import VerificationContext
 from pyauthkit.ports.password_credentials import PasswordCredentialResolver
+from pyauthkit.ports.password_guard import PasswordAttemptGuard
 from pyauthkit.ports.password_hashing import (
     InvalidPasswordHash,
     PasswordHashProcessingError,
@@ -46,17 +47,20 @@ class PasswordAuthenticator:
     The host must configure rate limiting, admission and trusted route bindings.
     """
 
-    __slots__ = ("_resolver", "_hash_verifier", "_workers", "_dummy_hash", "_clock")
+    __slots__ = ("_resolver", "_hash_verifier", "_workers", "_dummy_hash", "_clock", "_guard")
 
     def __init__(
         self,
         *,
         resolver: PasswordCredentialResolver,
+        attempt_guard: PasswordAttemptGuard,
         hash_verifier: PasswordHashVerifier,
         workers: KDFWorkerPool,
         dummy_hash: str,
         clock: Clock | None = None,
     ) -> None:
+        if not callable(getattr(attempt_guard, "admit", None)):
+            raise ValueError("host-managed password attempt guard required")
         if not isinstance(workers, KDFWorkerPool):
             raise ValueError("bounded KDF workers required")
         if not callable(resolver.resolve) or not callable(resolver.is_current):
@@ -68,11 +72,15 @@ class PasswordAuthenticator:
         # An operator supplies a real Argon2id hash created at trusted bootstrap.
         # The dummy's plaintext is NOT accepted by the missing-user path.
         hash_verifier.validate_hash(dummy_hash)
-        self._resolver = resolver
-        self._hash_verifier = hash_verifier
-        self._workers = workers
-        self._dummy_hash = dummy_hash
-        self._clock = clock if clock is not None else _UTCClock()
+        object.__setattr__(self, "_resolver", resolver)
+        object.__setattr__(self, "_guard", attempt_guard)
+        object.__setattr__(self, "_hash_verifier", hash_verifier)
+        object.__setattr__(self, "_workers", workers)
+        object.__setattr__(self, "_dummy_hash", dummy_hash)
+        object.__setattr__(self, "_clock", clock if clock is not None else _UTCClock())
+
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("password authenticator composition cannot be mutated")
 
     @property
     def method(self) -> EvidenceMethod:
@@ -91,6 +99,19 @@ class PasswordAuthenticator:
             return ErrorOutcome(TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
 
         hint = request.claimed_identity
+        try:
+            admitted = await self._guard.admit(
+                scope_ref=context.scope_ref,
+                correlation_id=context.correlation_id,
+                identifier_kind=hint.identifier_kind if hint is not None else None,
+                identifier_value=hint.identifier_value if hint is not None else None,
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            return ErrorOutcome(TechnicalErrorCode.DEPENDENCY_UNAVAILABLE)
+        if admitted is not True:
+            return RejectedOutcome()
         if hint is None:
             return await self._mask_rejection(request.evidence.opaque_payload)
         try:

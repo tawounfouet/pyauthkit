@@ -25,6 +25,20 @@ from pyauthkit.password.capacity import KDFWorkerPool
 from pyauthkit.password.records import PasswordRecordStatus, PasswordVerifierRecord
 
 
+class PermitTestGuard:
+    """Explicit non-production fixture, never used as a security guarantee."""
+
+    async def admit(
+        self,
+        *,
+        scope_ref: TrustedScopeRef,
+        correlation_id: CorrelationId,
+        identifier_kind: str | None,
+        identifier_value: str | None,
+    ) -> bool:
+        return True
+
+
 def hash_secret(secret: bytes) -> str:
     return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(secret)
 
@@ -57,6 +71,7 @@ def configured(
     workers = KDFWorkerPool(max_workers=1, max_inflight=2, memory_budget_kib=65536)
     password_authenticator = PasswordAuthenticator(
         resolver=resolver,
+        attempt_guard=PermitTestGuard(),
         hash_verifier=Argon2idPasswordHashVerifier(Argon2idPolicy()),
         workers=workers,
         dummy_hash=hash_secret(b"unknown-user-mitigation-secret"),

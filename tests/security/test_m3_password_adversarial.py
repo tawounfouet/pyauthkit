@@ -27,6 +27,18 @@ from pyauthkit.password.records import (
 from pyauthkit.ports.authenticator import VerificationContext
 
 
+class PermitTestGuard:
+    async def admit(
+        self,
+        *,
+        scope_ref: TrustedScopeRef,
+        correlation_id: CorrelationId,
+        identifier_kind: str | None,
+        identifier_value: str | None,
+    ) -> bool:
+        return True
+
+
 def encoded() -> str:
     return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(
         b"real-secret"
@@ -56,6 +68,7 @@ def setup() -> tuple[PasswordAuthenticator, AuthenticationEngine, HostTrustCatal
     workers = KDFWorkerPool(max_workers=1, max_inflight=1, memory_budget_kib=65536)
     verifier = PasswordAuthenticator(
         resolver=BrokenResolver(),
+        attempt_guard=PermitTestGuard(),
         hash_verifier=Argon2idPasswordHashVerifier(Argon2idPolicy()),
         workers=workers,
         dummy_hash=encoded(),
