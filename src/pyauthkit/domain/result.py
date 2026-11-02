@@ -29,6 +29,9 @@ class Authenticated:
     def __new__(cls, *_args: object, **_kwargs: object) -> Never:
         raise TypeError("authentication success requires a verified policy gate")
 
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("authenticated result is immutable")
+
     def __repr__(self) -> str:
         return "Authenticated(<redacted, restricted>)"
 
