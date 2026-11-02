@@ -8,7 +8,8 @@ import asyncio
 from datetime import UTC, datetime
 
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from pyauthkit.application._verification import _issue_verified_outcome
 from pyauthkit.application.engine import AuthenticationEngine
