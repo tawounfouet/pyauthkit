@@ -94,6 +94,12 @@ class AuthenticationEngine:
         except Exception:
             return AuthError(request.correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
 
+        try:
+            if authenticator.method is not request.evidence.method:
+                return AuthError(request.correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
+        except Exception:
+            return AuthError(request.correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
+
         context = VerificationContext(
             entry.scope_ref,
             entry.profile_ref,
