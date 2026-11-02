@@ -44,3 +44,20 @@ after the security review and chosen governance checks.
 Do not declare GATE27-01 passed until checks, licensing, security reporting,
 branch protection and required review evidence are attached. The
 script does **not** merge PRs, close Issues or approve a security gate.
+
+## Observed administration result - 2026-11-02
+
+The maintainer ran `--plan` then `--apply` from the branch attached to PR #60.
+The output confirmed both actions completed:
+
+- `Ruleset verified on main with 7 required checks.`
+- `Private vulnerability reporting enabled and verified.`
+
+A separate GitHub GET of `/repos/tawounfouet/pyauthkit/rulesets/26350656`
+confirmed active enforcement, exact target `refs/heads/main`, seven named
+checks and an empty bypass list. A GET of the `main` branch returned
+`protected: true`.
+
+**Remaining governance limits:** zero mandatory approving reviews, no
+experiment showing an intentionally failed check blocks a merge, and
+PR #58/PR #60 still require their normal qualification and merge sequence.

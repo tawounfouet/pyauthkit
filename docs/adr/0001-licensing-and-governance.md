@@ -1,6 +1,6 @@
 # ADR-0001: Licensing and security governance
 
-- **Status:** PARTIALLY ACCEPTED - MIT licensing selected; security reporting remains OPEN
+- **Status:** ACCEPTED for MIT licensing and Private Vulnerability Reporting activation; broader security qualification remains OPEN
 - **Decision date:** 2026-11-02
 - **Decision owner:** repository maintainer (@tawounfouet)
 - **Related work:** WP27-001 (M0), GATE27-01
@@ -39,27 +39,40 @@ The maintainer selected the **MIT License** on 2026-11-02.
 - Review license compatibility of future dependencies and third-party code.
 - This decision does not authorize publication of the unqualified auth engine.
 
-## Decision B: vulnerability disclosure - OPEN
+## Decision B: private vulnerability disclosure - ACCEPTED
 
-The preferred channel is **GitHub Private Vulnerability Reporting**.
+The maintainer ran `scripts/gh_configure_m0_governance.sh --apply` on
+2026-11-02 and provided the CLI result
+`Private vulnerability reporting enabled and verified.`
 
-- Activation is performed by a repository administrator through GitHub
-  settings or the explicit `gh api --method PUT` admin operation.
-- The active state must be verified via the repository API.
-- Only after verification should `SECURITY.md` state that the private
-  reporting channel is enabled.
-- Avoid publishing real secrets or vulnerability details in public Issues.
-- Response-time SLA and supported-version policy remain undecided.
+- Reporting channel: **GitHub Private Vulnerability Reporting**.
+- `SECURITY.md` documents the private reporting workflow.
+- No public disclosure of live secrets or exploit details is permitted.
+- Response-time SLA, supported release versions and incident-runbook
+  maturity are **not** approved by this decision.
+
+## Decision C: default-branch Ruleset - VERIFIED
+
+The Ruleset `PYAUTHKIT_PROTECT_MAIN` (ID `26350656`) is active and
+targets `refs/heads/main`. A fresh GitHub repository read confirmed the
+branch is protected, the bypass list is empty and seven named status
+checks are required. The required review count is **0** for the current
+solo-maintainer phase, which does not constitute independent review.
+
+A successful ruleset readback proves configuration, not that a failing PR
+has been experimentally blocked. That gate evidence remains outstanding.
+
 
 ## GATE27-01 remaining evidence
 
 - [x] Maintainer's MIT selection recorded in this ADR (requires PR merge
       for the decision file and LICENSE to reach main)
 - [ ] MIT LICENSE, package metadata and README merged and verified on main
-- [ ] Private vulnerability reporting enabled and verified
-- [ ] Security policy updated to reflect verified channel state
-- [ ] Main Ruleset targeting main with required CI checks read back
+- [x] Private vulnerability reporting enabled and verified by maintainer CLI
+- [x] Security policy updated in PR #60 (pending merge to main)
+- [x] Main Ruleset targeting main with seven required CI checks read back
 - [ ] WP27-001 and other M0 lots qualified against the exit criteria
 
-**Note:** Security governance remains OPEN, even when the MIT decision
-is accepted. This ADR is therefore not a blanket security sign-off.
+**Note:** These decisions do not close GATE27-01. Independent review (if required),
+CI enforcement experiments, Issue #59 adjudication, PR merges and full M0
+qualification remain open.

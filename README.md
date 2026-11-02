@@ -2,7 +2,7 @@
 
 A modular, framework-agnostic authentication engine for the Python ecosystem.
 
-> **State:** PR-01 bootstrap only. No password, API key or JWT verification is implemented.
+> **State:** M0 bootstrap and governance (in progress). No password, API key or JWT verification is implemented.
 > Nothing in this repository is security-qualified or production-ready.
 
 ## Documentation
@@ -47,13 +47,12 @@ import in a *fresh environment* before signing off the packaging gate.
 ## Planning and decision records
 
 - GitHub Issues `WP27-001` through `WP27-053` track the MVP backlog.
-- M0 through M9 and exit gates GATE27-01 through GATE27-10 are **proposed**.
+- M0 through M9 and exit gates GATE27-01 through GATE27-10 are tracked in GitHub; M0 is not yet qualified.
 - The repository's `.github/workflows/bootstrap-planning.yml` is an
   idempotent synchronization job for milestones and labels.
-- `docs/adr/` records undecided choices, including licensing and Python support.
-- Canonical design sources: `27_PYAUTHKIT_IMPLEMENTATION_ROADMAP.md` and
-  `28_PYAUTHKIT_IMPLEMENTATION_BOOTSTRAP_PLAN.md` (design corpus; to be
-  imported separately, with provenance).
+- `docs/adr/` records decisions (MIT licensing accepted) and open issues (Python support/qualification).
+- Canonical design sources: [implementation roadmap](docs/specs/27_PYAUTHKIT_IMPLEMENTATION_ROADMAP.md) and
+  [bootstrap plan](docs/specs/28_PYAUTHKIT_IMPLEMENTATION_BOOTSTRAP_PLAN.md).
 
 ## Security
 
