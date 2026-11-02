@@ -64,3 +64,7 @@ API keys, tokens, private keys, or personal data.
 
 Do not use this repository for production authentication until the relevant
 security qualification gates are complete.
+
+## License
+
+PyAuthKit is licensed under the [MIT License](LICENSE). See `LICENSE` for the complete terms and required copyright notice.
