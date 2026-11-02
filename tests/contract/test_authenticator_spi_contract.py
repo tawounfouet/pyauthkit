@@ -94,3 +94,8 @@ def test_m2_t08_frozen_registry_keeps_exact_approved_implementation() -> None:
     assert registry.resolve(EvidenceMethod.JWT) is expected
     with pytest.raises(RuntimeError, match="frozen"):
         builder.register(ControlledVerifier(RejectedOutcome()))
+
+
+def test_m2_t06_empty_registry_is_rejected_at_bootstrap() -> None:
+    with pytest.raises(ValueError, match="empty authenticator registry"):
+        AuthenticatorRegistryBuilder().freeze()
