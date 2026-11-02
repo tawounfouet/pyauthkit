@@ -342,3 +342,15 @@ def test_m2_t01_untrusted_request_payload_limits() -> None:
         PresentedEvidence(EvidenceMethod.JWT, b"")
     with pytest.raises(ValueError, match="invalid evidence payload"):
         PresentedEvidence(EvidenceMethod.JWT, b"x" * 65537)
+
+
+def test_m2_t23_post_bootstrap_verifier_method_drift_is_rejected() -> None:
+    engine, fake, gate, catalog = harness(allow=True)
+    fake.method = EvidenceMethod.PASSWORD
+    result = asyncio.run(
+        engine.authenticate(request(), entry=catalog.resolve_for_host_route("host-route-a"))
+    )
+    assert isinstance(result, AuthError)
+    assert result.error_code is TechnicalErrorCode.INVALID_TRUST_CONFIGURATION
+    assert fake.calls == 0
+    assert gate.final_calls == 0
