@@ -10,7 +10,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Never
+from typing import Never, cast
 
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.scope import TrustedScopeRef
@@ -108,7 +108,9 @@ class HostTrustCatalog:
                 raise ValueError("duplicate host route")
             if len(entries) >= 128:
                 raise ValueError("host catalog capacity exceeded")
-            entry = object.__new__(TrustedEntryContext)
+            entry: TrustedEntryContext = cast(
+                TrustedEntryContext, object.__new__(cast(type[object], TrustedEntryContext))
+            )
             object.__setattr__(entry, "_scope_ref", binding.scope_ref)
             object.__setattr__(entry, "_profile_ref", binding.profile_ref)
             object.__setattr__(entry, "_allowed_methods", binding.allowed_methods)
