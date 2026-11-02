@@ -1,7 +1,6 @@
 """Adversarial cross-tenant, stale record, cancellation and result redaction."""
 
 import asyncio
-from datetime import UTC, datetime
 
 from argon2 import PasswordHasher
 from argon2.low_level import Type
@@ -14,14 +13,17 @@ from pyauthkit.application.policy import AuthenticationPolicyGate
 from pyauthkit.composition.registry import AuthenticatorRegistry
 from pyauthkit.domain.evidence import EvidenceMethod, PresentedEvidence
 from pyauthkit.domain.identity import ClaimedIdentity, ScopedSubjectRef
-from pyauthkit.domain.outcome import RejectedOutcome
 from pyauthkit.domain.request import AuthenticationRequest
 from pyauthkit.domain.result import AuthError, Rejected
 from pyauthkit.domain.scope import TrustedScopeRef
-from pyauthkit.domain.temporal import CorrelationId, ObservedAt
+from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
 from pyauthkit.password.capacity import KDFWorkerPool
-from pyauthkit.password.records import PasswordRecordFound, PasswordVerifierRecord, PasswordRecordStatus
+from pyauthkit.password.records import (
+    PasswordRecordFound,
+    PasswordRecordStatus,
+    PasswordVerifierRecord,
+)
 from pyauthkit.ports.authenticator import VerificationContext
 
 

@@ -12,12 +12,11 @@ from pyauthkit.password.records import (
     PasswordRecordFound,
     PasswordRecordLookup,
     PasswordRecordMissing,
-    PasswordRecordUnavailable,
     PasswordRecordStatus,
+    PasswordRecordUnavailable,
     PasswordVerifierRecord,
     is_scoped_human_record,
 )
-
 
 type LookupKey = tuple[str, str, str]
 

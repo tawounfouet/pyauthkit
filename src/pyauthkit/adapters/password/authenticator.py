@@ -20,7 +20,6 @@ from pyauthkit.password.records import (
     PasswordRecordFound,
     PasswordRecordMissing,
     PasswordRecordUnavailable,
-    PasswordVerifierRecord,
     is_scoped_human_record,
     record_is_admissible,
 )

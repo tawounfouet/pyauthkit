@@ -104,7 +104,7 @@ class Argon2idPasswordHashVerifier:
                     raise InvalidPasswordHash("unapproved password verifier")
                 if base64.b64encode(decoded).decode("ascii").rstrip("=") != value:
                     raise InvalidPasswordHash("unapproved password verifier")
-        except (binascii.Error, ValueError) as exc:
+        except (binascii.Error, ValueError):
             raise InvalidPasswordHash("unapproved password verifier") from None
 
     def verify(self, *, password: bytes, encoded_hash: str) -> bool:

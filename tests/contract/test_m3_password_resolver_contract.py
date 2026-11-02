@@ -83,15 +83,15 @@ def test_m3_ambiguous_and_foreign_scope_never_return_verified_record() -> None:
 
 def test_m3_verifier_projection_redacts_sensitive_material() -> None:
     scope = TrustedScopeRef("test")
-    secret = "private-hash-not-for-logs"
+    sample_verifier = "synthetic-phc-value-not-for-logs"
     item = PasswordVerifierRecord(
         scope_ref=scope,
         subject_ref=ScopedSubjectRef("private-id", "private-issuer", scope),
-        encoded_hash=secret,
+        encoded_hash=sample_verifier,
         status=PasswordRecordStatus.ACTIVE,
         version=1,
     )
-    assert secret not in repr(item)
+    assert sample_verifier not in repr(item)
     assert "private-id" not in repr(PasswordRecordFound(item))
     with pytest.raises(TypeError):
         from dataclasses import asdict
