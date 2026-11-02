@@ -1,0 +1,6 @@
+# Requested reviews apply when branch protection / CODEOWNERS review is enabled.
+* @tawounfouet
+/.github/ @tawounfouet
+/pyproject.toml @tawounfouet
+/src/pyauthkit/ @tawounfouet
+/docs/adr/ @tawounfouet
