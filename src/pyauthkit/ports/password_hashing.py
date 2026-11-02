@@ -6,6 +6,9 @@ from typing import Protocol
 class PasswordHashVerifier(Protocol):
     """A synchronous KDF port. The async caller must bound worker resources."""
 
+    @property
+    def max_memory_cost_kib(self) -> int: ...
+
     def validate_hash(self, encoded_hash: str) -> None:
         """Reject unapproved algorithm/version/cost before expensive KDF work."""
         ...
