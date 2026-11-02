@@ -30,9 +30,7 @@ from pyauthkit.ports.authenticator import VerificationContext
 
 
 def real_hash(secret: bytes) -> str:
-    return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(
-        secret
-    )
+    return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(secret)
 
 
 class Guard:

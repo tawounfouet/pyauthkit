@@ -76,9 +76,7 @@ def main() -> int:
         # The first environment above proves core imports without that extra.
         password_env = temp_path / "password-venv"
         venv.EnvBuilder(with_pip=True).create(password_env)
-        password_python = password_env / (
-            "Scripts/python.exe" if os.name == "nt" else "bin/python"
-        )
+        password_python = password_env / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
         subprocess.run(
             [
                 str(password_python),
