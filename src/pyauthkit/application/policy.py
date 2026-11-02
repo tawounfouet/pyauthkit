@@ -47,8 +47,11 @@ class AuthenticationPolicyGate:
             raise ValueError("invalid host trust catalog")
         if final_rule is not None and not callable(final_rule):
             raise ValueError("invalid final policy")
-        self._catalog = catalog
-        self._final_rule = final_rule
+        object.__setattr__(self, "_catalog", catalog)
+        object.__setattr__(self, "_final_rule", final_rule)
+
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("authentication policy cannot be mutated")
 
     def preflight(
         self, request: AuthenticationRequest, *, entry: TrustedEntryContext
