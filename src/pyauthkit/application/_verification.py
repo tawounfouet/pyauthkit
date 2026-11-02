@@ -56,9 +56,7 @@ def _issue_authenticated(subject: VerifiedSubject, correlation_id: CorrelationId
     return authenticated
 
 
-def _verified_matches_attempt(
-    outcome: VerifiedOutcome, context: VerificationContext
-) -> bool:
+def _verified_matches_attempt(outcome: VerifiedOutcome, context: VerificationContext) -> bool:
     """Reject cross-attempt, cross-tenant, cross-method and malformed outcomes."""
     try:
         subject = outcome.subject
