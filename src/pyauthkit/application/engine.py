@@ -96,7 +96,9 @@ class AuthenticationEngine:
 
         try:
             if authenticator.method is not request.evidence.method:
-                return AuthError(request.correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
+                return AuthError(
+                    request.correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION
+                )
         except Exception:
             return AuthError(request.correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
 
