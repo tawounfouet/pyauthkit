@@ -42,9 +42,7 @@ class FakeAuthenticator:
         self.calls = 0
         self.contexts: list[VerificationContext] = []
 
-    async def verify(
-        self, request: AuthenticationRequest, context: VerificationContext
-    ) -> object:
+    async def verify(self, request: AuthenticationRequest, context: VerificationContext) -> object:
         self.calls += 1
         self.contexts.append(context)
         if self.behavior == "rejected":
@@ -105,7 +103,10 @@ class SpyPolicy(AuthenticationPolicyGate):
     ) -> Authenticated | Rejected | AuthError:
         object.__setattr__(self, "final_calls", self.final_calls + 1)
         return super().final_decision(
-            request, entry=entry, context=context, outcome=outcome  # type: ignore[arg-type]
+            request,
+            entry=entry,
+            context=context,
+            outcome=outcome,  # type: ignore[arg-type]
         )
 
 
@@ -124,7 +125,9 @@ def request(
     method: EvidenceMethod = EvidenceMethod.JWT,
     tenant: str | None = None,
 ) -> AuthenticationRequest:
-    claim = ClaimedIdentity("username", "unverified-user", claimed_tenant=tenant) if tenant else None
+    claim = (
+        ClaimedIdentity("username", "unverified-user", claimed_tenant=tenant) if tenant else None
+    )
     return AuthenticationRequest(
         PresentedEvidence(method, b"secret_check_do_not_log"),
         CorrelationId("attempt-m2"),
@@ -292,6 +295,7 @@ def test_m2_t16_cancellation_is_propagated_not_normalized_to_success() -> None:
             await task
         assert fake.calls <= 1
         assert gate.final_calls == 0
+
     asyncio.run(scenario())
 
 
