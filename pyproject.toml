@@ -21,8 +21,14 @@ dev = [
   "build>=1.2",
   "mypy>=1.13",
   "pytest>=8",
+  "PyYAML>=6.0",
   "ruff>=0.9",
   "twine>=6",
+]
+security = [
+  "bandit>=1.8",
+  "detect-secrets>=1.5",
+  "pip-audit>=2.9",
 ]
 
 [tool.hatch.build.targets.wheel]
