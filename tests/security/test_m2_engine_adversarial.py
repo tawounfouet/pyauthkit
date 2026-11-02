@@ -93,7 +93,7 @@ class FakeAuthenticator:
 class SpyPolicy(AuthenticationPolicyGate):
     def __init__(self, catalog: HostTrustCatalog, *, allow: bool = False) -> None:
         super().__init__(catalog, final_rule=lambda _subject, _entry: allow)
-        self.final_calls = 0
+        object.__setattr__(self, "final_calls", 0)
 
     def final_decision(
         self,
@@ -103,7 +103,7 @@ class SpyPolicy(AuthenticationPolicyGate):
         context: VerificationContext,
         outcome: VerifiedOutcome,
     ) -> Authenticated | Rejected | AuthError:
-        self.final_calls += 1
+        object.__setattr__(self, "final_calls", self.final_calls + 1)
         return super().final_decision(
             request, entry=entry, context=context, outcome=outcome  # type: ignore[arg-type]
         )
