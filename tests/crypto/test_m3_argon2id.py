@@ -23,7 +23,9 @@ def encoded() -> str:
 def test_real_argon2id_correct_and_incorrect_password(
     verifier: Argon2idPasswordHashVerifier, encoded: str
 ) -> None:
-    assert verifier.verify(password=b"long-unique-passphrase-for-qualification", encoded_hash=encoded)
+    assert verifier.verify(
+        password=b"long-unique-passphrase-for-qualification", encoded_hash=encoded
+    )
     assert not verifier.verify(password=b"not-the-right-password", encoded_hash=encoded)
 
 

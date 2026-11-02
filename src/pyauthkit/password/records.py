@@ -52,7 +52,9 @@ class PasswordVerifierRecord:
             raise ValueError("password record subject scope mismatch")
         if not isinstance(encoded_hash, str) or not 1 <= len(encoded_hash) <= 512:
             raise ValueError("invalid password verifier material")
-        if not encoded_hash.isascii() or any(ord(ch) <= 32 or ord(ch) == 127 for ch in encoded_hash):
+        if not encoded_hash.isascii() or any(
+            ord(ch) <= 32 or ord(ch) == 127 for ch in encoded_hash
+        ):
             raise ValueError("invalid password verifier encoding")
         if not isinstance(status, PasswordRecordStatus):
             raise ValueError("invalid password record status")
@@ -118,15 +120,17 @@ class PasswordRecordUnavailable:
 
 
 type PasswordRecordLookup = (
-    PasswordRecordFound | PasswordRecordMissing | PasswordRecordAmbiguous | PasswordRecordUnavailable
+    PasswordRecordFound
+    | PasswordRecordMissing
+    | PasswordRecordAmbiguous
+    | PasswordRecordUnavailable
 )
 
 
 def record_is_admissible(record: PasswordVerifierRecord, *, at: ObservedAt) -> bool:
     """Status and expiry gate; no cryptographic proof is implied."""
-    return (
-        record.status is PasswordRecordStatus.ACTIVE
-        and (record.expires_at is None or at.value < record.expires_at.value)
+    return record.status is PasswordRecordStatus.ACTIVE and (
+        record.expires_at is None or at.value < record.expires_at.value
     )
 
 

@@ -26,9 +26,7 @@ from pyauthkit.password.records import PasswordRecordStatus, PasswordVerifierRec
 
 
 def hash_secret(secret: bytes) -> str:
-    return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(
-        secret
-    )
+    return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(secret)
 
 
 def request(secret: bytes, login: str = "alice") -> AuthenticationRequest:
@@ -55,9 +53,7 @@ def configured(
         version=1,
         expires_at=expires_at,
     )
-    resolver = InMemoryPasswordCredentialResolver(
-        {("tenant-a", "username", "alice"): (record,)}
-    )
+    resolver = InMemoryPasswordCredentialResolver({("tenant-a", "username", "alice"): (record,)})
     workers = KDFWorkerPool(max_workers=1, max_inflight=2, memory_budget_kib=65536)
     password_authenticator = PasswordAuthenticator(
         resolver=resolver,
@@ -100,12 +96,12 @@ def configured(
 def test_real_m3_engine_flow_and_final_policy(
     secret: bytes, login: str, allow: bool, expected: type[object]
 ) -> None:
-    engine, catalog, workers = configured(
-        hash_secret(b"real-long-password-for-M3"), allow=allow
-    )
+    engine, catalog, workers = configured(hash_secret(b"real-long-password-for-M3"), allow=allow)
     try:
         outcome = asyncio.run(
-            engine.authenticate(request(secret, login), entry=catalog.resolve_for_host_route("login"))
+            engine.authenticate(
+                request(secret, login), entry=catalog.resolve_for_host_route("login")
+            )
         )
         assert isinstance(outcome, expected)
         assert hasattr(outcome, "principal") is (expected is Authenticated)
@@ -113,14 +109,19 @@ def test_real_m3_engine_flow_and_final_policy(
         workers.close()
 
 
-@pytest.mark.parametrize("status", [PasswordRecordStatus.REVOKED, PasswordRecordStatus.DISABLED,
-                                    PasswordRecordStatus.SUSPENDED, PasswordRecordStatus.EXPIRED])
+@pytest.mark.parametrize(
+    "status",
+    [
+        PasswordRecordStatus.REVOKED,
+        PasswordRecordStatus.DISABLED,
+        PasswordRecordStatus.SUSPENDED,
+        PasswordRecordStatus.EXPIRED,
+    ],
+)
 def test_inadmissible_credential_rejected_even_with_right_password(
     status: PasswordRecordStatus,
 ) -> None:
-    engine, catalog, workers = configured(
-        hash_secret(b"real-long-password-for-M3"), status=status
-    )
+    engine, catalog, workers = configured(hash_secret(b"real-long-password-for-M3"), status=status)
     try:
         result = asyncio.run(
             engine.authenticate(

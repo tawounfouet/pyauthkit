@@ -45,7 +45,9 @@ class CallbackPasswordCredentialResolver:
             PasswordRecordMissing,
         )
 
-        if isinstance(result, (PasswordRecordMissing, PasswordRecordAmbiguous, PasswordRecordUnavailable)):
+        if isinstance(
+            result, (PasswordRecordMissing, PasswordRecordAmbiguous, PasswordRecordUnavailable)
+        ):
             return result
         return PasswordRecordUnavailable()
 

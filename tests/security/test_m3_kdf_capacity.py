@@ -35,6 +35,7 @@ def test_kdf_capacity_exhaustion_is_fail_closed() -> None:
         release.set()
         # Drain pool in another thread, avoiding event loop blocking.
         await asyncio.to_thread(pool.close)
+
     try:
         asyncio.run(scenario())
     finally:

@@ -61,7 +61,11 @@ def setup() -> tuple[PasswordAuthenticator, AuthenticationEngine, HostTrustCatal
         dummy_hash=encoded(),
     )
     catalog = HostTrustCatalog(
-        [HostBinding("r1", scope, TrustProfileRef("p", "v1", scope), frozenset({EvidenceMethod.PASSWORD}))]
+        [
+            HostBinding(
+                "r1", scope, TrustProfileRef("p", "v1", scope), frozenset({EvidenceMethod.PASSWORD})
+            )
+        ]
     )
     registry = AuthenticatorRegistry({EvidenceMethod.PASSWORD: verifier})
     engine = AuthenticationEngine(
@@ -114,9 +118,7 @@ def test_host_preflight_blocks_claimed_foreign_tenant() -> None:
         req = AuthenticationRequest(
             PresentedEvidence(EvidenceMethod.PASSWORD, b"real-secret"),
             CorrelationId("foreign-claim"),
-            claimed_identity=ClaimedIdentity(
-                "username", "victim", claimed_tenant="tenant-2"
-            ),
+            claimed_identity=ClaimedIdentity("username", "victim", claimed_tenant="tenant-2"),
         )
         result = asyncio.run(engine.authenticate(req, entry=catalog.resolve_for_host_route("r1")))
         assert isinstance(result, Rejected)

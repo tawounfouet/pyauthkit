@@ -35,9 +35,7 @@ def test_m3_scoped_lookup_missing_found_ambiguous_and_no_global_fallback(
     tenant_a = TrustedScopeRef("tenant-a")
     tenant_b = TrustedScopeRef("tenant-b")
     stored = record(tenant_a)
-    inner = InMemoryPasswordCredentialResolver(
-        {("tenant-a", "username", "same"): (stored,)}
-    )
+    inner = InMemoryPasswordCredentialResolver({("tenant-a", "username", "same"): (stored,)})
     if use_callback:
         resolver = CallbackPasswordCredentialResolver(
             resolve_callback=lambda scope, kind, value: inner.resolve(
@@ -65,12 +63,8 @@ def test_m3_scoped_lookup_missing_found_ambiguous_and_no_global_fallback(
 def test_m3_ambiguous_and_foreign_scope_never_return_verified_record() -> None:
     a, b = TrustedScopeRef("a"), TrustedScopeRef("b")
     normal = record(a)
-    collision = InMemoryPasswordCredentialResolver(
-        {("a", "username", "x"): (normal, normal)}
-    )
-    broken = InMemoryPasswordCredentialResolver(
-        {("a", "username", "x"): (record(b),)}
-    )
+    collision = InMemoryPasswordCredentialResolver({("a", "username", "x"): (normal, normal)})
+    broken = InMemoryPasswordCredentialResolver({("a", "username", "x"): (record(b),)})
 
     async def check() -> None:
         one = await collision.resolve(scope_ref=a, identifier_kind="username", identifier_value="x")

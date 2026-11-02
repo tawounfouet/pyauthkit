@@ -161,9 +161,7 @@ class PasswordAuthenticator:
         """
         try:
             await self._workers.run(
-                lambda: self._hash_verifier.verify(
-                    password=password, encoded_hash=self._dummy_hash
-                )
+                lambda: self._hash_verifier.verify(password=password, encoded_hash=self._dummy_hash)
             )
         except asyncio.CancelledError:
             raise
