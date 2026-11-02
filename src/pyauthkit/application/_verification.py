@@ -43,7 +43,9 @@ def _issue_verified_outcome(
     object.__setattr__(verified, "method", context.method)
     object.__setattr__(verified, "profile", context.profile_ref)
     object.__setattr__(verified, "verified_at", verified_at)
-    outcome = object.__new__(VerifiedOutcome)
+    outcome: VerifiedOutcome = cast(
+        VerifiedOutcome, object.__new__(cast(type[object], VerifiedOutcome))
+    )
     object.__setattr__(outcome, "status", "VERIFIED")
     object.__setattr__(outcome, "subject", verified)
     object.__setattr__(outcome, "correlation_id", context.correlation_id)
