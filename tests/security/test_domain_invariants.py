@@ -31,9 +31,11 @@ def test_property_evidence_payload_never_in_repr(payload: bytes, method: Evidenc
     assert "opaque_payload" not in repr(evidence)
 
 
-@given(st.text(min_size=1, max_size=256).filter(lambda s: s.strip() != "" and all(
-    32 <= ord(char) < 127 for char in s
-)))
+@given(
+    st.text(min_size=1, max_size=256).filter(
+        lambda s: s.strip() != "" and all(32 <= ord(char) < 127 for char in s)
+    )
+)
 @settings(max_examples=80)
 def test_property_claims_never_turn_into_verified_subject(value: str) -> None:
     claim = ClaimedIdentity("username", value, claimed_tenant="tenant-a")
@@ -64,9 +66,11 @@ def test_property_request_serialization_omits_evidence(payload: bytes) -> None:
         asdict(req)
 
 
-@given(st.text(min_size=1, max_size=127, alphabet=st.characters(
-    whitelist_categories=("Ll", "Lu", "Nd")
-)))
+@given(
+    st.text(
+        min_size=1, max_size=127, alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"))
+    )
+)
 @settings(max_examples=60)
 def test_property_scopes_never_coalesce_unequal_tenants(raw: str) -> None:
     # Alphanumeric ASCII only, matching the existing TrustedScopeRef grammar.
