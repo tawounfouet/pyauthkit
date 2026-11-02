@@ -18,6 +18,9 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+password = [
+  "argon2-cffi>=25.1,<26",
+]
 dev = [
   "build>=1.2",
   "hypothesis>=6.100",

@@ -7,7 +7,7 @@ The hash is sensitive offline-attack material even though it is not plaintext.
 from enum import StrEnum
 from typing import Never
 
-from pyauthkit.domain.identity import PrincipalType, ScopedSubjectRef
+from pyauthkit.domain.identity import ScopedSubjectRef
 from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import ObservedAt
 

@@ -32,7 +32,7 @@ jobs:
       - name: Install checks
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ".[dev]"
+          python -m pip install ".[dev,password]"
           python -m pip freeze
       - name: Ruff lint
         run: python -m ruff check .
@@ -78,7 +78,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ".[dev]"
+          python -m pip install ".[dev,password]"
           python -m pytest -v
           python -m build
           python scripts/smoke_wheel.py
@@ -103,7 +103,7 @@ jobs:
         run: |
           python -m venv .audit-venv
           .audit-venv/bin/python -m pip install --upgrade pip
-          .audit-venv/bin/python -m pip install ".[dev,security]"
+          .audit-venv/bin/python -m pip install ".[dev,password,security]"
           .audit-venv/bin/python -m pip freeze
       - name: Dependency vulnerability scan
         run: |
