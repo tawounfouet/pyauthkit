@@ -26,6 +26,8 @@ class InMemoryPasswordCredentialResolver:
 
     __slots__ = ("_records",)
 
+    _records: MappingProxyType[LookupKey, tuple[PasswordVerifierRecord, ...]]
+
     def __init__(self, records: Mapping[LookupKey, Sequence[PasswordVerifierRecord]]) -> None:
         checked: dict[LookupKey, tuple[PasswordVerifierRecord, ...]] = {}
         for key, values in records.items():
