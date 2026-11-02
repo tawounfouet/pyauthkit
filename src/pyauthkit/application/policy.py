@@ -40,6 +40,9 @@ class AuthenticationPolicyGate:
 
     __slots__ = ("_catalog", "_final_rule")
 
+    _catalog: HostTrustCatalog
+    _final_rule: FinalRule | None
+
     def __init__(self, catalog: HostTrustCatalog, *, final_rule: FinalRule | None = None) -> None:
         if not isinstance(catalog, HostTrustCatalog):
             raise ValueError("invalid host trust catalog")
