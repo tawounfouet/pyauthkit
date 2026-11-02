@@ -113,7 +113,5 @@ jobs:
         run: .audit-venv/bin/python -m bandit -r src -ll -ii
       - name: Search checked-in secrets
         run: |
-          .audit-venv/bin/detect-secrets scan --all-files --exclude-files '(^|/)\.audit-venv/|(^|/)\.secret-scan\.json
-          python scripts/check_secret_scan.py .secret-scan.json
- > .secret-scan.json
+          .audit-venv/bin/detect-secrets scan --all-files --exclude-files '([.]audit-venv/|[.]secret-scan[.]json)' > .secret-scan.json
           python scripts/check_secret_scan.py .secret-scan.json
