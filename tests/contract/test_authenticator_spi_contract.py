@@ -34,9 +34,7 @@ class ControlledVerifier:
         self.outcome = outcome
         self.calls: list[VerificationContext] = []
 
-    async def verify(
-        self, request: AuthenticationRequest, context: VerificationContext
-    ) -> object:
+    async def verify(self, request: AuthenticationRequest, context: VerificationContext) -> object:
         self.calls.append(context)
         return self.outcome
 
