@@ -46,11 +46,16 @@ class AuthenticationEngine:
             raise ValueError("invalid authentication policy gate")
         if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
             raise ValueError("invalid verification timeout")
-        self._policy = policy
-        self._registry = registry
-        self._timeout_seconds = timeout_seconds
-        self._monotonic = monotonic if monotonic is not None else time.monotonic
-        self._sink = event_sink
+        object.__setattr__(self, "_policy", policy)
+        object.__setattr__(self, "_registry", registry)
+        object.__setattr__(self, "_timeout_seconds", timeout_seconds)
+        object.__setattr__(
+            self, "_monotonic", monotonic if monotonic is not None else time.monotonic
+        )
+        object.__setattr__(self, "_sink", event_sink)
+
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("authentication engine composition cannot be mutated")
 
     async def authenticate(
         self, request: AuthenticationRequest, *, entry: TrustedEntryContext
