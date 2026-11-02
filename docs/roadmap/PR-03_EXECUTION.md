@@ -1,6 +1,6 @@
 # PR-03 - M1 Domain Kernel implementation and qualification
 
-- **State:** IMPLEMENTING / PR checks and GATE27-02 review required
+- **State:** MERGED / DOMAIN-ONLY QUALIFIED; GATE27-02 final decision in qualification document
 - **Milestone:** M1 - Domain Kernel & Invariants
 - **Work packages:** WP27-007..WP27-012
 - **Design sources:** specs 04-09, 24, 26, roadmap 27 §14, bootstrap 28 §45
@@ -35,14 +35,28 @@
 
 ## Qualification plan
 
-- [ ] All required GitHub checks PASS on PR HEAD.
-- [ ] Ruff lint and format, strict mypy, pytest unit/security/property tests.
-- [ ] Architecture fitness: Domain has no Web, IAM or adapter dependency.
-- [ ] Wheel/sdist builds and isolated imports on 5 matrix combinations.
-- [ ] Secret scanning and dependency/SAST checks pass.
-- [ ] Reviewer evaluates trust boundary and reserved-positive semantics.
-- [ ] Map invariant tests and exact SHA/run to work-package issues.
-- [ ] Gate GATE27-02 separately signed after review and merged-main CI.
-- [ ] PR intentionally remains open and unmerged until approval.
+- [x] All required GitHub checks PASS on PR HEAD.
+- [x] Ruff lint and format, strict mypy, pytest unit/security/property tests.
+- [x] Architecture fitness: Domain has no Web, IAM or adapter dependency.
+- [x] Wheel/sdist builds and isolated imports on 5 matrix combinations.
+- [x] Secret scanning and dependency/SAST checks pass.
+- [x] Domain-only trust boundary evaluated and limitations documented in GATE27-02 decision.
+- [x] Map invariant tests and exact SHA/run to work-package issues.
+- [x] Gate GATE27-02 signed by maintainer authorization, scoped to M1 domain modeling.
+- [x] PR #66 merged normally by maintainer; no bypass observed.
 
 **Release status:** no production authentication or PyPI distribution approved.
+
+
+## Verified M1 execution (2026-11-02)
+
+- PR #66: https://github.com/tawounfouet/pyauthkit/pull/66 (MERGED)
+- PR tested SHA: `3c992d8e70f7861c2d69c2ffc3307f7499ecb649`
+- PR CI: https://github.com/tawounfouet/pyauthkit/actions/runs/41425128544 (7/7 and GitGuardian PASS)
+- Protected `main` SHA: `9823bef47137b7837717c4a754031d5ca39326d4`
+- Post-merge CI: https://github.com/tawounfouet/pyauthkit/actions/runs/41434368832 (7/7 PASS)
+- 58 unit/architecture/security/property tests PASS, Ruff, mypy strict, 5 isolated wheel smoke environments, pip-audit, Bandit, scoped detect-secrets PASS.
+- Supplemental macOS Apple Silicon / Python 3.14.5 local PASS from maintainer (not a dedicated isolated qualification).
+- Formal qualification: `docs/qualification/GATE27-02_M1_DOMAIN_KERNEL_DECISION.md`.
+
+**Constraint:** no production authenticator, no valid positive final decision, no host trust resolver, no publication. Python constructor blocking is a design guard, not runtime authorization.

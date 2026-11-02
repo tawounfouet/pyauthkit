@@ -1,6 +1,6 @@
 # Design Learning Card - M1 Domain Kernel (PR-03)
 
-- **Status:** IMPLEMENTING - pending PR CI and GATE27-02 review
+- **Status:** ACCEPTED FOR DOMAIN MODEL M1 - no production authenticator
 - **Milestone:** M1 / WP27-007..012
 - **Decision scope:** Non-production domain types; no authentication verifier
 - **Sources:** Convention Software Design & Learning, specifications 04-07, 09, 24, 26, 27 §14 and 28 §45
@@ -159,6 +159,4 @@ into result objects or public summaries.
 
 ## Implementation Status
 
-**IMPLEMENTING** until PR checks, source review and gate evidence have
-been independently evaluated. **Not** an implemented authenticator and
-**not** production authentication.
+**ACCEPTED FOR M1 DOMAIN MODEL ONLY** per `GATE27-02_M1_DOMAIN_KERNEL_DECISION.md`. The product has no implemented authenticator and is not production authentication. The sole maintainer's acceptance is not an independent security audit.
