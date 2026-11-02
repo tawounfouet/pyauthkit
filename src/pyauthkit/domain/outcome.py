@@ -26,6 +26,9 @@ class VerifiedOutcome:
     def __new__(cls, *_args: object, **_kwargs: object) -> Never:
         raise TypeError("verified outcomes require an approved authenticator")
 
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("verified outcome is immutable")
+
     def __repr__(self) -> str:
         return "VerifiedOutcome(<redacted, internal>)"
 
