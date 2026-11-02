@@ -106,7 +106,8 @@ jobs:
           .audit-venv/bin/python -m pip install ".[dev,security]"
           .audit-venv/bin/python -m pip freeze
       - name: Dependency vulnerability scan
-        run: .audit-venv/bin/python -m pip_audit --strict --skip-editable
+        run: .audit-venv/bin/python -m pip uninstall -y pyauthkit
+          .audit-venv/bin/python -m pip_audit --strict
       - name: Static security patterns in runtime source
         run: .audit-venv/bin/python -m bandit -r src -ll -ii
       - name: Search checked-in secrets

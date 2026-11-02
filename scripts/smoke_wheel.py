@@ -25,10 +25,7 @@ def main() -> int:
         names = zf.namelist()
         if not any(n == "pyauthkit/__init__.py" for n in names):
             raise RuntimeError("wheel has no package init")
-        if any(
-            n.startswith(("tests/", "docs/", "scripts/")) or "/fixtures/" in n
-            for n in names
-        ):
+        if any(n.startswith(("tests/", "docs/", "scripts/")) or "/fixtures/" in n for n in names):
             raise RuntimeError("test, fixture or source-document content leaked into wheel")
     with tarfile.open(archives[0], "r:gz") as tf:
         names = tf.getnames()

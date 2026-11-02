@@ -37,6 +37,7 @@ packages = ["src/pyauthkit"]
 [tool.ruff]
 target-version = "py312"
 line-length = 100
+extend-exclude = ["docs/specs"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I", "B", "UP"]

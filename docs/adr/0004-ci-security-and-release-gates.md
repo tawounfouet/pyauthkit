@@ -24,7 +24,7 @@ scans also need their own evidence.
 - Candidate wheel matrix: Linux 3.12/3.13/3.14, macOS 3.12,
   Windows 3.12. This is **not** the full OS x Python cross product.
 - Build both wheel and sdist and run an isolated wheel import with no extras.
-- Run dependency audit of isolated dev+security tooling (skipping the editable, unpublished local package), Bandit on runtime
+- Run dependency audit of installed dev+security tooling after uninstalling the local unpublished package (which has no required runtime dependencies), Bandit on runtime
   source, and detect-secrets over checked-in files. Review false positives,
   never assume a scanner replaces protocol-specific negative test vectors.
 - Scan scripts are structural tools only. Neither SAST nor AST checks establish
