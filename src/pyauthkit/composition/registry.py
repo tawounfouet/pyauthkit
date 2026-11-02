@@ -26,7 +26,10 @@ class AuthenticatorRegistry:
             if not callable(authenticator.verify):
                 raise ValueError("invalid authenticator contract")
             checked[method] = authenticator
-        self._entries = MappingProxyType(checked)
+        object.__setattr__(self, "_entries", MappingProxyType(checked))
+
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("authenticator registry cannot be mutated")
 
     def resolve(self, method: EvidenceMethod) -> Authenticator:
         """Exact match only. Never try another mechanism on failure."""
