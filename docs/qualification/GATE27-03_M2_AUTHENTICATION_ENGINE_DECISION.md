@@ -1,11 +1,12 @@
 # PyAuthKit - GATE27-03 - M2 Authentication Engine & Ports
 
-> Decision proposal: **GO M2 FOR ENGINE AND PORTS ONLY**, contingent on this
-> closure evidence PR merging with green CI. The final authoritative sign-off
-> is recorded on GitHub issue #70 after the documentation/test PR is merged.
+> Qualification recommendation: **GO FOR M2 ENGINE AND PORTS ONLY**.
+> PR-04, PR-05 and the PR-72 qualification delta are merged and their CI is green.
+> Final authoritative sign-off is recorded on GitHub issue #70; a successful
+> engineering gate does not grant production authentication or release approval.
 >
 > Date: 2026-11-02. Qualified code baseline: main at
-> 2992c359d29f992c822e595ef9ef3babaed1d856.
+> c6122ca17a23abd299fc4098aa29a8797ca3923a.
 > **Not a release, not a password/JWT/API-key implementation and not a
 > cryptographic or production authentication certification.**
 
@@ -27,7 +28,11 @@
 | Packaging | wheel/sdist and fresh-venv smoke on Ubuntu Py3.12/3.13/3.14, macOS Py3.12 and Windows Py3.12 |
 | Security review | PR #69 and PR #71 COMMENT reviews; engineering review, not external independent assessment |
 | Gate tracking | https://github.com/tawounfouet/pyauthkit/issues/70 |
-| Closure delta | Additional explicit M2-T06 empty-registry and M2-T16 audit-cancellation tests, subject to new CI. |
+| PR-72 qualification | https://github.com/tawounfouet/pyauthkit/pull/72 (7/7 required + GitGuardian pass) |
+| Qualified main baseline | `c6122ca17a23abd299fc4098aa29a8797ca3923a` |
+| Main CI after PR-72 | https://github.com/tawounfouet/pyauthkit/actions/runs/41453376670 (7/7 required jobs PASS) |
+| Final integrated pytest | 104 passed in 3.35s (Ubuntu Python 3.12.15); mypy strict 23 source files PASS |
+| Closure delta | PR-72 #72: M2-T06 empty-registry and M2-T16 audit-cancellation tests passed in main CI; merged SHA `c6122ca17a23abd299fc4098aa29a8797ca3923a`. |
 
 ## 2. Requirement-to-test matrix
 
@@ -86,8 +91,8 @@ No M2 tests assert a standards certification or cryptographic identity.
 | G3-14 | Pending signed issue #70 decision after closure PR CI and merge |
 
 All criteria except the final administrative sign-off are supported by the
-implementation evidence above. The additional closure tests require successful
-closure PR CI before final sign-off.
+implementation evidence above. The additional closure tests passed on the PR-72 candidate and protected main.
+Final sign-off is the separate issue #70 gate decision, not this report alone.
 
 ## 4. Residual risks owned explicitly
 
@@ -120,3 +125,13 @@ hash migration, then obtain its independent GATE27-04 evidence.
 3. Record the final signed GO on issue #70 with the closure main SHA.
 4. Close WP27-013..018 and issue #70 only if all P0 remain successful.
 5. Close M2 milestone and initiate M3.
+
+## 7. Post-merge closure verification (2026-11-02)
+
+- **PR-72**: merged on `main`, merge commit `c6122ca17a23abd299fc4098aa29a8797ca3923a`.
+- **PR verification**: run [41453150814](https://github.com/tawounfouet/pyauthkit/actions/runs/41453150814), seven mandatory jobs successful. GitGuardian is a separate scan; it does not increase the required job count.
+- **Protected main**: run [41453376670](https://github.com/tawounfouet/pyauthkit/actions/runs/41453376670), seven of seven required jobs successful, verified by checking individual job conclusions.
+- **Integrated test logs**: exactly `104 passed in 3.35s` with pytest 9.2.0 on Python 3.12.15; strict mypy reports `Success: no issues found in 23 source files`. Ruff, architecture, packaging and security scans green.
+- **Engineering determination**: all 24 M2-T01..24 cases have traceable assertions, and the 14 G3 criteria have satisfied technical evidence except the separate gate-issue administrative sign-off. The formal decision belongs in [GATE27-03 issue #70](https://github.com/tawounfouet/pyauthkit/issues/70).
+- **Scope restriction**: the qualified host trust model is an explicit trusted catalog and preflight. A production framework/reverse-proxy adapter with independently verified route provenance is NOT part of this M2 GO. Real password authentication, sessions, IAM, production readiness, release, independent audit and reproducibility certification are NOT asserted. Issues #63 and #64 stay open.
+- **Work package closure**: WP27-013..018 may be marked completed only for bounded M2 responsibilities after gate sign-off. GitHub milestone closure is a separate administrative operation and must not be inferred from issue closures.
