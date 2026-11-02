@@ -33,9 +33,15 @@ def main() -> int:
             for n in names
         ):
             raise RuntimeError("test-only fake or test module leaked into runtime wheel")
-        for required in ("pyauthkit/application/engine.py", "pyauthkit/ports/authenticator.py"):
+        for required in (
+            "pyauthkit/application/engine.py",
+            "pyauthkit/ports/authenticator.py",
+            "pyauthkit/adapters/password/authenticator.py",
+            "pyauthkit/adapters/password/argon2id.py",
+            "pyauthkit/ports/password_guard.py",
+        ):
             if required not in names:
-                raise RuntimeError(f"M2 runtime contract missing from wheel: {required}")
+                raise RuntimeError(f"runtime contract missing from wheel: {required}")
     with tarfile.open(archives[0], "r:gz") as tf:
         names = tf.getnames()
         if not any(name.endswith("/pyproject.toml") for name in names):

@@ -2,68 +2,87 @@
 
 A modular, framework-agnostic authentication engine for the Python ecosystem.
 
-> **State:** M0 bootstrap and governance (in progress). No password, API key or JWT verification is implemented.
-> Nothing in this repository is security-qualified or production-ready.
+> **Current main:** M2 engine and ports qualified for their limited scope. Main is
+> **not a production authentication system**.
+>
+> **M3 candidate:** Password Authentication in [draft PR #75](https://github.com/tawounfouet/pyauthkit/pull/75).
+> [GATE27-04 #74](https://github.com/tawounfouet/pyauthkit/issues/74)
+> remains OPEN / NOT QUALIFIED. No release or deployment is authorized.
 
-## Documentation
+## Architecture and trust
 
-- [Specification index](docs/specs/README.md) - 29 numbered design documents (00-28) and the Software Design & Learning convention.
-- [Implementation roadmap](docs/specs/27_PYAUTHKIT_IMPLEMENTATION_ROADMAP.md) - milestones M0-M9, beginning with M0 and PR-01.
-- [Bootstrap plan](docs/specs/28_PYAUTHKIT_IMPLEMENTATION_BOOTSTRAP_PLAN.md) - initial implementation and qualification plan.
-- [Software Design & Learning convention](docs/specs/PYAUTHKIT_SOFTWARE_DESIGN_LEARNING_CONVENTION.md) - documentation and design methodology.
+PyAuthKit separates **proof of authentication** from IAM identity mapping,
+authorization, sessions, tokens and delegation. A request's username and
+password are untrusted. The application host establishes approved
+`TrustedEntryContext`, `TrustedScopeRef` and policy before the engine may
+select a verifier. Only the M2 `AuthenticationPolicyGate` issues the final
+`Authenticated` result.
 
-Authentication and authorization remain separate responsibilities. Consult the specifications for the intended scope, open decisions and test expectations.
+M3's proposed password path uses:
 
-## Scope
+1. A **source-scoped** `PasswordCredentialResolver` returning explicit
+   `Found | Missing | Ambiguous | Unavailable` variants.
+2. A real `argon2-cffi` **Argon2id-only** verifier with strict PHC
+   algorithm/version/parameter bounds.
+3. A bounded per-process `KDFWorkerPool`, retaining capacity after async
+   cancellation until native work actually completes.
+4. A **required host-supplied** `PasswordAttemptGuard` with no permissive
+   production default. Network rate limiting, distributed quotas and
+   response shaping remain the host's responsibility.
+5. A `PasswordAuthenticator` implementing the M2 async SPI, with state,
+   expiry, scope and optional source-freshness checks before returning an
+   internal positive outcome. M2 still applies its mandatory final policy.
 
-The planned MVP verifies *presented evidence* only within a host-approved trusted
-context. Authentication does **not** imply an IAM account, authorization,
-session, token issuance, or delegated rights. PyIAMKit is a distinct concern.
+M3 has no password registration, reset, change, local SQL store, MFA,
+session/token issuance, IAM permission, automatic rehash write or HTTP login UI.
+The in-memory resolver is a test/demo snapshot, not a persistent auth store.
 
-## PR-01: minimal Python package
+## Development
 
-The first delivery is limited to wheel/sdist packaging, import/version checks,
-a syntactic scope reference, security reporting guidance, and the governance
-decisions still awaiting approval.
+Python >=3.12; install core development dependencies:
 
-### Setup (candidate toolchain)
-
-Requires Python >=3.12 (proposal pending ADR review).
-
-```shell
-python -m venv .venv
-source .venv/bin/activate
+```sh
 python -m pip install -e '.[dev]'
 python -m pytest
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy src/pyauthkit
-python -m build
 ```
 
-Use `.venv\\Scripts\\activate` on Windows. Run wheel installation and
-import in a *fresh environment* before signing off the packaging gate.
+For the opt-in M3 cryptographic implementation and its tests:
 
-## Planning and decision records
+```sh
+python -m pip install -e '.[dev,password]'
+python -m pytest -v
+```
 
-- GitHub Issues `WP27-001` through `WP27-053` track the MVP backlog.
-- M0 through M9 and exit gates GATE27-01 through GATE27-10 are tracked in GitHub; M0 is not yet qualified.
-- The repository's `.github/workflows/bootstrap-planning.yml` is an
-  idempotent synchronization job for milestones and labels.
-- `docs/adr/` records decisions (MIT licensing accepted) and open issues (Python support/qualification).
-- Canonical design sources: [implementation roadmap](docs/specs/27_PYAUTHKIT_IMPLEMENTATION_ROADMAP.md) and
-  [bootstrap plan](docs/specs/28_PYAUTHKIT_IMPLEMENTATION_BOOTSTRAP_PLAN.md).
+The core package has **no unconditional Argon2 dependency**. Building a wheel
+does not qualify a verifier or a specific deployment. A host must provide an
+approved, scoped credential source, a mandatory admission guard, an approved
+dummy Argon2id hash, bounded workers, final policy, audit integration and
+security review before any live usage.
 
-## Security
+## Source documents
 
-See [SECURITY.md](SECURITY.md). Do not open public issues containing passwords,
-API keys, tokens, private keys, or personal data.
+- [Product and system specifications](docs/specs/README.md)
+- [Software Design & Learning convention](docs/specs/PYAUTHKIT_SOFTWARE_DESIGN_LEARNING_CONVENTION.md)
+- [Roadmap M0-M9](docs/specs/27_PYAUTHKIT_IMPLEMENTATION_ROADMAP.md)
+- [PR-06 execution record](docs/roadmap/PR-06_EXECUTION.md)
+- [M3 security oracles](docs/qualification/M3_PR06_SECURITY_ORACLES.md)
+- [GATE27-04 issue](https://github.com/tawounfouet/pyauthkit/issues/74)
 
-**Not a login system yet.** No `authenticate()` success path is provided.
+## Security status and limitations
 
-Do not use this repository for production authentication until the relevant
-security qualification gates are complete.
+M2 qualification does **not** automatically qualify M3. Even when all CI
+checks pass, production suitability requires review of 40 M3 scenarios,
+deployment-specific rate limiting, actual credential-store consistency,
+benchmarking of Argon2 memory/latency and a signed gate. A verifier in a Python
+process is not a sandbox against malicious host code. Failed attempts must
+not emit raw passwords, hashes or untrusted identifiers into audit channels.
+
+See [SECURITY.md](SECURITY.md) for private security reporting. Do not post
+credentials or personal data in public issues.
 
 ## License
 
-PyAuthKit is licensed under the [MIT License](LICENSE). See `LICENSE` for the complete terms and required copyright notice.
+PyAuthKit is licensed under the [MIT License](LICENSE).
