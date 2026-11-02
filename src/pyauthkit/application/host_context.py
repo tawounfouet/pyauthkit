@@ -117,7 +117,10 @@ class HostTrustCatalog:
             entries[binding.route_id] = entry
         if not entries:
             raise ValueError("empty host trust catalog")
-        self._entries = MappingProxyType(entries)
+        object.__setattr__(self, "_entries", MappingProxyType(entries))
+
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("host trust catalog cannot be mutated")
 
     def resolve_for_host_route(self, route_id: str) -> TrustedEntryContext:
         """Resolve ONLY a host-validated route, never a request-selected tenant."""

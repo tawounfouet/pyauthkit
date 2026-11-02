@@ -1,27 +1,28 @@
-"""M2 AuthenticationPolicyGate preflight: deny by default, no final success.
+"""Host-controlled preflight and mandatory final authentication decision.
 
-Security invariant: an authenticator is not allowed to make a final
-authentication decision. PR-05 will separately implement the final
-verification-to-result policy transition.
+A verifier returns an *internal* outcome. Neither preflight nor a verifier
+may create a final principal without a coherent verified outcome and allow.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
+from pyauthkit.domain._verified import VerifiedSubject
 from pyauthkit.domain.failure import TechnicalErrorCode
+from pyauthkit.domain.outcome import VerifiedOutcome
 from pyauthkit.domain.request import AuthenticationRequest
-from pyauthkit.domain.result import AuthError, Rejected
+from pyauthkit.domain.result import Authenticated, AuthError, Rejected
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
+from pyauthkit.ports.authenticator import VerificationContext
 
+from ._verification import _issue_authenticated, _verified_matches_attempt
 from .host_context import HostTrustCatalog, TrustedEntryContext
 
 
 @dataclass(frozen=True, slots=True, repr=False)
 class VerificationPermitted:
-    """Preflight permission to attempt verification, NOT authentication.
-
-    No principal, verification evidence, or positive result status is issued.
-    """
+    """Preflight permits an attempt, NEVER a final authentication result."""
 
     correlation_id: CorrelationId
     profile_ref: TrustProfileRef
@@ -31,30 +32,32 @@ class VerificationPermitted:
 
 
 type PreflightOutcome = VerificationPermitted | Rejected | AuthError
+type FinalRule = Callable[[VerifiedSubject, TrustedEntryContext], bool]
 
 
 class AuthenticationPolicyGate:
-    """Pre-verification policy guard over host-owned active bindings.
+    """Two decisions: admission before verification, explicit allow after it."""
 
-    [SECURITY: Complete Mediation / Fail Closed] PR-04 deliberately does
-    NOT include final positive AuthenticationResult construction.
-    """
+    __slots__ = ("_catalog", "_final_rule")
 
-    __slots__ = ("_catalog",)
+    _catalog: HostTrustCatalog
+    _final_rule: FinalRule | None
 
-    def __init__(self, catalog: HostTrustCatalog) -> None:
+    def __init__(self, catalog: HostTrustCatalog, *, final_rule: FinalRule | None = None) -> None:
         if not isinstance(catalog, HostTrustCatalog):
             raise ValueError("invalid host trust catalog")
-        self._catalog = catalog
+        if final_rule is not None and not callable(final_rule):
+            raise ValueError("invalid final policy")
+        object.__setattr__(self, "_catalog", catalog)
+        object.__setattr__(self, "_final_rule", final_rule)
+
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("authentication policy cannot be mutated")
 
     def preflight(
         self, request: AuthenticationRequest, *, entry: TrustedEntryContext
     ) -> PreflightOutcome:
-        """Permit an attempt only for the catalog's host-issued entry.
-
-        A claimed tenant is an untrusted lookup hint: it can cause denial if
-        inconsistent, but it may never select the scope/profile.
-        """
+        """Reject unknown host bindings, foreign tenant hints and disabled methods."""
         if not isinstance(request, AuthenticationRequest):
             raise ValueError("invalid authentication request")
         if not self._catalog.owns(entry):
@@ -66,3 +69,35 @@ class AuthenticationPolicyGate:
         if request.evidence.method not in entry.allowed_methods:
             return Rejected(request.correlation_id)
         return VerificationPermitted(request.correlation_id, entry.profile_ref)
+
+    def final_decision(
+        self,
+        request: AuthenticationRequest,
+        *,
+        entry: TrustedEntryContext,
+        context: VerificationContext,
+        outcome: VerifiedOutcome,
+    ) -> Authenticated | Rejected | AuthError:
+        """Internal transition. A positive adapter outcome alone is insufficient."""
+        correlation_id = request.correlation_id
+        if not self._catalog.owns(entry):
+            return AuthError(correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
+        if (
+            context.correlation_id != correlation_id
+            or context.profile_ref != entry.profile_ref
+            or context.scope_ref != entry.scope_ref
+            or context.method != request.evidence.method
+            or context.method not in entry.allowed_methods
+            or not isinstance(outcome, VerifiedOutcome)
+            or not _verified_matches_attempt(outcome, context)
+        ):
+            return AuthError(correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
+        if self._final_rule is None:
+            return Rejected(correlation_id)
+        try:
+            approved = self._final_rule(outcome.subject, entry)
+        except Exception:
+            return AuthError(correlation_id, TechnicalErrorCode.INTERNAL_ERROR)
+        if approved is not True:
+            return Rejected(correlation_id)
+        return _issue_authenticated(outcome.subject, correlation_id)

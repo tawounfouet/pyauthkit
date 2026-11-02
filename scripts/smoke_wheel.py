@@ -27,6 +27,15 @@ def main() -> int:
             raise RuntimeError("wheel has no package init")
         if any(n.startswith(("tests/", "docs/", "scripts/")) or "/fixtures/" in n for n in names):
             raise RuntimeError("test, fixture or source-document content leaked into wheel")
+        if any(
+            n.startswith("pyauthkit/")
+            and ("fake" in Path(n).stem or Path(n).stem.startswith("test_"))
+            for n in names
+        ):
+            raise RuntimeError("test-only fake or test module leaked into runtime wheel")
+        for required in ("pyauthkit/application/engine.py", "pyauthkit/ports/authenticator.py"):
+            if required not in names:
+                raise RuntimeError(f"M2 runtime contract missing from wheel: {required}")
     with tarfile.open(archives[0], "r:gz") as tf:
         names = tf.getnames()
         if not any(name.endswith("/pyproject.toml") for name in names):
@@ -46,6 +55,8 @@ def main() -> int:
         script = (
             "import pyauthkit, importlib.metadata, pathlib; "
             "from pyauthkit.domain.scope import TrustedScopeRef; "
+            "from pyauthkit.application.engine import AuthenticationEngine; "
+            "from pyauthkit.composition.registry import AuthenticatorRegistryBuilder; "
             "assert pyauthkit.__version__ == importlib.metadata.version('pyauthkit'); "
             "assert TrustedScopeRef('tenant-a').value == 'tenant-a'; "
             "path = pathlib.Path(pyauthkit.__file__).resolve(); "

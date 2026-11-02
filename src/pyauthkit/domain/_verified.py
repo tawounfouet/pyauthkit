@@ -31,5 +31,8 @@ class VerifiedSubject:
     def __new__(cls, *_args: object, **_kwargs: object) -> Never:
         raise TypeError("verified subjects require an approved verifier")
 
+    def __setattr__(self, _name: str, _value: object) -> None:
+        raise AttributeError("verified subject is immutable")
+
     def __repr__(self) -> str:
         return "VerifiedSubject(<redacted, restricted>)"
