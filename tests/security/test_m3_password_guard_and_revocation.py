@@ -21,12 +21,18 @@ from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
 from pyauthkit.password.capacity import KDFWorkerPool
-from pyauthkit.password.records import PasswordRecordFound, PasswordRecordStatus, PasswordVerifierRecord
+from pyauthkit.password.records import (
+    PasswordRecordFound,
+    PasswordRecordStatus,
+    PasswordVerifierRecord,
+)
 from pyauthkit.ports.authenticator import VerificationContext
 
 
 def real_hash(secret: bytes) -> str:
-    return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(secret)
+    return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(
+        secret
+    )
 
 
 class Guard:
@@ -90,10 +96,13 @@ def components(
     return authenticator, resolver, workers, scope
 
 
-@pytest.mark.parametrize(("allow", "fail", "expected"), [
-    (False, False, RejectedOutcome),
-    (True, True, ErrorOutcome),
-])
+@pytest.mark.parametrize(
+    ("allow", "fail", "expected"),
+    [
+        (False, False, RejectedOutcome),
+        (True, True, ErrorOutcome),
+    ],
+)
 def test_guard_denial_or_outage_blocks_resolver_and_kdf(
     allow: bool, fail: bool, expected: type[object]
 ) -> None:
@@ -140,7 +149,14 @@ def test_revalidated_revocation_refuses_correct_password_before_final_gate() -> 
     authenticator, resolver, workers, scope = components(guard)
     resolver.current = False
     catalog = HostTrustCatalog(
-        [HostBinding("route", scope, TrustProfileRef("p", "v1", scope), frozenset({EvidenceMethod.PASSWORD}))]
+        [
+            HostBinding(
+                "route",
+                scope,
+                TrustProfileRef("p", "v1", scope),
+                frozenset({EvidenceMethod.PASSWORD}),
+            )
+        ]
     )
     engine = AuthenticationEngine(
         policy=AuthenticationPolicyGate(catalog, final_rule=lambda _subject, _entry: True),
