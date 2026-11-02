@@ -8,6 +8,7 @@ import asyncio
 import math
 import time
 from collections.abc import Callable
+from typing import Literal
 
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.failure import DomainTechnicalError, TechnicalErrorCode
@@ -18,7 +19,7 @@ from pyauthkit.domain.outcome import (
     normalize_non_success,
 )
 from pyauthkit.domain.request import AuthenticationRequest
-from pyauthkit.domain.result import Authenticated, AuthError, AuthenticationResult, Rejected
+from pyauthkit.domain.result import Authenticated, AuthenticationResult, AuthError, Rejected
 from pyauthkit.ports.authenticator import AuthenticatorLookup, VerificationContext
 from pyauthkit.ports.events import AuthenticationEvent, AuthenticationEventSink
 
@@ -118,6 +119,7 @@ class AuthenticationEngine:
     ) -> None:
         if self._sink is None:
             return
+        status: Literal["AUTHENTICATED", "REJECTED", "ERROR"]
         if isinstance(result, Authenticated):
             status = "AUTHENTICATED"
         elif isinstance(result, Rejected):
