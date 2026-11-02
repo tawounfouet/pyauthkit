@@ -1,7 +1,7 @@
 """No auto-discovery: a bootstrap builder creates one frozen verifier snapshot."""
 
+from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Mapping
 
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.ports.authenticator import Authenticator
