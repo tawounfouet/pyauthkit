@@ -354,3 +354,29 @@ def test_m2_t23_post_bootstrap_verifier_method_drift_is_rejected() -> None:
     assert result.error_code is TechnicalErrorCode.INVALID_TRUST_CONFIGURATION
     assert fake.calls == 0
     assert gate.final_calls == 0
+
+
+def test_m2_t16_cancellation_during_async_audit_does_not_return_success() -> None:
+    class BlockingAuditSink:
+        def __init__(self) -> None:
+            self.entered = asyncio.Event()
+
+        async def emit(self, event: AuthenticationEvent) -> None:
+            self.entered.set()
+            await asyncio.Event().wait()
+
+    async def scenario() -> None:
+        sink = BlockingAuditSink()
+        engine, fake, gate, catalog = harness(allow=True, sink=sink)
+        task = asyncio.create_task(
+            engine.authenticate(request(), entry=catalog.resolve_for_host_route("host-route-a"))
+        )
+        await asyncio.wait_for(sink.entered.wait(), timeout=1.0)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert task.cancelled()
+        assert fake.calls == 1
+        assert gate.final_calls == 1
+
+    asyncio.run(scenario())
