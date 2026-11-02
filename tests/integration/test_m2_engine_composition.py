@@ -44,11 +44,15 @@ def test_m2_t17_concurrent_tenants_are_cryptographically_unclaimed_but_scope_iso
     catalog = HostTrustCatalog(
         [
             HostBinding(
-                "route-a", scope_a, TrustProfileRef("profile", "v1", scope_a),
+                "route-a",
+                scope_a,
+                TrustProfileRef("profile", "v1", scope_a),
                 frozenset({EvidenceMethod.JWT}),
             ),
             HostBinding(
-                "route-b", scope_b, TrustProfileRef("profile", "v1", scope_b),
+                "route-b",
+                scope_b,
+                TrustProfileRef("profile", "v1", scope_b),
                 frozenset({EvidenceMethod.JWT}),
             ),
         ]
@@ -85,10 +89,14 @@ def test_m2_t17_concurrent_tenants_are_cryptographically_unclaimed_but_scope_iso
 def test_m2_t08_t23_host_catalog_registry_engine_and_policy_are_not_mutable() -> None:
     scope = TrustedScopeRef("tenant-a")
     catalog = HostTrustCatalog(
-        [HostBinding(
-            "route-a", scope, TrustProfileRef("p", "v1", scope),
-            frozenset({EvidenceMethod.JWT}),
-        )]
+        [
+            HostBinding(
+                "route-a",
+                scope,
+                TrustProfileRef("p", "v1", scope),
+                frozenset({EvidenceMethod.JWT}),
+            )
+        ]
     )
     builder = AuthenticatorRegistryBuilder()
     builder.register(ScopedVerifier())
