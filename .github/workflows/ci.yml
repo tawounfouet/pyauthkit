@@ -37,7 +37,9 @@ jobs:
       - name: Ruff lint
         run: python -m ruff check .
       - name: Ruff format
-        run: python -m ruff format --check .
+        run: |
+          python -m ruff format --diff .
+          python -m ruff format --check .
       - name: Mypy strict
         run: python -m mypy src/pyauthkit
       - name: Tests

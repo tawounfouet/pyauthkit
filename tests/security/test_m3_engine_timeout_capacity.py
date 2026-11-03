@@ -17,7 +17,11 @@ from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
 from pyauthkit.password.capacity import KDFWorkerPool
-from pyauthkit.password.records import PasswordRecordFound, PasswordRecordStatus, PasswordVerifierRecord
+from pyauthkit.password.records import (
+    PasswordRecordFound,
+    PasswordRecordStatus,
+    PasswordVerifierRecord,
+)
 
 
 class PermitFixtureGuard:
