@@ -37,9 +37,7 @@ class PermitFixture:
 
 
 def encoded(phrase: bytes) -> str:
-    return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(
-        phrase
-    )
+    return PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(phrase)
 
 
 def make_request(phrase: bytes, trace: str) -> AuthenticationRequest:
@@ -83,11 +81,15 @@ def test_m3_t15_real_two_tenants_same_username_have_independent_proofs() -> None
     catalog = HostTrustCatalog(
         [
             HostBinding(
-                "route-a", scope_a, TrustProfileRef("p", "v1", scope_a),
+                "route-a",
+                scope_a,
+                TrustProfileRef("p", "v1", scope_a),
                 frozenset({EvidenceMethod.PASSWORD}),
             ),
             HostBinding(
-                "route-b", scope_b, TrustProfileRef("p", "v1", scope_b),
+                "route-b",
+                scope_b,
+                TrustProfileRef("p", "v1", scope_b),
                 frozenset({EvidenceMethod.PASSWORD}),
             ),
         ]
@@ -146,7 +148,9 @@ def test_m3_t09_delayed_source_is_timed_out_without_fallback_or_success() -> Non
     catalog = HostTrustCatalog(
         [
             HostBinding(
-                "route", scope, TrustProfileRef("p", "v1", scope),
+                "route",
+                scope,
+                TrustProfileRef("p", "v1", scope),
                 frozenset({EvidenceMethod.PASSWORD}),
             )
         ]
