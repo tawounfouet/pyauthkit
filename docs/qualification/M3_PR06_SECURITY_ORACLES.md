@@ -1,60 +1,66 @@
 # PyAuthKit M3 - Qualification matrix M3-T01 to M3-T40
 
-- Date: 2026-11-02
+- Date: 2026-11-03
 - Source of truth: uploaded `2026-11-02_PYAUTHKIT_M3_PASSWORD_AUTHENTICATION_IMPLEMENTATION_PLAN.md` section 13.
 - Candidate: [PR #75](https://github.com/tawounfouet/pyauthkit/pull/75), DRAFT.
 - Gate: [GATE27-04 #74](https://github.com/tawounfouet/pyauthkit/issues/74), OPEN.
-- Qualification state: **NOT QUALIFIED**.
-- `NOT_RUN` means the individual oracle was not independently signed off, even if a related pytest function passed. Automated CI results are kept in the PR execution record. Each oracle needs explicit observed result, SHA, platform, run link and reviewer before being marked PASS.
+- Qualification state: **NOT QUALIFIED / NO-GO**. Last code-only verified baseline: `126fd2eb3e0858ce18218a78b8adf02c46a94937`, CI [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865), 7/7, 160 pytest tests. Subsequent documentation commits require a fresh CI on their own HEAD.
+- Colonne **Observé sur CI** = preuve d'exécution technique, pas approbation. **Statut formel** reste `INCONCLUSIVE` sans revue indépendante et décision d'acceptation; `T24` est `NOT_RUN` faute de host réel. `T25` et `T26` sont partiels sur les canaux réseau. Un statut PASS formel n'est pas attribué par l'assistant.
 
-| Oracle | Scenario | Independent expected outcome | Existing or missing evidence candidate | Qualified status |
-|---|---|---|---|---|
-| M3-T01 | Mot de passe correct, ACTIVE, décision finale ALLOW | AUTHENTICATED, sujet du record, une vérification KDF | `tests/integration/test_m3_password_engine.py` | NOT_RUN |
-| M3-T02 | Secret correct, décision finale DENY | REJECTED malgré match crypto | `tests/integration/test_m3_password_engine.py` | NOT_RUN |
-| M3-T03 | Mot de passe incorrect | REJECTED sans VerifiedOutcome | `tests/integration/test_m3_password_engine.py` | NOT_RUN |
-| M3-T04 | Compte absent | REJECTED sans fuite du statut | `tests/integration/test_m3_password_engine.py` | NOT_RUN |
-| M3-T05 | SUSPENDED/DISABLED | REJECTED sans succès | `tests/integration/test_m3_password_engine.py` | NOT_RUN |
-| M3-T06 | REVOKED | REJECTED sans succès | `tests/integration/test_m3_password_engine.py` | NOT_RUN |
-| M3-T07 | Expiré, frontière temporelle | REJECTED, vérification UTC | `tests/integration/test_m3_password_engine.py` | NOT_RUN |
-| M3-T08 | Résolution ambiguë | REJECTED, aucun choix arbitraire | `tests/contract/test_m3_password_resolver_contract.py` | NOT_RUN |
-| M3-T09 | Store indisponible | AuthError, aucun fallback | `PENDING` | NOT_RUN |
-| M3-T10 | Hash corrompu | Aucun succès ni exception brute | `tests/integration/test_m3_password_engine.py` | NOT_RUN |
-| M3-T11 | Argon2i/Argon2d | Refus avant KDF | `tests/crypto/test_m3_argon2id.py` | NOT_RUN |
-| M3-T12 | PHC m/t/p supérieur aux limites | Refus avant KDF | `tests/crypto/test_m3_argon2id.py` | NOT_RUN |
-| M3-T13 | PHC faible/version interdite | Refus sans downgrade | `tests/crypto/test_m3_argon2id.py` | NOT_RUN |
-| M3-T14 | Vecteurs crypto Argon2id indépendants | Vecteurs reproductibles, corruption | `PARTIAL: generated with same library` | NOT_RUN |
-| M3-T15 | Cross-tenant subject/credential | Jamais AUTHENTICATED pour autre tenant | `tests/security/test_m3_password_adversarial.py` | NOT_RUN |
-| M3-T16 | claimed_tenant non approuvé | Rejet avant KDF | `tests/security/test_m3_password_adversarial.py` | NOT_RUN |
-| M3-T17 | Route absente/contexte étranger | Pas de lookup/KDF | `M2 tests, M3-specific proof PENDING` | NOT_RUN |
-| M3-T18 | Tentative de falsification VerifiedOutcome | Refus du policy gate | `M2 adversarial tests` | NOT_RUN |
-| M3-T19 | Retour Authenticated par adaptateur | Moteur refuse | `M2 adversarial tests` | NOT_RUN |
-| M3-T20 | Annulation pendant KDF | Aucun succès, capacité réservée | `tests/security/test_m3_kdf_capacity.py` | NOT_RUN |
-| M3-T21 | Timeout pendant KDF | Pas de succès tardif | `M2 timeout tests + M3 PENDING` | NOT_RUN |
-| M3-T22 | 100+ clients concurrents | Concurrence/mémoire bornées | `PENDING: load test` | NOT_RUN |
-| M3-T23 | Guard absent ou indisponible | Bootstrap/admission fail-closed | `tests/security/test_m3_password_guard_and_revocation.py` | NOT_RUN |
-| M3-T24 | Guard multi-tenant/multi-source | Compteurs et isolation de chaque tenant | `PENDING: host adapter` | NOT_RUN |
-| M3-T25 | Tous refus publics | Codes/messages équivalents | `PARTIAL: outcomes; host HTTP PENDING` | NOT_RUN |
-| M3-T26 | Analyse statistique des timings | Rapport d'énumération et limites | `PENDING: benchmark` | NOT_RUN |
-| M3-T27 | Secret canary en exceptions/log/audit | Absence de secret exposé | `PARTIAL: repr tests` | NOT_RUN |
-| M3-T28 | Hash ou login brut dans audit | Aucune fuite en event/audit | `PENDING: dedicated audit test` | NOT_RUN |
-| M3-T29 | Registry sans PASSWORD | Aucun auto-enregistrement | `M2 registry tests` | NOT_RUN |
-| M3-T30 | Wheel sans extra password | Import M2 sans Argon2 obligatoire | `scripts/smoke_wheel.py` | NOT_RUN |
-| M3-T31 | Wheel avec extra, cinq plateformes | Argon2id réel dans wheel isolé | `scripts/smoke_wheel.py + CI matrix` | NOT_RUN |
-| M3-T32 | needs_rehash true | Pas d'écriture pendant authenticate | `PARTIAL: readonly API` | NOT_RUN |
-| M3-T33 | Révocation pendant KDF | Revalidation et refus | `tests/security/test_m3_password_guard_and_revocation.py` | NOT_RUN |
-| M3-T34 | Identifiant/secret mal formés ou énormes | Validation bornée avant KDF | `M1/M2 validation, M3 PENDING` | NOT_RUN |
-| M3-T35 | Octets Unicode, espaces, normalisation | Aucune transformation implicite | `PENDING: dedicated tests` | NOT_RUN |
-| M3-T36 | Non-régression M1/M2 | 104 tests antérieurs inchangés et verts | `CI pytest tests; baseline count review` | NOT_RUN |
-| M3-T37 | Deux implémentations de resolver | Contract tests identiques | `tests/contract/test_m3_password_resolver_contract.py` | NOT_RUN |
-| M3-T38 | p50/p95/p99 KDF et RSS | Benchmark consigné | `PENDING: bench` | NOT_RUN |
-| M3-T39 | Fault injection fermeture workers | Arrêt sans fuite non bornée | `PENDING: shutdown faults` | NOT_RUN |
-| M3-T40 | Legacy needs_rehash | Lecture seule ou CAS qualifié | `PENDING: legacy policy` | NOT_RUN |
+| Oracle | Scénario | Résultat attendu | Test / preuve (racine `tests/` sauf script) | Observé sur CI | SHA testé | CI Run | Reviewer indépendant | Statut formel |
+|---|---|---|---|---|---|---|---|---|
+| M3-T01 | Mot de passe correct, ACTIVE, décision finale ALLOW | AUTHENTICATED, sujet du record, une vérification KDF | `integration/test_m3_password_engine.py::test_real_m3_engine_flow_and_final_policy` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T02 | Secret correct, décision finale DENY | REJECTED malgré match crypto | `integration/test_m3_password_engine.py::test_real_m3_engine_flow_and_final_policy` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T03 | Mot de passe incorrect | REJECTED sans VerifiedOutcome | `crypto/test_m3_argon2id.py::test_real_argon2id_correct_and_incorrect_password` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T04 | Compte absent | REJECTED sans fuite du statut | `security/test_m3_failure_equivalence_audit.py::test_m3_t25_missing_wrong_revoked_ambiguous_and_no_hint_share_denial` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T05 | SUSPENDED/DISABLED | REJECTED sans succès | `integration/test_m3_password_engine.py::test_inadmissible_credential_rejected_even_with_right_password` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T06 | REVOKED | REJECTED sans succès | `integration/test_m3_password_engine.py::test_inadmissible_credential_rejected_even_with_right_password` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T07 | Expiré, frontière temporelle | REJECTED, vérification UTC | `security/test_m3_revocation_unicode_and_rehash.py::test_m3_t07_expiration_exact_utc_instant_is_rejected` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T08 | Résolution ambiguë | REJECTED, aucun choix arbitraire | `contract/test_m3_password_resolver_contract.py::test_m3_ambiguous_and_foreign_scope_never_return_verified_record` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T09 | Store indisponible | AuthError, aucun fallback | `integration/test_m3_scope_and_store_timeouts.py::test_m3_t09_delayed_source_is_timed_out_without_fallback_or_success` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T10 | Hash corrompu | Aucun succès ni exception brute | `crypto/test_m3_published_argon2id_vector.py::test_m3_t10_corrupted_published_tag_never_authenticates` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T11 | Argon2i/Argon2d | Refus avant KDF | `crypto/test_m3_argon2id.py::test_malicious_and_alternative_phc_rejected_before_kdf` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T12 | PHC m/t/p supérieur aux limites | Refus avant KDF | `crypto/test_m3_published_argon2id_vector.py::test_m3_t11_t12_t13_published_vector_unsafe_mutations_refused` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T13 | PHC faible/version interdite | Refus sans downgrade | `crypto/test_m3_argon2id.py::test_disabled_kdf_downgrade_profiles_are_rejected` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T14 | Vecteurs crypto Argon2id indépendants | Vecteurs reproductibles, corruption | `crypto/test_m3_published_argon2id_vector.py::test_m3_t14_published_argon2id_vector_interoperates_with_adapter` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T15 | Cross-tenant subject/credential | Jamais AUTHENTICATED pour autre tenant | `integration/test_m3_scope_and_store_timeouts.py::test_m3_t15_real_two_tenants_same_username_have_independent_proofs` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T16 | claimed_tenant non approuvé | Rejet avant KDF | `security/test_m3_password_adversarial.py::test_host_preflight_blocks_claimed_foreign_tenant` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T17 | Route absente/contexte étranger | Pas de lookup/KDF | `security/test_m2_engine_adversarial.py::test_m2_t02_t03_foreign_tenant_and_unknown_route` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T18 | Tentative de falsification VerifiedOutcome | Refus du policy gate | `security/test_m2_engine_adversarial.py::test_m2_t11_foreign_positive_outcomes_fail_before_final_gate` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T19 | Retour Authenticated par adaptateur | Moteur refuse | `security/test_m2_engine_adversarial.py::test_m2_t24_verifier_cannot_return_final_authenticated_itself` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T20 | Annulation pendant KDF | Aucun succès, capacité réservée | `security/test_m3_kdf_capacity.py::test_kdf_capacity_exhaustion_is_fail_closed` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T21 | Timeout pendant KDF | Pas de succès tardif | `security/test_m3_engine_timeout_capacity.py::test_m3_t21_timeout_never_grants_late_success_or_releases_busy_worker` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T22 | 100+ clients concurrents | Concurrence/mémoire bornées | `security/test_m3_concurrency_stress.py::test_m3_t22_120_simultaneous_attempts_bounded_workers_and_queue` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T23 | Guard absent ou indisponible | Bootstrap/admission fail-closed | `security/test_m3_password_guard_and_revocation.py::test_guard_denial_or_outage_blocks_resolver_and_kdf` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T24 | Guard multi-tenant/multi-source | Compteurs et isolation de chaque tenant | `HOST ADAPTER NOT PROVIDED` | NOT_RUN (host absent) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | NOT_RUN |
+| M3-T25 | Tous refus publics | Codes/messages équivalents | `security/test_m3_failure_equivalence_audit.py::test_m3_t25_missing_wrong_revoked_ambiguous_and_no_hint_share_denial` | PARTIAL (résultats library seulement) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T26 | Analyse statistique des timings | Rapport d'énumération et limites | `scripts/benchmark_m3_password.py (18 observations x 3)` | PARTIAL (benchmark CI, sans HTTP) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T27 | Secret canary en exceptions/log/audit | Absence de secret exposé | `security/test_m3_failure_equivalence_audit.py::test_m3_t27_t28_audit_event_never_contains_hash_or_login_canary` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T28 | Hash ou login brut dans audit | Aucune fuite en event/audit | `security/test_m3_failure_equivalence_audit.py::test_m3_t27_t28_audit_event_never_contains_hash_or_login_canary` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T29 | Registry sans PASSWORD | Aucun auto-enregistrement | `security/test_m3_failure_equivalence_audit.py::test_m3_t29_registry_does_not_auto_register_password` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T30 | Wheel sans extra password | Import M2 sans Argon2 obligatoire | `scripts/smoke_wheel.py (isolated core)` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T31 | Wheel avec extra, cinq plateformes | Argon2id réel dans wheel isolé | `scripts/smoke_wheel.py (password extra + five runners)` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T32 | needs_rehash true | Pas d'écriture pendant authenticate | `security/test_m3_revocation_unicode_and_rehash.py::test_m3_t40_legacy_tag_size_needs_rehash_but_authn_is_read_only` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T33 | Révocation pendant KDF | Revalidation et refus | `security/test_m3_revocation_unicode_and_rehash.py::test_m3_t33_revocation_during_post_kdf_freshness_check_is_rejected` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T34 | Identifiant/secret mal formés ou énormes | Validation bornée avant KDF | `security/test_m3_failure_equivalence_audit.py::test_m3_t34_malformed_or_oversized_evidence_rejected_before_kdf` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T35 | Octets Unicode, espaces, normalisation | Aucune transformation implicite | `security/test_m3_revocation_unicode_and_rehash.py::test_m3_t35_unicode_bytes_are_not_normalized_or_truncated` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T36 | Non-régression M1/M2 | 104 tests antérieurs inchangés et verts | `CI pytest -v (104 M1/M2 tests plus 56 M3 cases)` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T37 | Deux implémentations de resolver | Contract tests identiques | `contract/test_m3_password_resolver_contract.py::test_m3_scoped_lookup_missing_found_ambiguous_and_no_global_fallback` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T38 | p50/p95/p99 KDF et RSS | Benchmark consigné | `scripts/benchmark_m3_password.py (p50/p95/p99 + RSS)` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T39 | Fault injection fermeture workers | Arrêt sans fuite non bornée | `security/test_m3_concurrency_stress.py::test_m3_t39_shutdown_drains_running_native_work_and_refuses_new_jobs` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
+| M3-T40 | Legacy needs_rehash | Lecture seule ou CAS qualifié | `security/test_m3_revocation_unicode_and_rehash.py::test_m3_t40_legacy_tag_size_needs_rehash_but_authn_is_read_only` | PASS (automatisé, scope de test) | `126fd2eb3e08` | [41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) | NON ATTRIBUÉ | INCONCLUSIVE |
 
 ## Interpretation
 
 The test-column entries are **candidate traceability**, NOT per-oracle certification. In particular, a dummy KDF only reduces simple username-enumeration differences; it does not establish constant-time transport behavior. The in-memory resolver's `is_current` callback cannot establish distributed revocation freshness. Per-process semaphore slots do not prove global brute-force rate limiting. The library cannot attest the semantics of an arbitrary host-supplied `PasswordAttemptGuard`.
 
 The five wheel jobs must install both core without optional crypto and the native `[password]` extra in separate isolated environments and execute an Argon2id verification. Performance, denial-of-service, timing, external store consistency and mandatory durable audit remain distinct deployment decisions.
+
+## Interprétation des résultats
+
+- **37/40** oracles possèdent une preuve automatisée dans le périmètre du composant ou de ses fixtures; **T25 et T26** ne couvrent pas les canaux HTTP et restent partiels; **T24** n'a pas été exécuté sur un host à quotas distribués.
+- Les 40 oracles nécessitent un responsable de revue formel pour que leur verdict soit signé. Les résultats d'un CI antérieur ne prouvent pas le SHA d'un futur merge.
+- Documentation décisionnelle : [GATE27-04_M3_PASSWORD_AUTHENTICATION_DECISION.md](GATE27-04_M3_PASSWORD_AUTHENTICATION_DECISION.md).
 
 ## Gate decision
 

@@ -69,6 +69,7 @@ security review before any live usage.
 - [Roadmap M0-M9](docs/specs/27_PYAUTHKIT_IMPLEMENTATION_ROADMAP.md)
 - [PR-06 execution record](docs/roadmap/PR-06_EXECUTION.md)
 - [M3 security oracles](docs/qualification/M3_PR06_SECURITY_ORACLES.md)
+- [M3 GATE27-04 qualification decision](docs/qualification/GATE27-04_M3_PASSWORD_AUTHENTICATION_DECISION.md) - NO-GO pending host and independent review
 - [GATE27-04 issue](https://github.com/tawounfouet/pyauthkit/issues/74)
 
 ## Security status and limitations

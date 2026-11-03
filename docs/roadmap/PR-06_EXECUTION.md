@@ -30,3 +30,12 @@ No main merge, PyPI publication, production deployment, IAM authorization,
 credential lifecycle mutations, MFA or session/token issuance. The in-memory
 store and the dummy-hash technique do not establish distributed revocation,
 online anti-enumeration timing guarantees or global rate limits.
+
+## Qualification technique complémentaire - 2026-11-03
+
+- Baseline code testé : `126fd2eb3e0858ce18218a78b8adf02c46a94937`.
+- CI [#41607548865](https://github.com/tawounfouet/pyauthkit/actions/runs/41607548865) : 7/7 SUCCESS, 160 pytest PASS, Ruff, mypy strict, architecture et scans PASS, cinq plateformes wheel avec et sans crypto.
+- Ajouts : vecteur Argon2id public, 120 vérifications concurrentes, timeout sans succès tardif, shutdown borné, expiration UTC, Unicode, rehash lecture seule, révocation post-KDF simulée, deux tenants réels, store différé, audit canary et codes génériques.
+- Benchmark CI (18 échantillons par scénario) : p50 correct 21.724 ms, incorrect 21.601 ms, absent 21.634 ms; RSS max 66 180 KiB sur GitHub Linux. **Aucune garantie de timing constant ou de production.**
+- Dossier formel : `docs/qualification/GATE27-04_M3_PASSWORD_AUTHENTICATION_DECISION.md` = **NO-GO** tant que T24/T25/T26 host, ADRs, risques et revue indépendante non soldés.
+- Ne pas fusionner ou publier sans sign-off ni post-merge main CI.
