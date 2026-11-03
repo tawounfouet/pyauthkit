@@ -39,8 +39,12 @@ from pyauthkit.password.records import PasswordRecordStatus, PasswordVerifierRec
 
 class BenchmarkOnlyAllow:
     async def admit(
-        self, *, scope_ref: TrustedScopeRef, correlation_id: CorrelationId,
-        identifier_kind: str | None, identifier_value: str | None,
+        self,
+        *,
+        scope_ref: TrustedScopeRef,
+        correlation_id: CorrelationId,
+        identifier_kind: str | None,
+        identifier_value: str | None,
     ) -> bool:
         return True
 
@@ -69,9 +73,7 @@ async def run_benchmark(*, samples_per_case: int = 18) -> dict[str, object]:
         status=PasswordRecordStatus.ACTIVE,
         version=1,
     )
-    resolver = InMemoryPasswordCredentialResolver(
-        {(scope.value, "username", "present"): (record,)}
-    )
+    resolver = InMemoryPasswordCredentialResolver({(scope.value, "username", "present"): (record,)})
     workers = KDFWorkerPool(max_workers=1, max_inflight=2, memory_budget_kib=65536)
     try:
         authenticator = PasswordAuthenticator(
@@ -84,7 +86,9 @@ async def run_benchmark(*, samples_per_case: int = 18) -> dict[str, object]:
         catalog = HostTrustCatalog(
             [
                 HostBinding(
-                    "r", scope, TrustProfileRef("p", "v1", scope),
+                    "r",
+                    scope,
+                    TrustProfileRef("p", "v1", scope),
                     frozenset({EvidenceMethod.PASSWORD}),
                 )
             ]

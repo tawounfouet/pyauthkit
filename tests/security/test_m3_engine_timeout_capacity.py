@@ -95,7 +95,9 @@ def test_m3_t21_timeout_never_grants_late_success_or_releases_busy_worker() -> N
     catalog = HostTrustCatalog(
         [
             HostBinding(
-                "route", scope, TrustProfileRef("p", "v1", scope),
+                "route",
+                scope,
+                TrustProfileRef("p", "v1", scope),
                 frozenset({EvidenceMethod.PASSWORD}),
             )
         ]

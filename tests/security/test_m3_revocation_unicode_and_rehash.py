@@ -79,7 +79,9 @@ def make_engine(
     catalog = HostTrustCatalog(
         [
             HostBinding(
-                "r", scope, TrustProfileRef("p", "v1", scope),
+                "r",
+                scope,
+                TrustProfileRef("p", "v1", scope),
                 frozenset({EvidenceMethod.PASSWORD}),
             )
         ]
@@ -125,15 +127,14 @@ def test_m3_t35_unicode_bytes_are_not_normalized_or_truncated() -> None:
     composed = "café-éléphant".encode()
     decomposed = "cafe\u0301-éléphant".encode()
     assert composed != decomposed
-    h = PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(
-        composed
-    )
+    h = PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(composed)
     record = make_record(h)
     resolver = InMemoryPasswordCredentialResolver(
         {(record.scope_ref.value, "username", "alice"): (record,)}
     )
     engine, catalog, workers = make_engine(record, resolver)
     try:
+
         async def check() -> tuple[object, object]:
             entry = catalog.resolve_for_host_route("r")
             correct = await engine.authenticate(submit(composed), entry=entry)

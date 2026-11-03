@@ -35,8 +35,12 @@ from pyauthkit.ports.events import AuthenticationEvent
 
 class PermitFixture:
     async def admit(
-        self, *, scope_ref: TrustedScopeRef, correlation_id: CorrelationId,
-        identifier_kind: str | None, identifier_value: str | None,
+        self,
+        *,
+        scope_ref: TrustedScopeRef,
+        correlation_id: CorrelationId,
+        identifier_kind: str | None,
+        identifier_value: str | None,
     ) -> bool:
         return True
 
@@ -83,7 +87,9 @@ def setup(
     catalog = HostTrustCatalog(
         [
             HostBinding(
-                "route", scope, TrustProfileRef("p", "v1", scope),
+                "route",
+                scope,
+                TrustProfileRef("p", "v1", scope),
                 frozenset({EvidenceMethod.PASSWORD}),
             )
         ]
@@ -167,9 +173,9 @@ def test_m3_t25_missing_wrong_revoked_ambiguous_and_no_hint_share_denial() -> No
 
 def test_m3_t27_t28_audit_event_never_contains_hash_or_login_canary() -> None:
     scope = TrustedScopeRef("negative-test-scope")
-    encoded = PasswordHasher(
-        memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID
-    ).hash(b"test-audit-phrase")
+    encoded = PasswordHasher(memory_cost=19456, time_cost=2, parallelism=1, type=Type.ID).hash(
+        b"test-audit-phrase"
+    )
     record = PasswordVerifierRecord(
         scope_ref=scope,
         subject_ref=ScopedSubjectRef("PRIVATE_SUBJECT_CANARY", "issuer", scope),
