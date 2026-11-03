@@ -42,6 +42,8 @@ jobs:
         run: python -m mypy src/pyauthkit
       - name: Tests
         run: python -m pytest -v
+      - name: M3 real KDF performance and timing study (informational)
+        run: python scripts/benchmark_m3_password.py
       - name: Architecture fitness
         run: python scripts/check_architecture.py
       - name: Workflow privilege and SHA guard
