@@ -24,12 +24,10 @@ class Infrastructure:
         self.secret_key = os.urandom(32)
         self.workers: list[KDFWorkerPool] = []
 
-    async def seed(
-        self, scope: str, username: str, password: bytes, subject_id: str
-    ) -> None:
-        encoded = PasswordHasher(
-            time_cost=2, memory_cost=19456, parallelism=1, type=Type.ID
-        ).hash(password)
+    async def seed(self, scope: str, username: str, password: bytes, subject_id: str) -> None:
+        encoded = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1, type=Type.ID).hash(
+            password
+        )
         await insert_fixture_record(
             self.pool,
             scope_id=scope,
@@ -59,9 +57,9 @@ class Infrastructure:
             postgres_pool=self.pool if postgres_override is None else postgres_override,
             redis=self.redis if redis_override is None else redis_override,
             hmac_key=self.secret_key,
-            route_scopes=routes if routes is not None else {
-                "alpha": "tenant-alpha", "beta": "tenant-beta"
-            },
+            route_scopes=routes
+            if routes is not None
+            else {"alpha": "tenant-alpha", "beta": "tenant-beta"},
             workers=worker_pool,
             max_per_source=max_per_source,
             max_per_identity=max_per_identity,

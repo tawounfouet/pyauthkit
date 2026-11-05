@@ -173,9 +173,7 @@ async def test_t26_real_http_randomized_timing_statistical_study(
     randomized = ["wrong", "missing"] * 60
     random.Random(20261103).shuffle(randomized)
 
-    async with live_host(app) as url, httpx.AsyncClient(
-        base_url=url, timeout=5.0
-    ) as client:
+    async with live_host(app) as url, httpx.AsyncClient(base_url=url, timeout=5.0) as client:
         for case in randomized:
             payload = {
                 "username": "alice" if case == "wrong" else "unknown",

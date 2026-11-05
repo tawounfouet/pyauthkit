@@ -33,9 +33,7 @@ async def test_t24_two_fastapi_replicas_share_limits_but_isolate_tenants(
     async with (
         httpx.AsyncClient(transport=transport_a, base_url="http://qualifier") as a,
         httpx.AsyncClient(transport=transport_b, base_url="http://qualifier") as b,
-        httpx.AsyncClient(
-            transport=transport_new_peer, base_url="http://qualifier"
-        ) as second_peer,
+        httpx.AsyncClient(transport=transport_new_peer, base_url="http://qualifier") as second_peer,
     ):
         login = {"username": "ghost", "password": "incorrect"}  # pragma: allowlist secret
         assert (await a.post("/alpha/login", json=login)).status_code == 401
@@ -55,14 +53,18 @@ async def test_t24_two_fastapi_replicas_share_limits_but_isolate_tenants(
             "/beta/login", json={"username": "alice", "password": "beta-phrase"}  # pragma: allowlist secret
         )
         assert cross_tenant.status_code == 200
-        assert (await second_peer.post(
-            "/alpha/login", json={"username": "alice", "password": "alpha-phrase"}
-        )).status_code == 200
+        assert (
+            await second_peer.post(
+                "/alpha/login", json={"username": "alice", "password": "alpha-phrase"}
+            )
+        ).status_code == 200
         # No body-controlled tenant swap.
-        assert (await second_peer.post(
-            "/alpha/login",
-            json={"username": "alice", "password": "beta-phrase"},
-        )).status_code == 401
+        assert (
+            await second_peer.post(
+                "/alpha/login",
+                json={"username": "alice", "password": "beta-phrase"},
+            )
+        ).status_code == 401
 
 
 @pytest.mark.asyncio

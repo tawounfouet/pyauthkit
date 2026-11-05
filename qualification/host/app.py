@@ -67,7 +67,9 @@ def compose_qualification_app(
     catalog = HostTrustCatalog(
         [
             HostBinding(
-                route, scope, TrustProfileRef("m3-password", "v1", scope),
+                route,
+                scope,
+                TrustProfileRef("m3-password", "v1", scope),
                 frozenset({EvidenceMethod.PASSWORD}),
             )
             for route, scope in scopes.items()
@@ -80,7 +82,11 @@ def compose_qualification_app(
         max_per_identity=max_per_identity,
         window_seconds=window_seconds,
     )
-    crypto = hash_verifier if hash_verifier is not None else Argon2idPasswordHashVerifier(Argon2idPolicy())
+    crypto = (
+        hash_verifier
+        if hash_verifier is not None
+        else Argon2idPasswordHashVerifier(Argon2idPolicy())
+    )
     dummy_hash = PasswordHasher(
         memory_cost=19456,
         time_cost=2,

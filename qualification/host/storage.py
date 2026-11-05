@@ -67,9 +67,7 @@ class PostgresPasswordCredentialResolver:
         if not isinstance(scope_ref, TrustedScopeRef):
             return PasswordRecordUnavailable()
         # Source-side WHERE scope_id = $1 prevents global username lookup.
-        row = await self._pool.fetchrow(
-            _LOOKUP, scope_ref.value, identifier_kind, identifier_value
-        )
+        row = await self._pool.fetchrow(_LOOKUP, scope_ref.value, identifier_kind, identifier_value)
         if row is None:
             return PasswordRecordMissing()
         if row["scope_id"] != scope_ref.value:
@@ -78,16 +76,12 @@ class PostgresPasswordCredentialResolver:
             return PasswordRecordFound(
                 PasswordVerifierRecord(
                     scope_ref=scope_ref,
-                    subject_ref=ScopedSubjectRef(
-                        row["subject_id"], row["issuer_id"], scope_ref
-                    ),
+                    subject_ref=ScopedSubjectRef(row["subject_id"], row["issuer_id"], scope_ref),
                     encoded_hash=row["encoded_phc"],
                     status=PasswordRecordStatus(row["status"]),
                     version=row["version"],
                     expires_at=(
-                        ObservedAt(row["expires_at"])
-                        if row["expires_at"] is not None
-                        else None
+                        ObservedAt(row["expires_at"]) if row["expires_at"] is not None else None
                     ),
                 )
             )
