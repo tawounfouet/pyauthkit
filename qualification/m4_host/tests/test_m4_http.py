@@ -6,6 +6,7 @@ production latency guarantee is claimed by localhost Uvicorn checks.
 
 import asyncio
 import json
+import math
 import os
 import random
 import socket
@@ -232,11 +233,18 @@ async def test_m4_two_uvicorn_os_processes_share_redis_and_pg(infra: Infrastruct
 async def test_m4_loopback_timing_observation_no_equivalence_claim(
     infra: Infrastructure, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    """M4-T31: p50/p95/p99 and exploratory median-difference interval.
+
+    This is synthetic loopback measurement, not a validated equivalence
+    or production non-enumerability criterion. No arbitrary timing PASS gate.
+    """
     await infra.seed()
-    app = infra.app(peer_limit=200, selector_limit=200)
-    order = ["wrong", "missing"] * 20
+    app = infra.app(peer_limit=300, selector_limit=300)
+    n = 50
+    order = ["wrong", "missing"] * n
     random.Random(20261105).shuffle(order)
     times: dict[str, list[float]] = {"wrong": [], "missing": []}
+    signatures: dict[str, set[tuple[object, ...]]] = {"wrong": set(), "missing": set()}
     async with live_host(app) as url, httpx.AsyncClient(base_url=url, timeout=4) as client:
         for kind in order:
             headers = (
@@ -248,15 +256,46 @@ async def test_m4_loopback_timing_observation_no_equivalence_claim(
             outcome = await client.post("/alpha/authenticate", headers=headers)
             elapsed = (time.perf_counter_ns() - start) / 1_000_000
             assert outcome.status_code == 401
+            signatures[kind].add(refusal_signature(outcome))
             times[kind].append(elapsed)
+
+    def percentile(samples: list[float], part: float) -> float:
+        ordered = sorted(samples)
+        index = max(0, min(len(ordered) - 1, math.ceil(part * len(ordered)) - 1))
+        return ordered[index]
+
+    # Resampling is descriptive only; autocorrelation, scheduling and
+    # network/proxy differences prevent asserting population equivalence.
+    rng = random.Random(20261105)
+    offsets = []
+    for _ in range(500):
+        wrong = rng.choices(times["wrong"], k=n)
+        missing = rng.choices(times["missing"], k=n)
+        offsets.append(statistics.median(wrong) - statistics.median(missing))
+    offsets.sort()
     report = {
-        "sample_size_each": 20,
-        "wrong_median_ms": round(statistics.median(times["wrong"]), 3),
-        "missing_median_ms": round(statistics.median(times["missing"]), 3),
-        "context": "loopback only; no proxy/CDN; no proven constant time",
+        "sample_size_each": n,
+        "randomized_order_seed": 20261105,
+        "units": "milliseconds",
+        "p50_ms": {
+            name: round(statistics.median(values), 3) for name, values in times.items()
+        },
+        "p95_ms": {name: round(percentile(values, 0.95), 3) for name, values in times.items()},
+        "p99_ms": {name: round(percentile(values, 0.99), 3) for name, values in times.items()},
+        "median_difference_wrong_minus_missing_ms": round(
+            statistics.median(times["wrong"]) - statistics.median(times["missing"]), 3
+        ),
+        "exploratory_bootstrap_median_diff_95pct_ms": [
+            round(percentile(offsets, 0.025), 3),
+            round(percentile(offsets, 0.975), 3),
+        ],
+        "context": "CI loopback HTTP; no proxy/CDN; no statistical equivalence claim",
+        "qualification_status": "OBSERVATION_ONLY",
     }
     print("M4_HTTP_TIMING_OBSERVATION=" + json.dumps(report, sort_keys=True))
-    assert len(times["wrong"]) == len(times["missing"]) == 20
+    assert len(times["wrong"]) == len(times["missing"]) == n
+    assert len(signatures["wrong"]) == len(signatures["missing"]) == 1
+    assert signatures["wrong"] == signatures["missing"]
 
 
 @pytest.mark.asyncio
