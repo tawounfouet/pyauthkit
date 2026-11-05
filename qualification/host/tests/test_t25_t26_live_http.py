@@ -136,6 +136,11 @@ def statistical_report(wrong: list[float], missing: list[float]) -> dict[str, ob
         a = [wrong[rng.randrange(n)] for _ in range(n)]
         b = [missing[rng.randrange(n)] for _ in range(n)]
         bootstrap_deltas.append(statistics.median(b) - statistics.median(a))
+    lower_delta = percentile(bootstrap_deltas, 2.5)
+    upper_delta = percentile(bootstrap_deltas, 97.5)
+    # A 5% loopback median-difference tolerance is an explicit CI heuristic,
+    # NOT a security standard or production-level non-enumerability criterion.
+    tolerance_ms = statistics.median(wrong) * 0.05
     return {
         "number_per_case": n,
         "wrong_p50_ms": round(statistics.median(wrong), 3),
@@ -145,9 +150,13 @@ def statistical_report(wrong: list[float], missing: list[float]) -> dict[str, ob
         "difference_median_ms": round(observed, 3),
         "permutation_two_sided_p": round((exceedances + 1) / (repetitions + 1), 4),
         "bootstrap_95pct_delta_median_ms": [
-            round(percentile(bootstrap_deltas, 2.5), 3),
-            round(percentile(bootstrap_deltas, 97.5), 3),
+            round(lower_delta, 3),
+            round(upper_delta, 3),
         ],
+        "loopback_equivalence_margin_ms": round(tolerance_ms, 3),
+        "bootstrap_ci_within_5pct_median_margin": (
+            lower_delta > -tolerance_ms and upper_delta < tolerance_ms
+        ),
         "limits": (
             "localhost HTTP/1.1; CI runner; synthetic secrets; no CDN/proxy; "
             "no claim of constant time or network-wide non-enumerability"
@@ -181,3 +190,4 @@ async def test_t26_real_http_randomized_timing_statistical_study(
     difference = abs(float(report["difference_median_ms"]))
     median_wrong = float(report["wrong_p50_ms"])
     assert difference <= median_wrong * 0.35
+    assert report["bootstrap_ci_within_5pct_median_margin"] is True
