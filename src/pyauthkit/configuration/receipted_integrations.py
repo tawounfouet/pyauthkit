@@ -27,8 +27,8 @@ from pyauthkit.ports.secrets import SecretResolver
 from .api_key_bootstrap import compose_secret_backed_api_key_runtime
 from .jwt_bootstrap import EgressGrants, compose_trusted_jwt_runtime
 from .models import ConfigurationRejected, ConfigurationSnapshot
-from .secrets import SecretAccessPolicy
 from .receipted_audit import ReceiptedDecisionGateway
+from .secrets import SecretAccessPolicy
 
 
 def _validate_audited_composition(
