@@ -79,12 +79,8 @@ class CachedApprovedJwksKeyResolver:
             raise ValueError("invalid approved JWKS source catalog")
         object.__setattr__(self, "_sources", MappingProxyType(checked))
         object.__setattr__(self, "_fetcher", fetcher)
-        object.__setattr__(
-            self, "_clock", monotonic if monotonic is not None else time.monotonic
-        )
-        object.__setattr__(
-            self, "_locks", {ref: asyncio.Lock() for ref in checked}
-        )
+        object.__setattr__(self, "_clock", monotonic if monotonic is not None else time.monotonic)
+        object.__setattr__(self, "_locks", {ref: asyncio.Lock() for ref in checked})
         object.__setattr__(self, "_cache", {})
 
     def __setattr__(self, _name: str, _value: object) -> None:
