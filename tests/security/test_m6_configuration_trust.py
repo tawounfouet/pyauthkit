@@ -20,7 +20,7 @@ from pyauthkit.configuration.models import ConfigurationRejected
 from pyauthkit.domain.evidence import EvidenceMethod, PresentedEvidence
 from pyauthkit.domain.identity import PrincipalType, ScopedSubjectRef
 from pyauthkit.domain.request import AuthenticationRequest
-from pyauthkit.domain.result import Authenticated
+from pyauthkit.domain.result import Authenticated, AuthError, Rejected
 from pyauthkit.domain.temporal import CorrelationId, ObservedAt
 from pyauthkit.ports.authenticator import VerificationContext
 
@@ -239,3 +239,63 @@ def test_m6_t35_invalid_restart_never_returns_a_runtime() -> None:
     with pytest.raises(ConfigurationRejected):
         load(raw, generation=2)
     assert make_runtime(generation=1).snapshot.generation.value == 1
+
+
+def test_m6_t24_rejected_and_error_events_never_echo_evidence() -> None:
+    sink = InMemoryAuthenticationEventSink()
+    runtime = make_runtime(sink=sink)
+
+    async def scenario() -> tuple[object, object]:
+        denied = AuthenticationRequest(
+            PresentedEvidence(EvidenceMethod.API_KEY, CANARY.encode()),
+            CorrelationId("m6-denied"),
+        )
+        rejected = await runtime.engine.authenticate(
+            denied, entry=runtime.catalog.resolve_for_host_route("api")
+        )
+        foreign = make_runtime()
+        broken = AuthenticationRequest(
+            PresentedEvidence(EvidenceMethod.JWT, CANARY.encode()),
+            CorrelationId("m6-invalid-trust"),
+        )
+        errored = await runtime.engine.authenticate(
+            broken, entry=foreign.catalog.resolve_for_host_route("api")
+        )
+        return rejected, errored
+
+    first, second = asyncio.run(scenario())
+    assert isinstance(first, Rejected)
+    assert isinstance(second, AuthError)
+    assert tuple(event.result_status for event in sink.events) == ("REJECTED", "ERROR")
+    for event in sink.events:
+        assert CANARY not in repr(event)
+        assert not hasattr(event, "principal")
+        assert not hasattr(event, "credential")
+        assert not hasattr(event, "jwt")
+
+
+def test_m6_t31_required_audit_cannot_be_enabled_by_a_fake_sink() -> None:
+    raw = raw_config()
+    raw["audit_delivery"] = "required"
+    with pytest.raises(ConfigurationRejected):
+        load(raw)
+
+
+def test_m6_t33_memory_sink_does_not_claim_idempotent_delivery() -> None:
+    sink = InMemoryAuthenticationEventSink()
+    runtime = make_runtime(sink=sink)
+
+    async def scenario() -> None:
+        req = AuthenticationRequest(
+            PresentedEvidence(EvidenceMethod.JWT, CANARY.encode()),
+            CorrelationId("m6-duplicate"),
+        )
+        entry = runtime.catalog.resolve_for_host_route("api")
+        await runtime.engine.authenticate(req, entry=entry)
+        await runtime.engine.authenticate(req, entry=entry)
+
+    asyncio.run(scenario())
+    assert len(sink.events) == 2
+    assert all(event.correlation_id.value == "m6-duplicate" for event in sink.events)
+    assert not hasattr(sink.events[0], "persisted")
+    assert not hasattr(sink.events[0], "receipt")

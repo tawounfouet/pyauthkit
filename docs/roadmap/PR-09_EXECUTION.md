@@ -51,3 +51,32 @@ source file nor the caller's JWT/header. Pattern: simple typed values, a strict
 reader and ports only where an actual adapter varies. Alternatives rejected:
 automatic discovery, dict union for trust blocks, secret string interpolation,
 undocumented durable-audit claim, and a mutable engine registry.
+
+## 2026-11-05 development iteration 2 - M4 secret consumer integration
+
+- New `ScopedApiKeySecretSource` bridges approved M6 references to M4's
+  `ApiKeyProtectionKeySource`, keyed by exact trusted scope and M4 key ref.
+  Provider/namespace/purpose/version are explicit; secrets are fetched per use,
+  never placed in snapshots or memoized by this adapter.
+- `compose_secret_backed_api_key_runtime` is a specialized async composition
+  route. It validates complete secret binding coverage, preflights key
+  availability and material length, then builds the existing M4 HMAC verifier,
+  API Key authenticator and M2 policy-gated engine.
+- The generic `compose_authentication_engine` still rejects snapshots
+  containing secret references. This remains intentional fail-closed behavior.
+- Key rotation is implemented as new configuration generation + new engine
+  instance, not hot reload. A provider revocation after successful bootstrap
+  triggers a fail-closed dependency error during subsequent verification.
+- Host-owned `minimum_generation` remains an injected trust input. This
+  package does NOT supply a durable cross-restart ledger.
+- Synthetic-only positive and negative integration checks exercise a genuine
+  M4 HMAC and the normal M2 final-policy path, not a JWT cryptographic fake.
+
+**Evidence, first post-change CI quality run**: SHA
+`46d8915b69f235256715465f6c49416f5bbbd9d3`,
+https://github.com/tawounfouet/pyauthkit/actions/runs/42105908829 -
+Ruff lint/format PASS, mypy strict 52 source files PASS, 365 pytest PASS,
+architecture fitness PASS. These are developer tests, not independent G7 sign-off.
+
+Further verification: dedicated M6 boundary CI job, expanded audit event tests,
+candidate oracle evidence register and controlled restart runbook.
