@@ -21,6 +21,8 @@ class StaticJwtProfileResolver:
 
     __slots__ = ("_profiles",)
 
+    _profiles: MappingProxyType[TrustProfileRef, TrustedJwtVerificationProfile]
+
     def __init__(self, profiles: Mapping[TrustProfileRef, TrustedJwtVerificationProfile]) -> None:
         checked: dict[TrustProfileRef, TrustedJwtVerificationProfile] = {}
         for ref, profile in profiles.items():
@@ -77,6 +79,8 @@ class StaticJwksKeyResolver:
     """Key selection bounded to pre-approved immutable profile-specific sets."""
 
     __slots__ = ("_sets",)
+
+    _sets: MappingProxyType[TrustProfileRef, MappingProxyType[str, str]]
 
     def __init__(self, keysets: Mapping[TrustProfileRef, tuple[str, ...]]) -> None:
         checked: dict[TrustProfileRef, MappingProxyType[str, str]] = {}
