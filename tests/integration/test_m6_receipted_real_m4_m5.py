@@ -104,8 +104,7 @@ def _digest(secret: bytes) -> bytes:
         return len(value).to_bytes(4, "big") + value
 
     content = b"pyauthkit-api-key-v1\x00" + b"".join(
-        frame(value)
-        for value in (SCOPE.value.encode("ascii"), b"ak1", _b64(SELECTOR), API_SECRET)
+        frame(value) for value in (SCOPE.value.encode("ascii"), b"ak1", _b64(SELECTOR), API_SECRET)
     )
     return hmac.new(secret, content, hashlib.sha256).digest()
 
@@ -290,9 +289,7 @@ def _jwt_gateway(committer, keys, *, floor=1):
 async def _check(gw, *, method: EvidenceMethod, raw: bytes, route: str, attempt_id=None):
     chosen = _attempt() if attempt_id is None else attempt_id
     result = await gw.authenticate(
-        AuthenticationRequest(
-            PresentedEvidence(method, raw), CorrelationId("private-trace-m6")
-        ),
+        AuthenticationRequest(PresentedEvidence(method, raw), CorrelationId("private-trace-m6")),
         entry=gw.catalog.resolve_for_host_route(route),
         attempt_id=chosen,
     )
@@ -319,9 +316,7 @@ def test_m6_receipted_real_m4_hmac_positive_and_rejected_always_committed(tmp_pa
         assert isinstance(denial, Rejected)
         assert committer.inspect_receipt(attempt_bad).result_status == "REJECTED"
         assert not hasattr(gw, "engine")
-        assert "private-trace-m6" not in (tmp_path / "receipt.sqlite").read_bytes().decode(
-            "latin1"
-        )
+        assert "private-trace-m6" not in (tmp_path / "receipt.sqlite").read_bytes().decode("latin1")
         assert b"service-a" not in (tmp_path / "receipt.sqlite").read_bytes()
 
     asyncio.run(scenario())
@@ -380,11 +375,7 @@ def test_m6_receipted_m4_m5_cannot_return_positive_when_store_missing(
     committer = _store(tmp_path)
 
     async def scenario():
-        gw = (
-            await _api_gateway(committer)
-            if which == "m4"
-            else _jwt_gateway(committer, public)
-        )
+        gw = await _api_gateway(committer) if which == "m4" else _jwt_gateway(committer, public)
         (tmp_path / "receipt.sqlite").unlink()
         method = EvidenceMethod.API_KEY if which == "m4" else EvidenceMethod.JWT
         route = "api" if which == "m4" else "jwt"
