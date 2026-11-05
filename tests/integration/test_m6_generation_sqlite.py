@@ -169,18 +169,14 @@ def test_m6_t36_corrupt_or_empty_ledger_denies_activation(tmp_path: Path) -> Non
 def test_m6_t36_ledger_cannot_be_reprovisioned_with_lower_floor(tmp_path: Path) -> None:
     store = ledger(tmp_path, floor=4)
     with pytest.raises(GenerationLedgerUnavailable, match="provisioning rejected"):
-        provision_sqlite_generation_ledger(
-            tmp_path / "host-generation.db", initial_floor=1
-        )
+        provision_sqlite_generation_ledger(tmp_path / "host-generation.db", initial_floor=1)
     assert store.read_floor() == 4
 
 
 @pytest.mark.parametrize("invalid", [0, -1, 1.0, True, 2**63, "2"])
 def test_m6_t36_invalid_floor_provisioning_rejected(tmp_path: Path, invalid) -> None:
     with pytest.raises(GenerationLedgerUnavailable):
-        provision_sqlite_generation_ledger(
-            tmp_path / "floor.db", initial_floor=invalid
-        )
+        provision_sqlite_generation_ledger(tmp_path / "floor.db", initial_floor=invalid)
     assert not (tmp_path / "floor.db").exists()
 
 
@@ -236,9 +232,12 @@ def test_m6_t36_same_generation_restart_is_allowed_only_if_floor_unchanged(
 ) -> None:
     store = ledger(tmp_path, floor=2)
     snap = snapshot(2)
-    assert prepare_with_generation_ledger(
-        snap, ledger=store, build=lambda floor: build(snap, floor=floor)
-    ).snapshot is snap
+    assert (
+        prepare_with_generation_ledger(
+            snap, ledger=store, build=lambda floor: build(snap, floor=floor)
+        ).snapshot
+        is snap
+    )
     store.compare_and_advance(expected_floor=2, generation=3)
     with pytest.raises(ConfigurationRejected, match="stale"):
         prepare_with_generation_ledger(
@@ -256,9 +255,7 @@ def test_m6_t36_async_preflight_failure_keeps_floor_unchanged(tmp_path: Path) ->
         raise RuntimeError("synthetic vault failure")
 
     with pytest.raises(RuntimeError):
-        asyncio.run(
-            prepare_with_generation_ledger_async(snap, ledger=store, build=prepare)
-        )
+        asyncio.run(prepare_with_generation_ledger_async(snap, ledger=store, build=prepare))
     assert store.read_floor() == 1
 
 
@@ -270,9 +267,7 @@ def test_m6_t36_async_candidate_returns_after_persistent_commit(tmp_path: Path) 
         await asyncio.sleep(0)
         return build(snap, floor=floor)
 
-    runtime = asyncio.run(
-        prepare_with_generation_ledger_async(snap, ledger=store, build=prepare)
-    )
+    runtime = asyncio.run(prepare_with_generation_ledger_async(snap, ledger=store, build=prepare))
     assert runtime.snapshot is snap
     assert SqliteGenerationFloorLedger(path=tmp_path / "host-generation.db").read_floor() == 2
 
