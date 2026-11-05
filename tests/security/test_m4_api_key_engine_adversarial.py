@@ -1,7 +1,7 @@
 """M4 PR-07C negative SPI/cancellation tests for host-controlled dependencies."""
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import datetime
 
 import pytest
 
