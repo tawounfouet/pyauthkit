@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from redis.asyncio import Redis
 
 from pyauthkit.password.capacity import KDFWorkerPool
+from pyauthkit.ports.password_hashing import PasswordHashVerifier
 from qualification.host.app import compose_qualification_app
 from qualification.host.storage import insert_fixture_record, prepare_qualification_schema
 
@@ -43,6 +44,8 @@ class Infrastructure:
         max_per_source: int = 200,
         max_per_identity: int = 200,
         routes: dict[str, str] | None = None,
+        hash_verifier: PasswordHashVerifier | None = None,
+        redis_override: Redis | None = None,
     ) -> FastAPI:
         worker_pool = KDFWorkerPool(
             max_workers=2,
@@ -53,7 +56,7 @@ class Infrastructure:
         self.workers.append(worker_pool)
         return compose_qualification_app(
             postgres_pool=self.pool,
-            redis=self.redis,
+            redis=self.redis if redis_override is None else redis_override,
             hmac_key=self.secret_key,
             route_scopes=routes if routes is not None else {
                 "alpha": "tenant-alpha", "beta": "tenant-beta"
@@ -61,6 +64,7 @@ class Infrastructure:
             workers=worker_pool,
             max_per_source=max_per_source,
             max_per_identity=max_per_identity,
+            hash_verifier=hash_verifier,
         )
 
 
