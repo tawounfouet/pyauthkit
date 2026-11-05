@@ -172,7 +172,9 @@ class Harness:
         self.catalog = HostTrustCatalog(
             [
                 HostBinding(
-                    "route-a", SCOPE, TrustProfileRef("api-profile", "v1", SCOPE),
+                    "route-a",
+                    SCOPE,
+                    TrustProfileRef("api-profile", "v1", SCOPE),
                     frozenset({EvidenceMethod.API_KEY}),
                 )
             ]
@@ -191,9 +193,7 @@ class Harness:
         self.engine = AuthenticationEngine(
             policy=AuthenticationPolicyGate(
                 self.catalog,
-                final_rule=(
-                    None if final_allow is None else lambda _subject, _entry: final_allow
-                ),
+                final_rule=(None if final_allow is None else lambda _subject, _entry: final_allow),
             ),
             registry=registry.freeze(),
             event_sink=self.events,
@@ -355,9 +355,7 @@ def test_post_hmac_revocation_version_change_blocks_verified_outcome() -> None:
 
     class RevokeAfterProof:
         async def verify(self, *, scope_ref, presented, record) -> bool:
-            match = await real_proof.verify(
-                scope_ref=scope_ref, presented=presented, record=record
-            )
+            match = await real_proof.verify(scope_ref=scope_ref, presented=presented, record=record)
             harness.owner.records[:] = [_record(status=ApiKeyRecordStatus.REVOKED, version=2)]
             return match
 
@@ -370,9 +368,7 @@ def test_post_hmac_revocation_version_change_blocks_verified_outcome() -> None:
     registry = AuthenticatorRegistryBuilder()
     registry.register(harness.authenticator)
     harness.engine = AuthenticationEngine(
-        policy=AuthenticationPolicyGate(
-            harness.catalog, final_rule=lambda _subject, _entry: True
-        ),
+        policy=AuthenticationPolicyGate(harness.catalog, final_rule=lambda _subject, _entry: True),
         registry=registry.freeze(),
     )
     result = harness.authenticate()
@@ -400,9 +396,7 @@ def test_inflight_time_expiry_blocks_success_after_hmac() -> None:
     registry = AuthenticatorRegistryBuilder()
     registry.register(authenticator)
     harness.engine = AuthenticationEngine(
-        policy=AuthenticationPolicyGate(
-            harness.catalog, final_rule=lambda _subject, _entry: True
-        ),
+        policy=AuthenticationPolicyGate(harness.catalog, final_rule=lambda _subject, _entry: True),
         registry=registry.freeze(),
     )
     assert isinstance(harness.authenticate(), Rejected)
@@ -423,7 +417,7 @@ def test_key_source_outage_is_technical() -> None:
     harness.key_source.outage = True
     result = harness.authenticate()
     assert isinstance(result, AuthError)
-    assert result.error_code is TechnicalErrorCode.INTERNAL_ERROR
+    assert result.error_code is TechnicalErrorCode.DEPENDENCY_UNAVAILABLE
 
 
 @pytest.mark.security

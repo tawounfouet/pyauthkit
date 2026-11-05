@@ -8,6 +8,7 @@ a global fallback, another tenant's key or a "default" HMAC key.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import hmac
 import re
@@ -112,9 +113,17 @@ class HmacApiKeyVerifier:
         if record.protection_key_ref not in self._approved_refs.get(scope_ref, frozenset()):
             raise DomainTechnicalError(TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
 
-        key = await self._key_source.get_key(
-            scope_ref=scope_ref, protection_key_ref=record.protection_key_ref
-        )
+        try:
+            key = await self._key_source.get_key(
+                scope_ref=scope_ref, protection_key_ref=record.protection_key_ref
+            )
+        except asyncio.CancelledError:
+            raise
+        except DomainTechnicalError:
+            raise
+        except Exception:
+            # Never expose provider exception details or accept fallback keys.
+            raise DomainTechnicalError(TechnicalErrorCode.DEPENDENCY_UNAVAILABLE) from None
         if key is None:
             raise DomainTechnicalError(TechnicalErrorCode.DEPENDENCY_UNAVAILABLE)
         if not isinstance(key, ApiKeyProtectionKey):

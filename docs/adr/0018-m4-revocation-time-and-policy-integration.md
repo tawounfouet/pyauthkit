@@ -47,7 +47,7 @@ positive verifier boolean must never issue an AuthenticatedPrincipal directly.
 
 - Bad encoding, unknown selector, disabled/revoked/expired/not-yet-valid
   record, false proof, stale version, guard refusal: `RejectedOutcome`.
-- Absent store or key-source material, exception in guard/resolver/freshness:
+- Absent store or key-source material, exception in guard/resolver/freshness/key source:
   `ErrorOutcome` with safe code; no principal.
 - Ambiguous record, trust mismatch or approved configuration inconsistency:
   `ErrorOutcome(INVALID_TRUST_CONFIGURATION)`.
