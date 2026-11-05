@@ -198,7 +198,6 @@ def test_cancelled_resolution_propagates_without_caching() -> None:
     assert len(network.calls) == 2
 
 
-
 @pytest.mark.security
 def test_invalidate_during_fetch_never_resurrects_revoked_keyset() -> None:
     profile, source = _profile("a")
@@ -216,9 +215,7 @@ def test_invalidate_during_fetch_never_resurrects_revoked_keyset() -> None:
             return json.dumps({"keys": self.keys[source.source_id]}).encode()
 
     network = DeferredTransport()
-    resolver = CachedApprovedJwksKeyResolver(
-        sources={profile.profile_ref: source}, fetcher=network
-    )
+    resolver = CachedApprovedJwksKeyResolver(sources={profile.profile_ref: source}, fetcher=network)
 
     async def run() -> None:
         first = asyncio.create_task(
@@ -231,12 +228,14 @@ def test_invalidate_during_fetch_never_resurrects_revoked_keyset() -> None:
             await first
         assert error.value.code is TechnicalErrorCode.DEPENDENCY_UNAVAILABLE
         network.keys["a"] = [_jwk("rotated")]
-        assert await resolver.resolve_key(
-            profile=profile, kid_hint="shared", algorithm_hint="RS256"
-        ) is None
-        assert await resolver.resolve_key(
-            profile=profile, kid_hint="rotated", algorithm_hint="RS256"
-        ) is not None
+        assert (
+            await resolver.resolve_key(profile=profile, kid_hint="shared", algorithm_hint="RS256")
+            is None
+        )
+        assert (
+            await resolver.resolve_key(profile=profile, kid_hint="rotated", algorithm_hint="RS256")
+            is not None
+        )
 
     asyncio.run(run())
     assert network.calls == ["a", "a"]
