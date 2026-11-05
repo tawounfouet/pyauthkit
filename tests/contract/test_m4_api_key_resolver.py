@@ -44,8 +44,8 @@ class InMemoryApiKeyResolver:
     """Test-only source-scoped fake: no real DB or distributed freshness claim."""
 
     def __init__(self, records: list[ApiKeyVerifierRecord]) -> None:
-        self.records: dict[tuple[TrustedScopeRef, str], list[ApiKeyVerifierRecord]] = (
-            defaultdict(list)
+        self.records: dict[tuple[TrustedScopeRef, str], list[ApiKeyVerifierRecord]] = defaultdict(
+            list
         )
         self.available = True
         for item in records:

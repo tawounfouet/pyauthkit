@@ -182,6 +182,4 @@ class ApiKeyUnavailable:
     """Source unavailable, contract broken or inconsistent: never fallback."""
 
 
-type ApiKeyRecordLookup = (
-    ApiKeyFound | ApiKeyMissing | ApiKeyAmbiguous | ApiKeyUnavailable
-)
+type ApiKeyRecordLookup = ApiKeyFound | ApiKeyMissing | ApiKeyAmbiguous | ApiKeyUnavailable

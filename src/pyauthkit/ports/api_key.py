@@ -14,9 +14,7 @@ from pyauthkit.domain.scope import TrustedScopeRef
 class ApiKeyCredentialResolver(Protocol):
     """Only host-approved scope + bounded selector, never global key lookup."""
 
-    async def resolve(
-        self, *, scope_ref: TrustedScopeRef, key_id: str
-    ) -> ApiKeyRecordLookup: ...
+    async def resolve(self, *, scope_ref: TrustedScopeRef, key_id: str) -> ApiKeyRecordLookup: ...
 
     async def is_current(self, *, record: ApiKeyVerifierRecord) -> bool:
         """Re-read authoritative version/state where owner consistency permits."""

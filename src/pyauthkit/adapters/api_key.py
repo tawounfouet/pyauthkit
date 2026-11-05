@@ -43,9 +43,7 @@ class HostCallbackApiKeyResolver:
     def __repr__(self) -> str:
         return "HostCallbackApiKeyResolver(<host-owned callbacks>)"
 
-    async def resolve(
-        self, *, scope_ref: TrustedScopeRef, key_id: str
-    ) -> ApiKeyRecordLookup:
+    async def resolve(self, *, scope_ref: TrustedScopeRef, key_id: str) -> ApiKeyRecordLookup:
         if not isinstance(scope_ref, TrustedScopeRef):
             raise ValueError("invalid approved scope")
         ApiKeyCredentialRef(key_id)
