@@ -38,15 +38,18 @@
 
 ## PR-08C - Remote JWKS (WP27-029, WP27-031)
 
-- [ ] Approved fixed HTTPS JWKS issuer source.
-- [ ] SSRF/DNS rebinding/redirect/egress policy, validated in real network host.
-- [ ] Cache isolation, TTL, invalidation, rotation and single-flight.
-- [ ] Concurrency/cancellation/timeout/overbudget tests.
-- [ ] Safe failure during remote key unavailability.
+- [x] Immutable approved fixed HTTPS JWKS source descriptor, sourced only from host.
+- [x] Explicit operator-owned transport port; no permissive fetcher in core.
+- [x] Per-profile cache isolation, TTL, invalidation, rotation and single-flight.
+- [x] Synthetic concurrency, cancellation, timeout and malformed JWKS tests.
+- [x] Cache rejects stale snapshots and network outages in synthetic tests.
+- [ ] Real HTTPS transport with DNS rebinding, redirects, egress allowlist, TLS enforcement.
+- [ ] Host-level adversarial network and key-rotation qualification under GATE27-06.
 
 **Safety choice:** No generic URL fetching or token-driven JWKS discovery was
-introduced merely to tick this checkbox. A static trusted source is supported
-for development and offline verification; remote sources are not yet supported.
+introduced merely to tick this checkbox. A static trusted source is supported for development and offline verification;
+remote sources require an operator-controlled fetch adapter with proven network
+safety. The built-in cache does not prove transport egress security.
 
 ## PR-08D - End-to-end M2 integration and release evidence (WP27-030, 032)
 
