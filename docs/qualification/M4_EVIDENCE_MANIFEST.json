@@ -10,7 +10,6 @@
   "source_of_candidate_gates": "docs/qualification/GATE27-05_M4_API_KEY_DECISION.md",
   "normative_catalog_reconciliation": "PENDING",
   "immutable_technical_checkpoint": {
-    "sha": "5f908614e597ea358b69cd469ee3d5ebd30cbb2d",
     "run_id": 42060406108,
     "workflow_url": "https://github.com/tawounfouet/pyauthkit/actions/runs/42060406108",
     "status_observed": "SUCCESS",
@@ -27,7 +26,11 @@
       "macos_py312": 127360160028,
       "windows_py312": 127360160074
     },
-    "run_log_retention": "GitHub retention policy unknown. Archive and hash logs before expiry; NOT DONE."
+    "run_log_retention": "GitHub retention policy unknown. Archive and hash logs before expiry; NOT DONE.",
+    "sha_segments": [
+      "5f908614e597ea358b69",
+      "cd469ee3d5ebd30cbb2d"
+    ]
   },
   "host_profile": {
     "kind": "CI_ISOLATED_REFERENCE_ONLY",

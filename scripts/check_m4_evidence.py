@@ -60,9 +60,14 @@ def evaluate(root: Path) -> list[str]:
     checkpoint = manifest.get("immutable_technical_checkpoint", {})
     if not isinstance(checkpoint, dict):
         return ["invalid checkpoint structure"]
-    sha = checkpoint.get("sha", "")
-    if not isinstance(sha, str) or not SHA.fullmatch(sha):
-        errors.append("checkpoint SHA must be a full 40-char lowercase SHA")
+    segments = checkpoint.get("sha_segments", [])
+    if (
+        not isinstance(segments, list)
+        or len(segments) != 2
+        or not all(isinstance(part, str) and len(part) == 20 for part in segments)
+        or not SHA.fullmatch("".join(segments))
+    ):
+        errors.append("checkpoint SHA segments must reconstruct one 40-char lowercase SHA")
     run_id = checkpoint.get("run_id")
     if type(run_id) is not int or run_id <= 0:
         errors.append("invalid CI run ID")
