@@ -16,7 +16,7 @@ from types import MappingProxyType
 from typing import Never
 
 from pyauthkit.domain.api_key import ApiKeyVerifierRecord
-from pyauthkit.domain.api_key_format import API_KEY_FORMAT_VERSION, ParsedOpaqueApiKey
+from pyauthkit.domain.api_key_format import WIRE_FORMAT_VERSION, ParsedOpaqueApiKey
 from pyauthkit.domain.failure import DomainTechnicalError, TechnicalErrorCode
 from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.ports.api_key_crypto import ApiKeyProtectionKey, ApiKeyProtectionKeySource
@@ -104,7 +104,7 @@ class HmacApiKeyVerifier:
             record.scope_ref != scope_ref
             or record.subject_ref.scope_ref != scope_ref
             or record.key_id != presented.key_id
-            or presented.format_version != API_KEY_FORMAT_VERSION
+            or presented.format_version != WIRE_FORMAT_VERSION
         ):
             return False
         if record.verifier_algorithm != "hmac-sha256" or len(record.verifier_digest) != 32:

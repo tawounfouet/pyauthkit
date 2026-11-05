@@ -16,7 +16,7 @@ from typing import Never, SupportsIndex
 # The fixed length prevents padding, whitespace, double-decoding and ambiguity.
 _API_KEY_PATTERN = re.compile(rb"ak1\.([A-Za-z0-9_-]{22})\.([A-Za-z0-9_-]{43})\Z")
 API_KEY_WIRE_BYTES = 70
-API_KEY_FORMAT_VERSION = "ak1"
+WIRE_FORMAT_VERSION = "ak1"
 
 
 def _canonical_decode(encoded: bytes, *, expected_length: int) -> bytes | None:
@@ -61,7 +61,7 @@ class ParsedOpaqueApiKey:
 
     @property
     def format_version(self) -> str:
-        return API_KEY_FORMAT_VERSION
+        return WIRE_FORMAT_VERSION
 
     @property
     def key_id(self) -> str:
