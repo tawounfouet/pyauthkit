@@ -57,6 +57,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ".[dev,password,qualification]"
           python -m pip freeze
+      - name: M3 host integration on PostgreSQL/Redis with live HTTP
+        env:
+          M3_PG_DSN: postgresql://m3qual:m3qual_ci_synthetic_only@127.0.0.1:5432/m3qual  # pragma: allowlist secret
+          M3_REDIS_URL: redis://127.0.0.1:6379/15
+        run: python -m pytest -v -s qualification/host/tests
       - name: Ruff lint
         run: python -m ruff check .
       - name: Ruff format
@@ -65,11 +70,6 @@ jobs:
         run: python -m mypy src/pyauthkit
       - name: Tests
         run: python -m pytest -v
-      - name: M3 host integration on PostgreSQL/Redis with live HTTP
-        env:
-          M3_PG_DSN: postgresql://m3qual:m3qual_ci_synthetic_only@127.0.0.1:5432/m3qual  # pragma: allowlist secret
-          M3_REDIS_URL: redis://127.0.0.1:6379/15
-        run: python -m pytest -v -s qualification/host/tests
       - name: M3 real KDF performance and timing study (informational)
         run: python scripts/benchmark_m3_password.py
       - name: Architecture fitness
