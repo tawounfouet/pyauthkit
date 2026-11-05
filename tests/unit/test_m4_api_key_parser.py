@@ -5,7 +5,8 @@ import copy
 import pickle
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from pyauthkit.domain.api_key_format import (
     API_KEY_WIRE_BYTES,
@@ -17,7 +18,9 @@ from pyauthkit.domain.api_key_format import (
 def encoded_key(
     selector: bytes = bytes(range(16)), secret: bytes = bytes(range(32))
 ) -> bytes:
-    token = lambda part: base64.urlsafe_b64encode(part).rstrip(b"=")
+    def token(part: bytes) -> bytes:
+        return base64.urlsafe_b64encode(part).rstrip(b"=")
+
     return b"ak1." + token(selector) + b"." + token(secret)
 
 
@@ -47,7 +50,6 @@ def test_valid_opaque_key_has_exact_canonical_length() -> None:
         encoded_key().replace(b".", b"..", 1),
         encoded_key().replace(b".", b"%2e", 1),
         encoded_key().replace(b"-", b"+", 1) + b" ",
-        encoded_key()[:4] + b"A" * 22 + b"." + b"A" * 43,
         encoded_key()[:25] + b"x" + encoded_key()[26:],
         encoded_key()[:69] + b"9",
         encoded_key()[:26] + b"." + b"*" + encoded_key()[28:],
@@ -58,6 +60,16 @@ def test_valid_opaque_key_has_exact_canonical_length() -> None:
 )
 def test_noncanonical_truncated_or_modified_input_is_rejected(raw: bytes) -> None:
     assert OpaqueApiKeyParser.parse(raw) is None
+
+
+@pytest.mark.unit
+def test_structural_parser_does_not_claim_issuer_entropy() -> None:
+    # Canonical zero bytes are valid syntax but NOT safe issuance entropy.
+    # The credential owner must use a CSPRNG and enforce the 32-byte entropy policy.
+    encoded_zeros = b"ak1." + b"A" * 22 + b"." + b"A" * 43
+    parsed = OpaqueApiKeyParser.parse(encoded_zeros)
+    assert parsed is not None
+    assert parsed.secret_bytes == bytes(32)
 
 
 @pytest.mark.security
