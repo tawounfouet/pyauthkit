@@ -58,7 +58,7 @@ def _claims_match(
     audience = claims.get("aud")
     if type(issuer) is not str or issuer != profile.issuer:
         return None
-    if type(subject) is not str or not 1 <= len(subject) <= 256:
+    if type(subject) is not str or not 1 <= len(subject) <= 256 or not subject.strip():
         return None
     if any(ord(char) < 32 or ord(char) == 127 for char in subject):
         return None
