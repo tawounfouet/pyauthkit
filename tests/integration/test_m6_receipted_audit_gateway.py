@@ -289,7 +289,9 @@ def test_m6_receipted_untrusted_entry_denied_before_positive(tmp_path: Path) -> 
     gw = gateway(store(tmp_path))
     result = asyncio.run(
         gw.authenticate(
-            req(), entry=object(), attempt_id=attempt()  # type: ignore[arg-type]
+            req(),
+            entry=object(),
+            attempt_id=attempt(),  # type: ignore[arg-type]
         )
     )
     assert isinstance(result, AuthError)
@@ -391,6 +393,7 @@ def test_m6_receipted_fake_committer_exception_is_sanitized() -> None:
     result = asyncio.run(check(gateway(HostileCommitter()), attempt()))
     assert isinstance(result, AuthError)
     assert CANARY not in repr(result)
+
 
 def test_m6_receipted_factory_refuses_untrusted_fake_committer() -> None:
     class ForgingCommitter:

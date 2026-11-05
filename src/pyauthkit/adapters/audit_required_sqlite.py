@@ -176,9 +176,7 @@ class SqliteRequiredAuditCommitter:
             ).fetchone()
             if exists is not None:
                 raise RequiredAuditAttemptConflict("audit attempt already consumed")
-            count = connection.execute(
-                "SELECT COUNT(*) FROM required_audit_attempts"
-            ).fetchone()
+            count = connection.execute("SELECT COUNT(*) FROM required_audit_attempts").fetchone()
             if count is None or type(count[0]) is not int or count[0] >= self._capacity:
                 raise RequiredAuditCommitUnavailable("required audit store full")
             record_id = uuid4().hex
