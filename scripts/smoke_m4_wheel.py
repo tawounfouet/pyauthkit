@@ -63,9 +63,7 @@ async def smoke() -> None:
     assert await verifier.verify(scope_ref=scope, presented=presented, record=record)
     bad_secret = bytearray(secret)
     bad_secret[-1] ^= 1
-    changed = OpaqueApiKeyParser.parse(
-        b"ak1." + selector + b"." + encoded(bytes(bad_secret))
-    )
+    changed = OpaqueApiKeyParser.parse(b"ak1." + selector + b"." + encoded(bytes(bad_secret)))
     assert changed is not None
     assert not await verifier.verify(scope_ref=scope, presented=changed, record=record)
     print("M4 ISOLATED WHEEL CRYPTO SMOKE PASS")

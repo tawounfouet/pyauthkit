@@ -30,7 +30,7 @@ from .conftest import (
     SELECTOR,
     Infrastructure,
     encode,
-    test_digest,
+    test_digest as fixture_digest,
     wire,
 )
 
@@ -348,24 +348,20 @@ async def test_m4_no_overlap_rotation_rejects_old_bearer_after_commit(
         live_host(infra.app()) as url,
         httpx.AsyncClient(base_url=url, timeout=4) as client,
     ):
-        old_valid = await client.post(
-            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
-        )
+        old_valid = await client.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
         assert old_valid.status_code == 200
         assert await rotate_cas(
             infra.pool,
             scope="tenant-alpha",
             selector=encode(SELECTOR).decode("ascii"),
             expected_version=1,
-            digest=test_digest("tenant-alpha", secret=OTHER_SECRET),
+            digest=fixture_digest("tenant-alpha", secret=OTHER_SECRET),
             protection_ref="key-v1",
         )
         old_rejected = await client.post(
             "/alpha/authenticate", headers=auth_header(bytes(range(32)))
         )
-        new_valid = await client.post(
-            "/alpha/authenticate", headers=auth_header(OTHER_SECRET)
-        )
+        new_valid = await client.post("/alpha/authenticate", headers=auth_header(OTHER_SECRET))
     assert old_rejected.status_code == 401
     assert new_valid.status_code == 200
 
@@ -385,12 +381,8 @@ async def test_m4_two_processes_reject_revoked_bearer_after_commit(
         httpx.AsyncClient(base_url=url_a, timeout=4) as client_a,
         httpx.AsyncClient(base_url=url_b, timeout=4) as client_b,
     ):
-        first = await client_a.post(
-            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
-        )
-        second = await client_b.post(
-            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
-        )
+        first = await client_a.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
+        second = await client_b.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
         assert first.status_code == second.status_code == 200
         assert await revoke_cas(
             infra.pool,
@@ -414,9 +406,7 @@ async def test_m4_inactive_records_match_generic_http_refusal(
 ) -> None:
     """M4-T30: wrong, suspended, disabled and revoked share refusal signature."""
     await infra.seed()
-    async with live_host(infra.app()) as url, httpx.AsyncClient(
-        base_url=url, timeout=4
-    ) as client:
+    async with live_host(infra.app()) as url, httpx.AsyncClient(base_url=url, timeout=4) as client:
         wrong = await client.post("/alpha/authenticate", headers=auth_header(OTHER_SECRET))
         for status in ("suspended", "disabled", "revoked"):
             await infra.pool.execute(
@@ -424,7 +414,5 @@ async def test_m4_inactive_records_match_generic_http_refusal(
                 status,
                 "tenant-alpha",
             )
-            denied = await client.post(
-                "/alpha/authenticate", headers=auth_header(bytes(range(32)))
-            )
+            denied = await client.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
             assert refusal_signature(denied) == refusal_signature(wrong)

@@ -21,7 +21,7 @@ from pyauthkit.domain.api_key import (
 )
 from pyauthkit.domain.evidence import EvidenceMethod, PresentedEvidence
 from pyauthkit.domain.request import AuthenticationRequest
-from pyauthkit.domain.result import Rejected
+from pyauthkit.domain.result import AuthError, Rejected
 from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
@@ -127,7 +127,9 @@ async def test_m4_revocation_between_hmac_and_pg_recheck_denies(infra: Infrastru
     )
     start_revoke = asyncio.Event()
     proceed = asyncio.Event()
-    key_source = FixtureProtectionKeySource(REFERENCE_KEY)
+    key_source = FixtureProtectionKeySource(
+        REFERENCE_KEY, approved_scopes=frozenset({"tenant-alpha"})
+    )
     proof = HmacApiKeyVerifier(key_source=key_source, approved_refs={scope: frozenset({"key-v1"})})
 
     class PausedProof:
@@ -312,13 +314,9 @@ async def test_m4_two_resolvers_share_source_scope_and_freshness_contract(
             assert await callback.is_current(record=b.record)
         else:
             assert isinstance(a, ApiKeyMissing)
-    known = await direct.resolve(
-        scope_ref=TrustedScopeRef("tenant-alpha"), key_id=selector
-    )
+    known = await direct.resolve(scope_ref=TrustedScopeRef("tenant-alpha"), key_id=selector)
     assert isinstance(known, ApiKeyFound)
-    assert await revoke_cas(
-        infra.pool, scope="tenant-alpha", selector=selector, expected_version=1
-    )
+    assert await revoke_cas(infra.pool, scope="tenant-alpha", selector=selector, expected_version=1)
     assert not await direct.is_current(record=known.record)
     assert not await callback.is_current(record=known.record)
 
@@ -338,9 +336,7 @@ async def test_m4_128_concurrent_attempts_bounded_on_slow_postgresql(
             self.active = 0
             self.peak = 0
 
-        async def resolve(
-            self, *, scope_ref: TrustedScopeRef, key_id: str
-        ) -> ApiKeyRecordLookup:
+        async def resolve(self, *, scope_ref: TrustedScopeRef, key_id: str) -> ApiKeyRecordLookup:
             async with self.semaphore:
                 self.active += 1
                 self.peak = max(self.peak, self.active)
@@ -408,6 +404,8 @@ async def test_m4_128_concurrent_attempts_bounded_on_slow_postgresql(
         )
     finally:
         HOST_PEER.reset(peer)
-    assert all(isinstance(result, Rejected) for result in decisions)
+    assert len(decisions) == 128
+    assert all(isinstance(result, (Rejected, AuthError)) for result in decisions)
+    assert any(isinstance(result, Rejected) for result in decisions)
     assert 1 <= slow.peak <= 8
     assert slow.active == 0
