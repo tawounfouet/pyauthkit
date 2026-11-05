@@ -74,9 +74,7 @@ class HmacApiKeyVerifier:
             if (
                 type(refs) is not frozenset
                 or not 1 <= len(refs) <= 32
-                or not all(
-                    isinstance(ref, str) and _ALLOWED_REF.fullmatch(ref) for ref in refs
-                )
+                or not all(isinstance(ref, str) and _ALLOWED_REF.fullmatch(ref) for ref in refs)
             ):
                 raise ValueError("invalid approved key-ref set")
             snapshot[scope_ref] = refs

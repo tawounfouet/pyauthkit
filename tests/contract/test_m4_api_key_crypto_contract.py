@@ -43,9 +43,7 @@ def test_plain_stdlib_hmac_adapter_satisfies_async_proof_port() -> None:
     # A negative digest is a cryptographic mismatch, never AuthN success.
     record = ApiKeyVerifierRecord(
         scope_ref=scope,
-        subject_ref=ScopedSubjectRef(
-            subject_id="svc", issuer_ref="test-issuer", scope_ref=scope
-        ),
+        subject_ref=ScopedSubjectRef(subject_id="svc", issuer_ref="test-issuer", scope_ref=scope),
         principal_type=PrincipalType.SERVICE,
         key_id=presented.key_id,
         verifier_digest=bytes(32),

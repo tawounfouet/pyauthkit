@@ -15,9 +15,7 @@ from pyauthkit.domain.api_key_format import (
 )
 
 
-def encoded_key(
-    selector: bytes = bytes(range(16)), secret: bytes = bytes(range(32))
-) -> bytes:
+def encoded_key(selector: bytes = bytes(range(16)), secret: bytes = bytes(range(32))) -> bytes:
     def token(part: bytes) -> bytes:
         return base64.urlsafe_b64encode(part).rstrip(b"=")
 

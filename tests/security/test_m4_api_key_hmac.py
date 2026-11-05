@@ -25,18 +25,14 @@ SELECTOR = bytes(range(16))
 SECRET = bytes(range(32))
 # Independent output generated with OpenSSL HMAC-SHA256 on the explicit
 # length-prefixed message documented in ADR-0016. No self-derived oracle.
-OPENSSL_EXPECTED = bytes.fromhex(
-    "540574633838c98c95e6afd36e8712768ade3a211ebf7bed39f55caccad22184"
-)
+OPENSSL_EXPECTED = bytes.fromhex("540574633838c98c95e6afd36e8712768ade3a211ebf7bed39f55caccad22184")
 
 
 def _encode(value: bytes) -> bytes:
     return base64.urlsafe_b64encode(value).rstrip(b"=")
 
 
-def _presented(
-    selector: bytes = SELECTOR, secret: bytes = SECRET
-) -> ParsedOpaqueApiKey:
+def _presented(selector: bytes = SELECTOR, secret: bytes = SECRET) -> ParsedOpaqueApiKey:
     raw = b"ak1." + _encode(selector) + b"." + _encode(secret)
     result = OpaqueApiKeyParser.parse(raw)
     assert isinstance(result, ParsedOpaqueApiKey)
@@ -94,9 +90,7 @@ def _verifier(
 def test_independent_openssl_vector_accepts_full_key_only() -> None:
     source = ControlledKeySource()
     verifier = _verifier(source)
-    assert asyncio.run(
-        verifier.verify(scope_ref=SCOPE, presented=_presented(), record=_record())
-    )
+    assert asyncio.run(verifier.verify(scope_ref=SCOPE, presented=_presented(), record=_record()))
     assert source.calls == [(SCOPE, KEY_REF)]
 
 
@@ -141,9 +135,7 @@ def test_cross_tenant_record_never_matches_or_fetches_foreign_key() -> None:
 def test_digest_cannot_be_replayed_under_another_approved_scope() -> None:
     source = ControlledKeySource()
     source.keys[(OTHER_SCOPE, KEY_REF)] = ApiKeyProtectionKey(SERVER_KEY)
-    verifier = _verifier(
-        source, {SCOPE: frozenset({KEY_REF}), OTHER_SCOPE: frozenset({KEY_REF})}
-    )
+    verifier = _verifier(source, {SCOPE: frozenset({KEY_REF}), OTHER_SCOPE: frozenset({KEY_REF})})
     assert not asyncio.run(
         verifier.verify(
             scope_ref=OTHER_SCOPE, presented=_presented(), record=_record(scope=OTHER_SCOPE)
@@ -181,9 +173,7 @@ def test_missing_approved_hmac_key_is_technical_failure() -> None:
     source.keys.clear()
     with pytest.raises(DomainTechnicalError) as exc:
         asyncio.run(
-            _verifier(source).verify(
-                scope_ref=SCOPE, presented=_presented(), record=_record()
-            )
+            _verifier(source).verify(scope_ref=SCOPE, presented=_presented(), record=_record())
         )
     assert exc.value.code is TechnicalErrorCode.DEPENDENCY_UNAVAILABLE
 
@@ -194,7 +184,8 @@ def test_unsupported_algorithm_has_no_fallback() -> None:
     with pytest.raises(DomainTechnicalError) as exc:
         asyncio.run(
             _verifier(source).verify(
-                scope_ref=SCOPE, presented=_presented(),
+                scope_ref=SCOPE,
+                presented=_presented(),
                 record=_record(algorithm="sha256", digest=OPENSSL_EXPECTED),
             )
         )
@@ -212,9 +203,7 @@ def test_invalid_protection_key_material_never_passes() -> None:
     source.keys[(SCOPE, KEY_REF)] = b"not material"  # type: ignore[assignment]
     with pytest.raises(DomainTechnicalError) as exc:
         asyncio.run(
-            _verifier(source).verify(
-                scope_ref=SCOPE, presented=_presented(), record=_record()
-            )
+            _verifier(source).verify(scope_ref=SCOPE, presented=_presented(), record=_record())
         )
     assert exc.value.code is TechnicalErrorCode.INVALID_TRUST_CONFIGURATION
 
