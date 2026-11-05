@@ -110,3 +110,19 @@ Le `M4_SECURITY_REVIEW_CHECKLIST.md` sert a verifier : identite du relecteur, in
 - [Security] scope choisi par l'hote, preuve HMAC complete, revalidation de version, politique finale, refus fail-closed.
 - [Testing / Runtime] preuves sur fuite, isolement, concurrence/CAS, deux processus OS et modes d'echec.
 - [Transfer] Un test vert de l'adapter montre un comportement **dans un environnement**. La qualification exige une trace causale jusqu'aux menaces, limites, preuves et decisions.
+
+## 9. Revue contradictoire technique et source normative (2026-11-05)
+
+- **Crosswalk:** `M4_CANONICAL_REQUIREMENTS_CROSSWALK.md` distinguishes
+  normative section 27 §17/§56 and section 28 §49 from the 40/16 candidate
+  indexes. There are **zero** literal `M4-T01..T40` or `G5-01..16`
+  entries in source specifications 27 and 28. Therefore no one-to-one
+  canonical acceptance mapping can legitimately be asserted from those
+  documents alone.
+- **Reference-host hardening:** duplicate HTTP Authorization headers must
+  be treated as malformed evidence and pass the same rate guard before
+  returning generic 401. This changes only `qualification/m4_host`,
+  not the distributable PyAuthKit authentication engine.
+- **Security reviewer status:** this review is an assistant technical
+  review, **not an independent qualified signer**. Formal GATE27-05
+  remains NO-GO until the owner accepts actual oracles and risks.

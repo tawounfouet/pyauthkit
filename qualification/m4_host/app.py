@@ -114,16 +114,19 @@ def compose_app(
     def build_handler(route: str):
         async def authenticate(request: Request) -> JSONResponse:
             started = time.monotonic()
-            header = request.headers.get("authorization", "")
-            # Missing/malformed input follows the same guarded negative path.
+            authorization_values = request.headers.getlist("authorization")
+            # Duplicate Authorization fields are ambiguous across HTTP components.
+            # They follow the same guarded negative path as missing/invalid input.
             evidence = b"invalid"
-            if header.startswith("ApiKey "):
-                try:
-                    raw = header[7:].encode("ascii")
-                    if 1 <= len(raw) <= 256:
-                        evidence = raw
-                except UnicodeError:
-                    pass
+            if len(authorization_values) == 1:
+                header = authorization_values[0]
+                if header.startswith("ApiKey "):
+                    try:
+                        raw = header[7:].encode("ascii")
+                        if 1 <= len(raw) <= 256:
+                            evidence = raw
+                    except UnicodeError:
+                        pass
             auth_request = AuthenticationRequest(
                 PresentedEvidence(EvidenceMethod.API_KEY, evidence),
                 CorrelationId(uuid.uuid4().hex),

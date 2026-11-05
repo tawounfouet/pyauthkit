@@ -272,3 +272,32 @@ async def test_m4_bearer_replay_is_an_explicit_non_goal_of_api_keys(
     # Both successes expose the natural bearer replay property.
     # This is NOT replay prevention, session security or a production guarantee.
     assert first.status_code == repeated.status_code == 200
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_duplicate_authorization_headers_never_authenticate(
+    infra: Infrastructure,
+) -> None:
+    await infra.seed()
+    app = infra.app()
+    valid = "ApiKey " + wire(secret=bytes(range(32)))
+    duplicates = [
+        [("Authorization", valid), ("Authorization", valid)],
+        [("Authorization", valid), ("Authorization", "Bearer untrusted")],
+        [("Authorization", "Bearer untrusted"), ("Authorization", valid)],
+    ]
+    async with (
+        live_host(app) as url,
+        httpx.AsyncClient(base_url=url, timeout=4) as client,
+    ):
+        denied = []
+        for headers in duplicates:
+            response = await client.post("/alpha/authenticate", headers=headers)
+            assert response.status_code == 401
+            denied.append(refusal_signature(response))
+        assert len(set(denied)) == 1
+        # Duplicates are still accounted for by the mandatory attempt guard.
+        assert len(await infra.redis.keys("m4q:scope:*")) == 1
+        unique = await client.post("/alpha/authenticate", headers={"Authorization": valid})
+        assert unique.status_code == 200
+

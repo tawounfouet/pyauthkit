@@ -122,3 +122,21 @@
 ## Conditions de validite
 
 Une CI du banc de reference ne ferme pas un risque residuel en production. Le relecteur doit documenter pour chaque risque : probabilite, impact, detectabilite, profil exact, mitigation mise en oeuvre, preuve de verification, responsable, validite temporelle et acceptation/NO-GO. **Aucun risque n'est accepte dans ce fichier.**
+
+## F-M4-01 - Ambiguous duplicate Authorization headers (adversarial review)
+
+- **Observed during desk review:** the initial reference host retrieved a single
+  `request.headers.get("authorization")` value and did not explicitly reject
+  multiple Authorization fields. Different HTTP intermediaries can disagree on
+  header selection; no production reverse proxy is qualified here.
+- **Mitigation candidate:** reject multiple Authorization fields through the
+  same guarded `Rejected` path without reflecting field contents; never
+  select first/last/comma-joined bearer.
+- **Regression evidence:** `qualification/m4_host/tests/test_m4_http.py::
+  test_m4_duplicate_authorization_headers_never_authenticate` (after
+  this review's exact-HEAD CI completes).
+- **Residual risk:** header normalization/smuggling across real proxies,
+  HTTP/2-to-HTTP/1 translation, TLS termination and ingress limits remain
+  **UNQUALIFIED**. Associate this finding with R-M4-03 and M4-T37.
+- **Disposition:** remediation submitted for reference host; not an
+  independent production security acceptance.
