@@ -38,7 +38,9 @@ def create_app() -> FastAPI:
             redis_url, decode_responses=False, socket_connect_timeout=2, socket_timeout=2
         )
         workers = KDFWorkerPool(
-            max_workers=1, max_inflight=2, max_memory_cost_kib=65536,
+            max_workers=1,
+            max_inflight=2,
+            max_memory_cost_kib=65536,
             memory_budget_kib=65536,
         )
         try:

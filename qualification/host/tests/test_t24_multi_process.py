@@ -21,7 +21,8 @@ def unused_loopback_port() -> int:
 
 @asynccontextmanager
 async def process_host(
-    port: int, *,
+    port: int,
+    *,
     hmac_key: bytes,
 ) -> AsyncIterator[str]:
     environment = os.environ.copy()
@@ -93,9 +94,7 @@ async def test_t24_two_separate_uvicorn_processes_enforce_shared_redis_source_li
             first = await a.post("/alpha/login", json=login_data("unknown", "bad"))
             second = await b.post("/alpha/login", json=login_data("unknown", "bad"))
             third = await a.post("/alpha/login", json=login_data("alice", "alpha-phrase"))
-            separate_tenant = await b.post(
-                "/beta/login", json=login_data("alice", "beta-phrase")
-            )
+            separate_tenant = await b.post("/beta/login", json=login_data("alice", "beta-phrase"))
             assert first.status_code == second.status_code == third.status_code == 401
             assert first.content == second.content == third.content
             assert separate_tenant.status_code == 200
