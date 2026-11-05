@@ -47,13 +47,14 @@ def _parse_jwks(data: bytes, *, source: ApprovedJwksSource) -> MappingProxyType[
 class CachedApprovedJwksKeyResolver:
     """Per-profile TTL snapshots; no stale fallback, token-driven refresh or redirects."""
 
-    __slots__ = ("_sources", "_fetcher", "_clock", "_cache", "_locks")
+    __slots__ = ("_sources", "_fetcher", "_clock", "_cache", "_locks", "_generations")
 
     _sources: MappingProxyType[TrustProfileRef, ApprovedJwksSource]
     _fetcher: ApprovedJwksFetcher
     _clock: Callable[[], float]
     _cache: dict[TrustProfileRef, tuple[float, MappingProxyType[str, str]]]
     _locks: dict[TrustProfileRef, asyncio.Lock]
+    _generations: dict[TrustProfileRef, int]
 
     def __init__(
         self,
@@ -82,6 +83,7 @@ class CachedApprovedJwksKeyResolver:
         object.__setattr__(self, "_clock", monotonic if monotonic is not None else time.monotonic)
         object.__setattr__(self, "_locks", {ref: asyncio.Lock() for ref in checked})
         object.__setattr__(self, "_cache", {})
+        object.__setattr__(self, "_generations", {ref: 0 for ref in checked})
 
     def __setattr__(self, _name: str, _value: object) -> None:
         raise AttributeError("approved JWKS cache composition is immutable")
@@ -91,7 +93,9 @@ class CachedApprovedJwksKeyResolver:
 
     def invalidate(self, profile_ref: TrustProfileRef) -> None:
         """Operator-controlled key invalidation; not proof of cluster revocation."""
-        self._cache.pop(profile_ref, None)
+        if profile_ref in self._generations:
+            self._generations[profile_ref] += 1
+            self._cache.pop(profile_ref, None)
 
     def _now(self) -> float:
         try:
@@ -138,6 +142,9 @@ class CachedApprovedJwksKeyResolver:
             if current is not None and now < current[0]:
                 return current[1].get(kid_hint)
             # One refresh for all unknown kids in this profile; never fetch a kid URL.
+            generation = self._generations[ref]
             keyset = await self._load(source)
+            if generation != self._generations[ref]:
+                raise DomainTechnicalError(TechnicalErrorCode.DEPENDENCY_UNAVAILABLE)
             self._cache[ref] = (self._now() + source.ttl_seconds, keyset)
             return keyset.get(kid_hint)
