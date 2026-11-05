@@ -46,8 +46,14 @@ def read_live_settings(values: Mapping[str, str]) -> LiveSettings:
     required = {
         name: values.get(_PREFIX + name)
         for name in (
-            "ACCOUNT", "REGION", "PARTITION", "RESOURCE_ARN",
-            "VERSION", "NAMESPACE", "KEY_ID", "EXPECTED_PRINCIPAL",
+            "ACCOUNT",
+            "REGION",
+            "PARTITION",
+            "RESOURCE_ARN",
+            "VERSION",
+            "NAMESPACE",
+            "KEY_ID",
+            "EXPECTED_PRINCIPAL",
         )
     }
     if any(not isinstance(value, str) or not value for value in required.values()):
@@ -73,8 +79,11 @@ def read_live_settings(values: Mapping[str, str]) -> LiveSettings:
         raise ValueError("unapproved test-account identity")
     approved = ApprovedAwsSecret(settings.resource_arn)
     ref = SecretRef(
-        "aws-secrets-manager", settings.namespace, settings.key_id,
-        settings.version, "verify",
+        "aws-secrets-manager",
+        settings.namespace,
+        settings.key_id,
+        settings.version,
+        "verify",
     )
     if (
         f":secretsmanager:{settings.region}:{settings.account}:" not in approved.arn
@@ -114,8 +123,11 @@ async def check_live_aws(settings: LiveSettings) -> None:
         ):
             raise ValueError("unexpected AWS qualification principal")
         ref = SecretRef(
-            "aws-secrets-manager", settings.namespace, settings.key_id,
-            settings.version, "verify",
+            "aws-secrets-manager",
+            settings.namespace,
+            settings.key_id,
+            settings.version,
+            "verify",
         )
         resolver = build_admitted_aws_resolver(
             client=client,

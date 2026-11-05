@@ -14,8 +14,7 @@ def valid_settings() -> dict[str, str]:
         PREFIX + "REGION": "eu-west-1",
         PREFIX + "PARTITION": "aws",
         PREFIX + "RESOURCE_ARN": (
-            "arn:aws:secretsmanager:eu-west-1:123456789012:"
-            "secret:tenant-a/hmac-QWERTY"
+            "arn:aws:secretsmanager:eu-west-1:123456789012:secret:tenant-a/hmac-QWERTY"
         ),
         PREFIX + "VERSION": bytes(range(16)).hex(),
         PREFIX + "NAMESPACE": "tenant-a",
