@@ -30,7 +30,7 @@ SOURCE = ApprovedJwksSource(REF, "approved", "https://jwks.example.test/keys")
 BODY = b'{"keys":[]}'
 
 
-def test_context(tmp_path, *, certificate_hostname: str = NAME):
+def _tls_context(tmp_path, *, certificate_hostname: str = NAME):
     private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, certificate_hostname)])
     cert = (
@@ -142,7 +142,7 @@ async def exercise_tls(monkeypatch, server_ctx, client_ctx):
 @pytest.mark.integration
 @pytest.mark.security
 def test_real_tls_certificate_hostname_sni_and_body_are_verified(tmp_path, monkeypatch) -> None:
-    server_ctx, client_ctx = test_context(tmp_path)
+    server_ctx, client_ctx = _tls_context(tmp_path)
     result, requests = asyncio.run(exercise_tls(monkeypatch, server_ctx, client_ctx))
     assert result == BODY
     assert len(requests) == 1
@@ -159,7 +159,7 @@ def test_real_tls_wrong_certificate_hostname_fails_closed(tmp_path, monkeypatch)
 
 @pytest.mark.security
 def test_real_tls_untrusted_ca_fails_closed(tmp_path, monkeypatch) -> None:
-    server_ctx, _trusted_ctx = test_context(tmp_path)
+    server_ctx, _trusted_ctx = _tls_context(tmp_path)
     untrusted_ctx = ssl.create_default_context()
     with pytest.raises(DomainTechnicalError):
         asyncio.run(exercise_tls(monkeypatch, server_ctx, untrusted_ctx))
