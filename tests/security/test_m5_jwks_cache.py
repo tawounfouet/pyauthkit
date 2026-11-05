@@ -196,3 +196,47 @@ def test_cancelled_resolution_propagates_without_caching() -> None:
         is not None
     )
     assert len(network.calls) == 2
+
+
+
+@pytest.mark.security
+def test_invalidate_during_fetch_never_resurrects_revoked_keyset() -> None:
+    profile, source = _profile("a")
+
+    class DeferredTransport(FakeApprovedTransport):
+        def __init__(self) -> None:
+            super().__init__()
+            self.started = asyncio.Event()
+            self.release = asyncio.Event()
+
+        async def fetch(self, *, source: ApprovedJwksSource) -> bytes:
+            self.calls.append(source.source_id)
+            self.started.set()
+            await self.release.wait()
+            return json.dumps({"keys": self.keys[source.source_id]}).encode()
+
+    network = DeferredTransport()
+    resolver = CachedApprovedJwksKeyResolver(
+        sources={profile.profile_ref: source}, fetcher=network
+    )
+
+    async def run() -> None:
+        first = asyncio.create_task(
+            resolver.resolve_key(profile=profile, kid_hint="shared", algorithm_hint="RS256")
+        )
+        await asyncio.wait_for(network.started.wait(), timeout=1)
+        resolver.invalidate(profile.profile_ref)
+        network.release.set()
+        with pytest.raises(DomainTechnicalError) as error:
+            await first
+        assert error.value.code is TechnicalErrorCode.DEPENDENCY_UNAVAILABLE
+        network.keys["a"] = [_jwk("rotated")]
+        assert await resolver.resolve_key(
+            profile=profile, kid_hint="shared", algorithm_hint="RS256"
+        ) is None
+        assert await resolver.resolve_key(
+            profile=profile, kid_hint="rotated", algorithm_hint="RS256"
+        ) is not None
+
+    asyncio.run(run())
+    assert network.calls == ["a", "a"]
