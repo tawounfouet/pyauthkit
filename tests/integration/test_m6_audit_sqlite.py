@@ -106,6 +106,7 @@ def test_m6_audit_payload_canary_is_never_persisted_in_database_file(tmp_path: P
 
 def test_m6_audit_pseudonym_is_stable_within_a_key_version(tmp_path: Path) -> None:
     sink = provisioned(tmp_path)
+
     async def scenario() -> None:
         await sink.emit(event(outcome="REJECTED"))
         await sink.emit(event(outcome="ERROR"))
@@ -246,6 +247,7 @@ def test_m6_audit_sink_rejects_invalid_host_key_and_capacity(
 
 def test_m6_audit_store_concurrent_appends_do_not_lose_records(tmp_path: Path) -> None:
     sink = provisioned(tmp_path)
+
     async def scenario() -> None:
         await asyncio.gather(
             *(sink.emit(event(correlation=CorrelationId(f"concurrent-{i}"))) for i in range(8))
@@ -276,13 +278,15 @@ def _runtime(sink: SqliteAuthenticationAuditSink):
     snapshot = load_approved_configuration(
         {
             "schema_version": 1,
-            "routes": [{
-                "route_id": "audit-route",
-                "scope": "tenant-a",
-                "profile_id": "synthetic-jwt",
-                "profile_version": "v1",
-                "allowed_methods": ["jwt"],
-            }],
+            "routes": [
+                {
+                    "route_id": "audit-route",
+                    "scope": "tenant-a",
+                    "profile_id": "synthetic-jwt",
+                    "profile_version": "v1",
+                    "allowed_methods": ["jwt"],
+                }
+            ],
             "timeout_seconds": 2.0,
             "audit_delivery": "best_effort",
             "secrets": [],
@@ -349,13 +353,15 @@ def test_m6_required_audit_is_still_rejected_even_with_sqlite_store(tmp_path: Pa
         load_approved_configuration(
             {
                 "schema_version": 1,
-                "routes": [{
-                    "route_id": "audit-route",
-                    "scope": "tenant-a",
-                    "profile_id": "j",
-                    "profile_version": "v1",
-                    "allowed_methods": ["jwt"],
-                }],
+                "routes": [
+                    {
+                        "route_id": "audit-route",
+                        "scope": "tenant-a",
+                        "profile_id": "j",
+                        "profile_version": "v1",
+                        "allowed_methods": ["jwt"],
+                    }
+                ],
                 "timeout_seconds": 2.0,
                 "audit_delivery": "required",
                 "secrets": [],
