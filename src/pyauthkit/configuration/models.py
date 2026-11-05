@@ -4,12 +4,17 @@ A syntactically valid source is not an authority. Only the host's explicit
 SourcePolicy admits it. A snapshot contains references, never secret material.
 """
 
+import ipaddress
 import math
 import re
 from dataclasses import dataclass
 
 from pyauthkit.application.host_context import HostBinding
+from pyauthkit.domain.evidence import EvidenceMethod
+from pyauthkit.domain.jwks import ApprovedJwksSource
+from pyauthkit.domain.jwt import TrustedJwtVerificationProfile
 from pyauthkit.domain.secret import SecretRef
+from pyauthkit.domain.trust import TrustProfileRef
 
 _IDENT = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\Z")
 
@@ -87,6 +92,78 @@ class AuditDeliveryPolicy:
 
 
 @dataclass(frozen=True, slots=True, repr=False)
+class StaticJwtKeySource:
+    """Host-selected identifier for a public JWK set, never token-derived."""
+
+    keyset_ref: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.keyset_ref, str) or not _IDENT.fullmatch(self.keyset_ref):
+            raise ConfigurationRejected("invalid static JWT keyset reference")
+
+    def __repr__(self) -> str:
+        return "StaticJwtKeySource(<approved reference>)"
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class HttpsJwtKeySource:
+    """An approved HTTPS source and a bounded public IP allowlist."""
+
+    source: ApprovedJwksSource
+    allowed_ips: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.source, ApprovedJwksSource):
+            raise ConfigurationRejected("invalid JWKS source")
+        if (
+            type(self.allowed_ips) is not tuple
+            or not 1 <= len(self.allowed_ips) <= 16
+            or len(set(self.allowed_ips)) != len(self.allowed_ips)
+        ):
+            raise ConfigurationRejected("invalid JWKS destination allowlist")
+        for raw in self.allowed_ips:
+            if type(raw) is not str:
+                raise ConfigurationRejected("invalid JWKS destination allowlist")
+            try:
+                address = ipaddress.ip_address(raw)
+            except ValueError:
+                raise ConfigurationRejected("invalid JWKS destination allowlist") from None
+            if (
+                not address.is_global
+                or address.is_multicast
+                or isinstance(address, ipaddress.IPv6Address)
+                and address.ipv4_mapped is not None
+                or str(address) != raw
+            ):
+                raise ConfigurationRejected("unapproved JWKS destination")
+
+    def __repr__(self) -> str:
+        return "HttpsJwtKeySource(<pinned, host-controlled>)"
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class JwtTrustBinding:
+    """One M5 JWT profile and exactly one host-approved source of public keys."""
+
+    profile: TrustedJwtVerificationProfile
+    keys: StaticJwtKeySource | HttpsJwtKeySource
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.profile, TrustedJwtVerificationProfile):
+            raise ConfigurationRejected("invalid JWT trust profile")
+        if not isinstance(self.keys, (StaticJwtKeySource, HttpsJwtKeySource)):
+            raise ConfigurationRejected("invalid JWT key source")
+        if (
+            isinstance(self.keys, HttpsJwtKeySource)
+            and self.keys.source.profile_ref != self.profile.profile_ref
+        ):
+            raise ConfigurationRejected("JWKS source/profile mismatch")
+
+    def __repr__(self) -> str:
+        return "JwtTrustBinding(<host-approved, redacted>)"
+
+
+@dataclass(frozen=True, slots=True, repr=False)
 class ConfigurationSnapshot:
     """Deeply immutable *one-generation* host policy for one engine instance."""
 
@@ -97,9 +174,10 @@ class ConfigurationSnapshot:
     timeout_seconds: float
     audit_delivery: AuditDeliveryPolicy
     secret_refs: tuple[SecretRef, ...] = ()
+    jwt_profiles: tuple[JwtTrustBinding, ...] = ()
 
     def __post_init__(self) -> None:
-        if type(self.schema_version) is not int or self.schema_version != 1:
+        if type(self.schema_version) is not int or self.schema_version not in (1, 2):
             raise ConfigurationRejected("unsupported configuration schema")
         if not isinstance(self.generation, ConfigurationGeneration):
             raise ConfigurationRejected("invalid configuration generation")
@@ -124,6 +202,26 @@ class ConfigurationSnapshot:
             raise ConfigurationRejected("invalid secret references")
         if len(set(self.secret_refs)) != len(self.secret_refs):
             raise ConfigurationRejected("duplicate secret reference")
+        if type(self.jwt_profiles) is not tuple or not all(
+            isinstance(binding, JwtTrustBinding) for binding in self.jwt_profiles
+        ):
+            raise ConfigurationRejected("invalid JWT configuration")
+        if self.schema_version == 1:
+            if self.jwt_profiles:
+                raise ConfigurationRejected("JWT trust profiles require configuration schema v2")
+        else:
+            expected: set[TrustProfileRef] = {
+                binding.profile_ref
+                for binding in self.bindings
+                if EvidenceMethod.JWT in binding.allowed_methods
+            }
+            declared = tuple(binding.profile.profile_ref for binding in self.jwt_profiles)
+            if (
+                len(declared) != len(set(declared))
+                or set(declared) != expected
+                or len(declared) > 128
+            ):
+                raise ConfigurationRejected("JWT trust profile coverage mismatch")
         # Reuse M2's authoritative duplicate-route and scope/profile validation.
         from pyauthkit.application.host_context import HostTrustCatalog
 
