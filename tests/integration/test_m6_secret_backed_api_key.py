@@ -377,3 +377,121 @@ def test_m6_secret_bindings_are_deeply_immutable() -> None:
         assert "no secret cache" in repr(source)
 
     asyncio.run(scenario())
+
+@pytest.mark.integration
+def test_m6_aws_pinned_secret_really_wires_existing_m4_hmac_and_m2() -> None:
+    from botocore.session import get_session
+    from botocore.stub import Stubber
+
+    from pyauthkit.adapters.secrets_aws import ApprovedAwsSecret, AwsSecretsManagerResolver
+
+    version = "0123456789abcdef0123456789abcdef"
+    arn = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:tenant-a/hmac-QWERTY"
+    ref = SecretRef("aws-secrets-manager", SCOPE.value, "hmac", version, "verify")
+    client = get_session().create_client(
+        "secretsmanager",
+        region_name="eu-west-1",
+        aws_access_key_id="synthetic",
+        aws_secret_access_key="synthetic",
+    )
+    request = {"SecretId": arn, "VersionId": version, "VersionStage": "AWSCURRENT"}
+    response = {
+        "ARN": arn,
+        "Name": "tenant-a/hmac",
+        "VersionId": version,
+        "VersionStages": ["AWSCURRENT"],
+        "SecretBinary": KEY_V1,
+    }
+
+    async def scenario() -> None:
+        with Stubber(client) as stubber:
+            stubber.add_response("get_secret_value", response, request)
+            stubber.add_response("get_secret_value", response, request)
+            adapter = AwsSecretsManagerResolver(
+                client=client,
+                bindings={ref: ApprovedAwsSecret(arn)},
+                account_id="123456789012",
+                region="eu-west-1",
+            )
+            runtime = await compose_secret_backed_api_key_runtime(
+                _snapshot(ref),
+                bindings={(SCOPE, "hmac-v1"): ref},
+                access_policy=SecretAccessPolicy(
+                    frozenset({SecretGrant("aws-secrets-manager", SCOPE.value, "verify")})
+                ),
+                secret_resolver=adapter,
+                credential_resolver=Owner(_record()),
+                attempt_guard=Guard(),
+                clock=FixedClock(),
+                final_rule=lambda _subject, _entry: True,
+            )
+            assert isinstance(await _authenticate(runtime), Authenticated)
+            stubber.assert_no_pending_responses()
+
+    try:
+        asyncio.run(scenario())
+    finally:
+        client.close()
+
+
+@pytest.mark.security
+def test_m6_aws_version_revoked_after_preflight_fails_closed_in_m2() -> None:
+    from botocore.session import get_session
+    from botocore.stub import Stubber
+
+    from pyauthkit.adapters.secrets_aws import ApprovedAwsSecret, AwsSecretsManagerResolver
+
+    version = "0123456789abcdef0123456789abcdef"
+    arn = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:tenant-a/hmac-QWERTY"
+    ref = SecretRef("aws-secrets-manager", SCOPE.value, "hmac", version, "verify")
+    client = get_session().create_client(
+        "secretsmanager",
+        region_name="eu-west-1",
+        aws_access_key_id="synthetic",
+        aws_secret_access_key="synthetic",
+    )
+    request = {"SecretId": arn, "VersionId": version, "VersionStage": "AWSCURRENT"}
+    response = {
+        "ARN": arn,
+        "Name": "tenant-a/hmac",
+        "VersionId": version,
+        "VersionStages": ["AWSCURRENT"],
+        "SecretBinary": KEY_V1,
+    }
+
+    async def scenario() -> None:
+        with Stubber(client) as stubber:
+            stubber.add_response("get_secret_value", response, request)
+            stubber.add_client_error(
+                "get_secret_value",
+                service_error_code="ResourceNotFoundException",
+                service_message="unavailable",
+                expected_params=request,
+            )
+            adapter = AwsSecretsManagerResolver(
+                client=client,
+                bindings={ref: ApprovedAwsSecret(arn)},
+                account_id="123456789012",
+                region="eu-west-1",
+            )
+            runtime = await compose_secret_backed_api_key_runtime(
+                _snapshot(ref),
+                bindings={(SCOPE, "hmac-v1"): ref},
+                access_policy=SecretAccessPolicy(
+                    frozenset({SecretGrant("aws-secrets-manager", SCOPE.value, "verify")})
+                ),
+                secret_resolver=adapter,
+                credential_resolver=Owner(_record()),
+                attempt_guard=Guard(),
+                clock=FixedClock(),
+                final_rule=lambda _subject, _entry: True,
+            )
+            result = await _authenticate(runtime)
+            assert isinstance(result, AuthError)
+            assert result.error_code is TechnicalErrorCode.DEPENDENCY_UNAVAILABLE
+            stubber.assert_no_pending_responses()
+
+    try:
+        asyncio.run(scenario())
+    finally:
+        client.close()
