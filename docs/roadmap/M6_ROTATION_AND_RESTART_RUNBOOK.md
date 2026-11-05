@@ -115,3 +115,34 @@ runtime = prepare_with_generation_ledger(
 The example assumes the administrator provisioned the database previously.
 It does not authorize using a synthetic verifier or treating SQLite as
 a remote multi-replica coordinator.
+
+## AWS Secrets Manager reference consumer (M6 iteration 7)
+
+1. The host creates a Secrets Manager SDK client with explicit region,
+   IAM identity/role, bounded connect/read timeouts, bounded retries and no
+   custom unreviewed endpoint. No account credentials are embedded in config.
+2. The host config defines `SecretRef(provider="aws-secrets-manager", ...)`
+   and separately maps that complete logical reference to the exact full ARN.
+   `SecretRef.version` must be the AWS VersionId (not a mutable alias).
+3. AWS IAM permits `secretsmanager:GetSecretValue` on only the intended
+   resources. When a customer-managed KMS key protects a secret, `kms:Decrypt`
+   must be restricted to that key and use. Do not grant secret-write/rotation
+   privileges to the verification process.
+4. The adapter requests exact VersionId with AWSCURRENT. The response must
+   confirm the same ARN/version and contain `SecretBinary`. The M4 HMAC
+   consumer requires exactly 32 bytes and obtains them for each verification.
+5. The host rotates by installing the new AWS secret VersionId, applying a
+   new approved M6 snapshot/generation, preflighting, and switching traffic
+   only after readiness. Do not silently reuse AWSPREVIOUS after revocation.
+6. At an incident, deny a failed lookup (resource missing, stage moved,
+   response mismatch, IAM/KMS error, timeout). SDK exception text and raw
+   material should never be written to application logs.
+7. Live qualification requires a dedicated test account, IAM least
+   privilege, a customer-managed KMS key if used, CloudTrail/event review,
+   network policy checks, simulated throttling and mid-flight rotation.
+
+**SDK risk:** The adapter runs the synchronous `get_secret_value` call
+through an async worker thread. Cancelling/expiring the calling coroutine
+does not stop an SDK call already executing. Bound AWS SDK I/O and retry
+settings and worker concurrency in the host. No real account was used in
+the candidate tests.

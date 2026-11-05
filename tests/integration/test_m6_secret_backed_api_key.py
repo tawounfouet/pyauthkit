@@ -378,6 +378,7 @@ def test_m6_secret_bindings_are_deeply_immutable() -> None:
 
     asyncio.run(scenario())
 
+
 @pytest.mark.integration
 def test_m6_aws_pinned_secret_really_wires_existing_m4_hmac_and_m2() -> None:
     from botocore.session import get_session

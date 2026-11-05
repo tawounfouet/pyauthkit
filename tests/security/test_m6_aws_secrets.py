@@ -52,15 +52,16 @@ def test_m6_aws_exact_version_and_stage_are_required_on_request() -> None:
     client = FakeAwsClient()
     result = resolve(make(client))
     assert result == RAW
-    assert client.calls == [
-        {"SecretId": ARN, "VersionId": VERSION, "VersionStage": "AWSCURRENT"}
-    ]
+    assert client.calls == [{"SecretId": ARN, "VersionId": VERSION, "VersionStage": "AWSCURRENT"}]
 
 
 def test_m6_aws_cross_tenant_and_unknown_version_fail_before_sdk_call() -> None:
     client = FakeAwsClient()
     adapter = make(client)
-    for ref in (OTHER_REF, SecretRef(REF.provider, REF.namespace, REF.key_id, OTHER_VERSION, "verify")):
+    for ref in (
+        OTHER_REF,
+        SecretRef(REF.provider, REF.namespace, REF.key_id, OTHER_VERSION, "verify"),
+    ):
         with pytest.raises(SecretResolutionUnavailable, match="denied"):
             resolve(adapter, ref)
     assert client.calls == []
@@ -77,17 +78,34 @@ def test_m6_aws_wrong_purpose_fails_before_sdk_call() -> None:
 @pytest.mark.parametrize(
     "response",
     [
-        {"ARN": ARN, "VersionId": OTHER_VERSION, "VersionStages": ["AWSCURRENT"], "SecretBinary": RAW},
+        {
+            "ARN": ARN,
+            "VersionId": OTHER_VERSION,
+            "VersionStages": ["AWSCURRENT"],
+            "SecretBinary": RAW,
+        },
         {"ARN": ARN, "VersionId": VERSION, "VersionStages": ["AWSPREVIOUS"], "SecretBinary": RAW},
         {"ARN": ARN, "VersionId": VERSION, "VersionStages": [], "SecretBinary": RAW},
         {"ARN": ARN, "VersionId": VERSION, "VersionStages": ["AWSCURRENT"], "SecretString": CANARY},
         {"ARN": ARN, "VersionId": VERSION, "VersionStages": ["AWSCURRENT"], "SecretBinary": CANARY},
         {"ARN": ARN, "VersionId": VERSION, "VersionStages": ["AWSCURRENT"], "SecretBinary": b""},
-        {"ARN": ARN, "VersionId": VERSION, "VersionStages": ["AWSCURRENT"], "SecretBinary": b"x" * 65537},
-        {"ARN": ARN + "-other", "VersionId": VERSION, "VersionStages": ["AWSCURRENT"], "SecretBinary": RAW},
+        {
+            "ARN": ARN,
+            "VersionId": VERSION,
+            "VersionStages": ["AWSCURRENT"],
+            "SecretBinary": b"x" * 65537,
+        },
+        {
+            "ARN": ARN + "-other",
+            "VersionId": VERSION,
+            "VersionStages": ["AWSCURRENT"],
+            "SecretBinary": RAW,
+        },
     ],
 )
-def test_m6_aws_wrong_version_stage_identity_or_material_fails_closed(response: dict[str, object]) -> None:
+def test_m6_aws_wrong_version_stage_identity_or_material_fails_closed(
+    response: dict[str, object],
+) -> None:
     with pytest.raises(SecretResolutionUnavailable, match="secret unavailable"):
         resolve(make(FakeAwsClient(response)))
 
@@ -97,7 +115,10 @@ def test_m6_aws_post_bootstrap_revocation_fails_closed() -> None:
     adapter = make(client)
     assert resolve(adapter) == RAW
     client.payload = {
-        "ARN": ARN, "VersionId": VERSION, "VersionStages": ["AWSPREVIOUS"], "SecretBinary": RAW
+        "ARN": ARN,
+        "VersionId": VERSION,
+        "VersionStages": ["AWSPREVIOUS"],
+        "SecretBinary": RAW,
     }
     with pytest.raises(SecretResolutionUnavailable):
         resolve(adapter)

@@ -163,3 +163,32 @@ Final developer CI SHA: PENDING validation. GATE27-07 remains NO-GO.
   restart, and re-opened database persistence.
 - The source code and tests are DEVELOPMENT CANDIDATE only. Exact-HEAD CI
   and independent GATE27-07 acceptance remain mandatory.
+
+## 2026-11-05 development iteration 7 - AWS Secrets Manager adapter candidate
+
+- Added optional `AwsSecretsManagerResolver` implementing the existing M6
+  `SecretResolver` port. The host passes a preconstructed AWS Secrets
+  Manager SDK client and an immutable allowlist mapping M6 `SecretRef` to a
+  complete AWS secret ARN, with exact partition, region and account pinning.
+- The adapter accepts only `purpose=verify`, a concrete AWS VersionId
+  (32-64 characters) and the exact resource ARN. Every lookup requests
+  `VersionId` AND `VersionStage=AWSCURRENT`; no fallback to default or
+  `AWSPREVIOUS`. The returned ARN, version, stage and binary payload must
+  match the request or the adapter returns a sanitized failure.
+- M4 API Key HMAC consumes this provider through the existing
+  `ScopedApiKeySecretSource`; no second authentication engine was created.
+- Added SDK-level `botocore.stub.Stubber` tests and security-fault tests for
+  cross-scope alias, unexpected version, provider errors, revoked staging
+  label and no plaintext in repr.
+- AWS SDK is optional under `pyauthkit[aws]`; development tests install
+  the SDK explicitly. No AWS credentials, endpoints or fallback secrets are
+  obtained by PyAuthKit.
+- **Limitations:** Live IAM/KMS/TLS/CloudTrail, egress controls, cross-account
+  assumptions and provider rotation/revocation are NOT independently
+  qualified. Async execution uses a worker thread around a synchronous AWS
+  client, so cancellation of a coroutine does not cancel an AWS network
+  request already running. The host must bound SDK connect/read timeouts,
+  retries and concurrency. Secret bytes cannot be reliably zeroized in
+  standard Python. No production deployment is authorized.
+
+Final exact-head CI: PENDING at authoring. GATE27-07 stays NO-GO.
