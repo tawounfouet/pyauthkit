@@ -74,10 +74,7 @@ class ApprovedJwksSource:
             0.1 <= self.timeout_seconds <= 3.0
         ):
             raise ValueError("invalid JWKS timeout")
-        if (
-            type(self.max_response_bytes) is not int
-            or not 1024 <= self.max_response_bytes <= 65536
-        ):
+        if type(self.max_response_bytes) is not int or not 1024 <= self.max_response_bytes <= 65536:
             raise ValueError("invalid JWKS byte budget")
         if type(self.max_keys) is not int or not 1 <= self.max_keys <= 32:
             raise ValueError("invalid JWKS key budget")
