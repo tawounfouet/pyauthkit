@@ -47,3 +47,19 @@ def test_m4_decision_packet_keeps_human_governance_outstanding() -> None:
     assert "NON RENSEIGNE" in text
     assert "NO-GO" in text
     assert "Autorisation de merge" in text
+
+
+def test_m4_source_plan_semantics_not_legacy_catalog() -> None:
+    data = json.loads(
+        (ROOT / "docs/qualification/M4_EVIDENCE_MANIFEST.json").read_text(encoding="utf-8")
+    )
+    assert data["source_of_candidate_oracles"].endswith("M4_2026_11_05_SOURCE_MATRIX.md")
+    assert data["normative_catalog_reconciliation"] == (
+        "M4_DETAILED_PLAN_SOURCE_MAPPED_PENDING_OWNER_ADOPTION"
+    )
+    assert data["oracles"][36]["id"] == "M4-T37"
+    assert data["oracles"][36]["assertion"] == "Contract tests sur deux resolvers"
+    assert data["g5"][13]["candidate_requirement"] == "ADR et contrats publics approuvés"
+    assert sum(row["priority"] == "P0" for row in data["oracles"]) == 39
+    assert data["oracles"][27]["priority"] == "P1"
+    assert all(row["independent_adjudication"] == "PENDING" for row in data["oracles"])

@@ -33,7 +33,10 @@ For the licensing/disclosure decision, see
 
 ## Current implementation limitations
 
-Only the bootstrap package and a *syntax-only* `TrustedScopeRef` exist on
-`main` until subsequent implementation PRs are merged. A syntactically
-valid reference is not host-approved provenance or proof of authentication.
-There is no production-ready `authenticate()` success path.
+The protected `main` branch contains the **M0-M2 engine/domain baseline**,
+including host-approved entry catalog, authenticator SPI and final policy.
+M3 Password Authentication PR #75 and M4 API Key Authentication PR #76
+remain separate unmerged changes; their independent gates are not GO.
+A syntactically valid scope or locally successful verifier does not prove
+production identity, authorization or secret-management guarantees.
+There is **no supported production-ready authentication deployment**.

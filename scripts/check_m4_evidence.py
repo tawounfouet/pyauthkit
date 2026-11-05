@@ -55,7 +55,7 @@ def evaluate(root: Path) -> list[str]:
         errors.append("a machine-authored candidate file must not invent signatures")
     if manifest.get("merged") is not False or manifest.get("released") is not False:
         errors.append("candidate must not assert merge or release")
-    if manifest.get("normative_catalog_reconciliation") != "PENDING":
+    if manifest.get("normative_catalog_reconciliation") != "M4_DETAILED_PLAN_SOURCE_MAPPED_PENDING_OWNER_ADOPTION":
         errors.append("canonical-plan reconciliation not evidenced")
     checkpoint = manifest.get("immutable_technical_checkpoint", {})
     if not isinstance(checkpoint, dict):
@@ -152,18 +152,51 @@ def evaluate(root: Path) -> list[str]:
     ]:
         if not isinstance(source, str) or not (root / source).is_file():
             errors.append("missing candidate registry")
-    oracle_source = root / "docs/qualification/M4_PR07_SECURITY_ORACLES.md"
-    gate_source = root / "docs/qualification/GATE27-05_M4_API_KEY_DECISION.md"
+    oracle_source = root / "docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md"
     if oracle_source.is_file():
-        rows = re.findall(
-            r"^\| `?(M4-T\d{2})`? \|", oracle_source.read_text(encoding="utf-8"), flags=re.M
-        )
-        if rows != expected_oracles:
-            errors.append("candidate source oracle count or sequence drift")
-    if gate_source.is_file():
-        rows = re.findall(r"^\| (G5-\d{2}) \|", gate_source.read_text(encoding="utf-8"), flags=re.M)
-        if rows != expected_gates:
-            errors.append("candidate source gate count or sequence drift")
+        source = oracle_source.read_text(encoding="utf-8")
+        oracle_rows: list[list[str]] = []
+        gate_rows: list[list[str]] = []
+        for line in source.splitlines():
+            if line.startswith("| M4-T"):
+                oracle_rows.append([cell.strip() for cell in line.strip("|").split("|")])
+            elif line.startswith("| G5-"):
+                gate_rows.append([cell.strip() for cell in line.strip("|").split("|")])
+        if len(oracle_rows) != 40 or any(len(row) != 4 for row in oracle_rows):
+            errors.append("M4 detailed plan source oracle table malformed")
+        else:
+            if [row[0] for row in oracle_rows] != expected_oracles:
+                errors.append("source M4 oracle IDs changed")
+            for observed, item in zip(oracle_rows, oracles, strict=True):
+                if observed != [
+                    item.get("id"),
+                    item.get("priority"),
+                    item.get("assertion"),
+                    item.get("expected_behavior"),
+                ]:
+                    errors.append(f"{item.get('id', 'unknown')}: plan/manifest semantic drift")
+        if len(gate_rows) != 16 or any(len(row) != 4 for row in gate_rows):
+            errors.append("M4 detailed plan source G5 table malformed")
+        else:
+            if [row[0] for row in gate_rows] != expected_gates:
+                errors.append("source G5 IDs changed")
+            for observed, item in zip(gate_rows, gates, strict=True):
+                if observed != [
+                    item.get("id"),
+                    item.get("candidate_requirement"),
+                    item.get("required_evidence"),
+                    item.get("no_go_if"),
+                ]:
+                    errors.append(f"{item.get('id', 'unknown')}: gate/manifest semantic drift")
+    for item in oracles:
+        if item.get("technical_status") not in {
+            "EVIDENCE_REFERENCED",
+            "PARTIAL",
+            "MISSING",
+        }:
+            errors.append(f"{item.get('id', 'unknown')}: invalid technical status")
+        if item.get("priority") not in ("P0", "P1"):
+            errors.append(f"{item.get('id', 'unknown')}: unknown plan priority")
     workflow = root / ".github/workflows/ci.yml"
     if not workflow.is_file():
         errors.append("CI workflow missing")
