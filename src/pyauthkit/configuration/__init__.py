@@ -1,5 +1,6 @@
 """Host-authoritative, explicit M6 bootstrap. No environment auto-discovery."""
 
+from .api_key_bootstrap import compose_secret_backed_api_key_runtime
 from .bootstrap import M6Runtime, compose_authentication_engine
 from .models import (
     AuditDeliveryPolicy,
@@ -18,5 +19,6 @@ __all__ = [
     "SourcePolicy",
     "SourceProvenance",
     "compose_authentication_engine",
+    "compose_secret_backed_api_key_runtime",
     "load_approved_configuration",
 ]

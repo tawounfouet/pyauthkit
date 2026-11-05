@@ -8,6 +8,7 @@ from pyauthkit.application.host_context import HostTrustCatalog
 from pyauthkit.application.policy import AuthenticationPolicyGate, FinalRule
 from pyauthkit.composition.registry import AuthenticatorRegistryBuilder
 from pyauthkit.domain.evidence import EvidenceMethod
+from pyauthkit.domain.secret import SecretRef
 from pyauthkit.ports.authenticator import Authenticator
 from pyauthkit.ports.events import AuthenticationEventSink
 
@@ -48,9 +49,33 @@ def compose_authentication_engine(
     if snapshot.generation.value < minimum_generation:
         raise ConfigurationRejected("configuration generation is stale")
     if snapshot.secret_refs:
-        # A configured secret must not be treated as ready before an approved
-        # consumer is explicitly wired. A preflight lookup alone is not enough.
+        # Generic callers cannot assert a secret consumer by supplying an
+        # already-created authenticator. Use the explicit M4 composition path.
         raise ConfigurationRejected("secret consumer composition not implemented")
+    return _compose_approved_runtime(
+        snapshot,
+        authenticators=authenticators,
+        final_rule=final_rule,
+        event_sink=event_sink,
+        minimum_generation=minimum_generation,
+        admitted_secret_refs=frozenset(),
+    )
+
+
+def _compose_approved_runtime(
+    snapshot: ConfigurationSnapshot,
+    *,
+    authenticators: Iterable[Authenticator],
+    admitted_secret_refs: frozenset[SecretRef],
+    final_rule: FinalRule | None,
+    event_sink: AuthenticationEventSink | None,
+    minimum_generation: int,
+) -> M6Runtime:
+    """Internal composition gate: only validated secret-backed paths may call."""
+    if snapshot.generation.value < minimum_generation:
+        raise ConfigurationRejected("configuration generation is stale")
+    if admitted_secret_refs != frozenset(snapshot.secret_refs):
+        raise ConfigurationRejected("unapproved secret consumer coverage")
     if final_rule is not None and not callable(final_rule):
         raise ConfigurationRejected("invalid final rule")
     try:
