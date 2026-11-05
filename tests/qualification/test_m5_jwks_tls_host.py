@@ -152,7 +152,7 @@ def test_real_tls_certificate_hostname_sni_and_body_are_verified(tmp_path, monke
 
 @pytest.mark.security
 def test_real_tls_wrong_certificate_hostname_fails_closed(tmp_path, monkeypatch) -> None:
-    server_ctx, client_ctx = test_context(tmp_path, certificate_hostname="different.example.test")
+    server_ctx, client_ctx = _tls_context(tmp_path, certificate_hostname="different.example.test")
     with pytest.raises(DomainTechnicalError):
         asyncio.run(exercise_tls(monkeypatch, server_ctx, client_ctx))
 
