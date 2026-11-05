@@ -141,3 +141,25 @@ Evidence and GATE27-07: pending exact SHA CI review; no independent sign-off.
   New ADRs and learning cards remain **PROPOSED**, not security approvals.
 
 Final developer CI SHA: PENDING validation. GATE27-07 remains NO-GO.
+
+## 2026-11-05 development iteration 6 - persistent single-host generation floor
+
+- Added a host-controlled `GenerationFloorLedger` port, explicit one-time
+  `provision_sqlite_generation_ledger`, and a SQLite reference CAS adapter.
+  Normal reading uses `mode=rw`, never automatic create/default G1.
+  Invalid schema/state, stale generation, wrong journal mode and unavailable
+  database fail closed.
+- Added `prepare_with_generation_ledger` and async variant: read trusted
+  floor, prepare and validate one M6Runtime candidate, atomically advance
+  floor, then return the runtime. Failed dependency composition cannot advance
+  the floor. Concurrent candidate commits with the same expected generation
+  floor cannot both succeed.
+- This only strengthens single-file local persistence. A privileged host
+  process can rewrite/reset the ledger; filesystems, process crash durability,
+  multi-replica fencing, attacker-driven tampering, external config authenticity
+  and promotion to active serving remain host/deployment responsibilities.
+- Negative tests cover stale restart, absent/corrupt ledger, provisioning
+  collision, invalid floors, concurrent CAS, failed preflight, same-generation
+  restart, and re-opened database persistence.
+- The source code and tests are DEVELOPMENT CANDIDATE only. Exact-HEAD CI
+  and independent GATE27-07 acceptance remain mandatory.

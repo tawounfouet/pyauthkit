@@ -46,7 +46,7 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 | M6-T33 | COVERED | test_m6_t33_memory_sink_does_not_claim_idempotent_delivery |
 | M6-T34 | COVERED | test_m6_restart_to_new_key_does_not_mix_generations |
 | M6-T35 | PARTIAL | test_m6_t35_invalid_restart_never_returns_a_runtime; host routing not modeled |
-| M6-T36 | PARTIAL | stale generation rejected if trusted external floor injected; no durable ledger provided |
+| M6-T36 | PARTIAL | local SQLite reference ledger persists and CAS-checks generation across reopened connections; no tamper-resistance or multi-replica fencing |
 | M6-T37 | COVERED | test_m6_restart_to_new_key_does_not_mix_generations |
 | M6-T38 | COVERED | test_m6_t22_provider_exception_cannot_leak_canary and post-bootstrap fault |
 | M6-T39 | PENDING_SHA | wheel/sdist smoke jobs required at final head SHA |
@@ -68,8 +68,10 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
   receipt is asserted; `required` is rejected.
 - The source adapter only supports synthetic-provider tests here. Any real
   Vault/KMS/DB/HTTP integration needs additional threat, access and fault tests.
-- G1/G2 recovery is pinned by host-supplied floor, not a durable authenticated
-  ledger. This project cannot prove crash-safe anti-rollback without one.
+- An optional SQLite ledger now stores a local generation floor and CAS, but
+  it is neither cryptographically authenticated nor a multi-replica fencing
+  system. Privileged file replacement and host routing/activation remain
+  external; no cluster-wide anti-rollback claim is supported.
 - M3/M4/M5 upstream security gates have unresolved independent qualification.
 - G7-01..G7-16 remain unadjudicated; this document does not ratify their status.
 
