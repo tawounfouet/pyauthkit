@@ -282,3 +282,31 @@ Exact-head CI result: PENDING for this iteration until verified.
   and independent G7 qualification.
 
 Exact-head CI: PENDING. GATE27-07 remains NO-GO.
+
+## 2026-11-06 development iteration 11 - actual M4 HMAC / M5 JWT receipted integration
+
+- Added `compose_receipted_api_key_gateway` (async) and
+  `compose_receipted_jwt_gateway` (sync), each delegating exclusively to
+  the previously verified M4 HMAC secret-backed or M5 JWT v2 composer
+  respectively. Their returned M2 engine has no separate best-effort sink
+  and is only handed to the experimental `ReceiptedDecisionGateway`.
+- Admission is narrow: API-key-only schema v1 with explicit secret refs,
+  or JWT-only schema v2 with exact JWT trust profiles and separate host
+  grants. Mixed-method, secret+JWT, fake committers, stale generation and
+  nonapproved trust source fail before a gateway becomes available.
+- Integration tests exercise actual M4 possession proof and the M2 final
+  gate, signed RS256 JWT verification, rejected JWT audience, invalid API
+  bearer proof, post-bootstrap M4 secret revocation, audit DB removal,
+  cross-method attempt-ID replay, and no raw credential/subject/correlation
+  in the persisted SQLite decision records.
+- An experimental gateway object exposes only its `catalog` and
+  `authenticate` methods in its public interface, but its internal
+  Python runtime remains reachable by privileged in-process code. This
+  cannot enforce a sole non-bypassable HTTP entrypoint or prevent a host
+  from independently composing an M2 engine; framework route/admission
+  isolation remains explicitly **unqualified**.
+- The public schema still rejects `audit_delivery=required`.
+  These are candidate integration oracles, not an authorization to deploy
+  mandatory audit. Independent G7 security review remains NO-GO.
+
+Exact HEAD CI: PENDING this iteration.

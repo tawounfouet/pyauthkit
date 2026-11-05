@@ -64,12 +64,13 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 - Only an optional bounded metrics port and synthetic memory recorder exist;
   no production metrics exporter exists. Metrics are never an audit receipt and
   source identifiers, correlation IDs, scopes and credentials are not labels.
-- M6 now has TWO distinct local audit references: (a) the existing optional
-  best-effort SQLite event sink, whose errors M2 swallows; (b) an experimental
+- M6 now has TWO distinct local audit references: (a) the optional
+  best-effort SQLite event sink, whose errors M2 swallows; (b) the experimental
   receipt-bearing host application gateway with a separate SQLite CAS store.
-  The latter tests commit-before-positive-return, unique attempt IDs and
-  denial on failed commit, but has NOT been activated as a trusted public
-  configuration mode. `audit_delivery=required` stays rejected. The host
+  The latter now covers the real M4 HMAC and M5 RS256 JWT consumers with
+  narrow security-only composition, commit-before-positive-return, unique
+  attempt IDs and denial on failed commit. It has NOT been activated as a
+  trusted public configuration mode. `audit_delivery=required` stays rejected. The host
   could bypass the gateway by invoking a separate M2 engine; no cluster-wide
   delivery, storage tamper-resistance or exactly-once claim is made.
 - M6 includes an optional AWS Secrets Manager adapter, strict botocore client

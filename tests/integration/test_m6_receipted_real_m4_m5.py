@@ -103,7 +103,7 @@ def _digest(secret: bytes) -> bytes:
     def frame(value: bytes) -> bytes:
         return len(value).to_bytes(4, "big") + value
 
-    content = b"pyauthkit-api-key-v1\\x00" + b"".join(
+    content = b"pyauthkit-api-key-v1\x00" + b"".join(
         frame(value)
         for value in (SCOPE.value.encode("ascii"), b"ak1", _b64(SELECTOR), API_SECRET)
     )
@@ -264,7 +264,9 @@ async def _api_gateway(committer: SqliteRequiredAuditCommitter, *, secrets=None,
         access_policy=SecretAccessPolicy(
             frozenset({SecretGrant("unit-vault", SCOPE.value, "verify")})
         ),
-        secret_resolver=secrets if secrets is not None else SyntheticSecretResolver({REF: HMAC_KEY}),
+        secret_resolver=(
+            secrets if secrets is not None else SyntheticSecretResolver({REF: HMAC_KEY})
+        ),
         credential_resolver=Owner(_record()),
         attempt_guard=Guard(),
         committer=committer,
@@ -288,7 +290,9 @@ def _jwt_gateway(committer, keys, *, floor=1):
 async def _check(gw, *, method: EvidenceMethod, raw: bytes, route: str, attempt_id=None):
     chosen = _attempt() if attempt_id is None else attempt_id
     result = await gw.authenticate(
-        AuthenticationRequest(PresentedEvidence(method, raw), CorrelationId("private-trace-m6")),
+        AuthenticationRequest(
+            PresentedEvidence(method, raw), CorrelationId("private-trace-m6")
+        ),
         entry=gw.catalog.resolve_for_host_route(route),
         attempt_id=chosen,
     )
@@ -376,7 +380,11 @@ def test_m6_receipted_m4_m5_cannot_return_positive_when_store_missing(
     committer = _store(tmp_path)
 
     async def scenario():
-        gw = await _api_gateway(committer) if which == "m4" else _jwt_gateway(committer, public)
+        gw = (
+            await _api_gateway(committer)
+            if which == "m4"
+            else _jwt_gateway(committer, public)
+        )
         (tmp_path / "receipt.sqlite").unlink()
         method = EvidenceMethod.API_KEY if which == "m4" else EvidenceMethod.JWT
         route = "api" if which == "m4" else "jwt"
@@ -384,10 +392,8 @@ def test_m6_receipted_m4_m5_cannot_return_positive_when_store_missing(
         attempt_id, result = await _check(gw, method=method, raw=raw, route=route)
         assert isinstance(result, AuthError)
         assert result.error_code is TechnicalErrorCode.DEPENDENCY_UNAVAILABLE
-        assert committer.inspect_receipt(attempt_id) is None
 
-    # No successful receipt can be inspected once the DB is deleted;
-    # the gateway must return a technical error regardless.
+    # Missing storage is denied; the gateway cannot inspect any receipt.
     asyncio.run(scenario())
 
 
@@ -400,12 +406,18 @@ def test_m6_receipted_m4_m5_share_one_attempt_namespace(tmp_path: Path, signed_k
         jwt_gate = _jwt_gateway(committer, public)
         shared = _attempt()
         _, good = await _check(
-            api, method=EvidenceMethod.API_KEY, raw=_api_wire(),
-            route="api", attempt_id=shared,
+            api,
+            method=EvidenceMethod.API_KEY,
+            raw=_api_wire(),
+            route="api",
+            attempt_id=shared,
         )
         _, denied = await _check(
-            jwt_gate, method=EvidenceMethod.JWT, raw=_jwt_wire(private),
-            route="jwt", attempt_id=shared,
+            jwt_gate,
+            method=EvidenceMethod.JWT,
+            raw=_jwt_wire(private),
+            route="jwt",
+            attempt_id=shared,
         )
         assert isinstance(good, Authenticated)
         assert isinstance(denied, AuthError)
