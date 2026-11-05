@@ -43,13 +43,16 @@
 - [x] Per-profile cache isolation, TTL, invalidation, rotation and single-flight.
 - [x] Synthetic concurrency, cancellation, timeout and malformed JWKS tests.
 - [x] Cache rejects stale snapshots and network outages in synthetic tests.
-- [ ] Real HTTPS transport with DNS rebinding, redirects, egress allowlist, TLS enforcement.
-- [ ] Host-level adversarial network and key-rotation qualification under GATE27-06.
+- [x] Reference PinnedHttpsJwksFetcher: approved exact public IPs, DNS all-answer validation, literal-IP TLS connection, no redirects, bounded HTTP.
+- [x] Simulated DNS/HTTP SSRF tests and actual local TLS certificate/hostname tests.
+- [ ] Deployment-like public/organization network, DNS and firewall red-team qualification under GATE27-06.
+- [ ] Independent reviewer approval of egress allowlist and key-rotation incident plan.
 
 **Safety choice:** No generic URL fetching or token-driven JWKS discovery was
 introduced merely to tick this checkbox. A static trusted source is supported for development and offline verification;
-remote sources require an operator-controlled fetch adapter with proven network
-safety. The built-in cache does not prove transport egress security.
+a reference pinned HTTPS fetcher now exists, but tests use simulated routing;
+the deployment firewall, DNS service and public-provider address policy have
+not been qualified. The cache alone never proves transport egress security.
 
 ## PR-08D - End-to-end M2 integration and release evidence (WP27-030, 032)
 
@@ -60,8 +63,10 @@ safety. The built-in cache does not prove transport egress security.
 - [x] Emit only M2 internal VerifiedOutcome, pass through final policy gate.
 - [x] Adversarial tests for wrong issuer/audience/type/key, bad signature,
   duplicate JSON, none/HS confusion, role-based bypass and clock boundaries.
-- [ ] 40-oracle manifest with exact SHA/job/node identifiers.
-- [ ] CI matrix including dedicated M5 qualification job and wheel smoke.
+- [x] 40-oracle candidate manifest (tests linked, no independent approval).
+- [x] M5 CI job: OpenSSL external signing vectors, pinned HTTPS and local TLS tests, wheel smoke.
+- [x] Candidate G6 technical review and ADR-0021, explicitly NO-GO.
+- [ ] Exact final SHA/job results and independent evaluation of all 40 oracles.
 - [ ] Independent GATE27-06 security signoff.
 
 ## Inheritance and debt
