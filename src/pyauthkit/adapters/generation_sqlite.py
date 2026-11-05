@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 from pyauthkit.configuration.models import ConfigurationRejected
@@ -64,15 +65,19 @@ def provision_sqlite_generation_ledger(path: Path, *, initial_floor: int) -> Non
         raise GenerationLedgerUnavailable("ledger provisioning rejected") from None
     os.close(fd)
     try:
-        with sqlite3.connect(path, timeout=2.0) as conn:
-            conn.execute("PRAGMA journal_mode=DELETE")
-            conn.execute("PRAGMA synchronous=EXTRA")
-            conn.execute("PRAGMA trusted_schema=OFF")
-            conn.execute(_DDL)
-            conn.execute(
-                "INSERT INTO generation_floor (record_id, floor) VALUES (1, ?)",
-                (initial_floor,),
-            )
+        # sqlite3.Connection.__exit__ commits but does NOT close the handle.
+        # Explicit closing is essential on Windows: an open handle prevents
+        # removal/replacement in fail-closed recovery and restart drills.
+        with closing(sqlite3.connect(path, timeout=2.0)) as conn:
+            with conn:
+                conn.execute("PRAGMA journal_mode=DELETE")
+                conn.execute("PRAGMA synchronous=EXTRA")
+                conn.execute("PRAGMA trusted_schema=OFF")
+                conn.execute(_DDL)
+                conn.execute(
+                    "INSERT INTO generation_floor (record_id, floor) VALUES (1, ?)",
+                    (initial_floor,),
+                )
     except sqlite3.Error:
         # A partly provisioned file is NOT a working floor; subsequent reads
         # must fail. Avoid silently deleting forensic evidence.
