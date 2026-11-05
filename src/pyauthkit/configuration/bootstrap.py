@@ -11,6 +11,7 @@ from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.ports.authenticator import Authenticator
 from pyauthkit.ports.events import AuthenticationEventSink
 
+from .audit import BoundedBestEffortAuditSink
 from .models import ConfigurationRejected, ConfigurationSnapshot
 
 
@@ -46,6 +47,10 @@ def compose_authentication_engine(
         raise ConfigurationRejected("invalid generation floor")
     if snapshot.generation.value < minimum_generation:
         raise ConfigurationRejected("configuration generation is stale")
+    if snapshot.secret_refs:
+        # A configured secret must not be treated as ready before an approved
+        # consumer is explicitly wired. A preflight lookup alone is not enough.
+        raise ConfigurationRejected("secret consumer composition not implemented")
     if final_rule is not None and not callable(final_rule):
         raise ConfigurationRejected("invalid final rule")
     try:
@@ -64,9 +69,13 @@ def compose_authentication_engine(
             policy=gate,
             registry=registry,
             timeout_seconds=snapshot.timeout_seconds,
-            event_sink=event_sink,
+            event_sink=(
+                BoundedBestEffortAuditSink(event_sink)
+                if event_sink is not None
+                else None
+            ),
         )
-    except (AttributeError, RuntimeError, TypeError, ValueError, Exception) as error:
+    except Exception:
         # Never expose an adapter's exception text or raw config values.
         raise ConfigurationRejected("authentication composition rejected") from None
     return M6Runtime(snapshot, catalog, engine)
