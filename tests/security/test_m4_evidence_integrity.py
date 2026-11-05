@@ -33,8 +33,8 @@ def test_m4_candidate_catalog_contains_exactly_40_oracles_and_16_gates() -> None
     )
     expected_oracles = [f"M4-T{i:02d}" for i in range(1, 41)]
     expected_gates = [f"G5-{i:02d}" for i in range(1, 17)]
-    assert re.findall(r"^\\| (M4-T\\d{2}) \\|", text, re.M) == expected_oracles
-    assert re.findall(r"^\\| (G5-\\d{2}) \\|", text, re.M) == expected_gates
+    assert re.findall(r"^\| (M4-T\d{2}) \|", text, re.M) == expected_oracles
+    assert re.findall(r"^\| (G5-\d{2}) \|", text, re.M) == expected_gates
     assert "PROPOSED - NOT CANONICAL / NOT APPROVED" in text
     assert "PENDING" in text
 
