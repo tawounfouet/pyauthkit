@@ -65,9 +65,7 @@ class FixedClock:
 
 
 def raw_config(*, source: dict[str, object] | None = None) -> dict[str, object]:
-    selected = (
-        {"kind": "static", "keyset_ref": KEYSET} if source is None else source
-    )
+    selected = {"kind": "static", "keyset_ref": KEYSET} if source is None else source
     return {
         "schema_version": 2,
         "routes": [
@@ -168,7 +166,9 @@ def test_m6_jwt_t03_signed_issuer_and_audience_cannot_select_a_new_profile(rsa_f
         {"jku": "https://attacker.example.test/jwks"},
         {"x5u": "https://attacker.example.test/cert"},
     ):
-        assert isinstance(authenticate(runtime, issue(private, headers=untrusted_headers)), Rejected)
+        assert isinstance(
+            authenticate(runtime, issue(private, headers=untrusted_headers)), Rejected
+        )
 
 
 @pytest.mark.parametrize(
@@ -326,9 +326,7 @@ def test_m6_valid_host_granted_jwks_does_not_fetch_on_bootstrap_or_bad_jwt():
     runtime = compose_trusted_jwt_runtime(
         snap,
         approved_static_keysets={},
-        approved_jwks_egress={
-            ref: ("keys-a", "https://keys.example.com/jwks", ("1.1.1.1",))
-        },
+        approved_jwks_egress={ref: ("keys-a", "https://keys.example.com/jwks", ("1.1.1.1",))},
         clock=FixedClock(),
         final_rule=lambda _subject, _entry: True,
     )

@@ -124,9 +124,7 @@ def compose_trusted_jwt_runtime(
     if approved_jwks_egress is not None and not isinstance(approved_jwks_egress, Mapping):
         raise ConfigurationRejected("invalid approved JWKS egress policy")
     try:
-        profiles = {
-            item.profile.profile_ref: item.profile for item in snapshot.jwt_profiles
-        }
+        profiles = {item.profile.profile_ref: item.profile for item in snapshot.jwt_profiles}
         static_sets: dict[TrustProfileRef, tuple[str, ...]] = {}
         remotes: dict[TrustProfileRef, ApprovedJwksSource] = {}
         remote_ips: dict[TrustProfileRef, tuple[str, ...]] = {}
@@ -165,9 +163,7 @@ def compose_trusted_jwt_runtime(
         remote_resolver: VerificationKeyResolver | None = None
         if remotes:
             transport = PinnedHttpsJwksFetcher(sources=remotes, allowed_ips=remote_ips)
-            remote_resolver = CachedApprovedJwksKeyResolver(
-                sources=remotes, fetcher=transport
-            )
+            remote_resolver = CachedApprovedJwksKeyResolver(sources=remotes, fetcher=transport)
         key_router = _ExactProfileKeyRouter(
             static=static_resolver,
             remote=remote_resolver,

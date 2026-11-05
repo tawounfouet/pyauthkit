@@ -31,16 +31,31 @@ _ROOT_KEYS = frozenset({"schema_version", "routes", "timeout_seconds", "audit_de
 _ROOT_KEYS_V2 = _ROOT_KEYS | {"jwt_profiles"}
 _JWT_KEYS = frozenset(
     {
-        "scope", "profile_id", "profile_version", "issuer", "audience",
-        "expected_typ", "allowed_algorithms", "principal_type",
-        "max_token_bytes", "clock_skew_seconds", "max_age_seconds", "key_source",
+        "scope",
+        "profile_id",
+        "profile_version",
+        "issuer",
+        "audience",
+        "expected_typ",
+        "allowed_algorithms",
+        "principal_type",
+        "max_token_bytes",
+        "clock_skew_seconds",
+        "max_age_seconds",
+        "key_source",
     }
 )
 _STATIC_JWT_KEYS = frozenset({"kind", "keyset_ref"})
 _HTTPS_JWT_KEYS = frozenset(
     {
-        "kind", "source_id", "uri", "ttl_seconds", "timeout_seconds",
-        "max_response_bytes", "max_keys", "allowed_ips",
+        "kind",
+        "source_id",
+        "uri",
+        "ttl_seconds",
+        "timeout_seconds",
+        "max_response_bytes",
+        "max_keys",
+        "allowed_ips",
     }
 )
 _ROUTE_KEYS = frozenset({"route_id", "scope", "profile_id", "profile_version", "allowed_methods"})
@@ -213,9 +228,7 @@ def load_approved_configuration(
             timeout_seconds=mapping["timeout_seconds"],  # type: ignore[arg-type]
             audit_delivery=AuditDeliveryPolicy(_text(mapping["audit_delivery"])),
             secret_refs=tuple(secret_refs),
-            jwt_profiles=(
-                _parse_jwt_profiles(mapping["jwt_profiles"]) if version == 2 else ()
-            ),
+            jwt_profiles=(_parse_jwt_profiles(mapping["jwt_profiles"]) if version == 2 else ()),
         )
     except (ValueError, TypeError):
         raise ConfigurationRejected("configuration bootstrap rejected") from None
