@@ -123,9 +123,7 @@ async def test_t23_redis_outage_returns_503_without_credential_lookup(
             transport=httpx.ASGITransport(app=app, raise_app_exceptions=False),
             base_url="http://host",
         ) as client:
-            result = await client.post(
-                "/alpha/login", json=login_data("alice", "good-phrase")
-            )
+            result = await client.post("/alpha/login", json=login_data("alice", "good-phrase"))
             assert result.status_code == 503
             assert result.json() == {"error": "temporarily_unavailable"}
             assert result.headers.get("cache-control") == "no-store"

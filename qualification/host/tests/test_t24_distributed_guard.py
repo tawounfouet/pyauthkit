@@ -49,14 +49,10 @@ async def test_t24_two_fastapi_replicas_share_limits_but_isolate_tenants(
         assert blocked.json() == {"error": "invalid_credentials"}
 
         # Source buckets are tenant-scoped; another approved tenant remains viable.
-        cross_tenant = await b.post(
-            "/beta/login", json=login_data("alice", "beta-phrase")
-        )
+        cross_tenant = await b.post("/beta/login", json=login_data("alice", "beta-phrase"))
         assert cross_tenant.status_code == 200
         assert (
-            await second_peer.post(
-                "/alpha/login", json=login_data("alice", "alpha-phrase")
-            )
+            await second_peer.post("/alpha/login", json=login_data("alice", "alpha-phrase"))
         ).status_code == 200
         # No body-controlled tenant swap.
         assert (
@@ -114,9 +110,7 @@ async def test_t24_global_account_limit_applies_across_different_peers(
     async def post(app, ip: str, password: str) -> httpx.Response:
         transport = httpx.ASGITransport(app=app, client=(ip, 60000))
         async with httpx.AsyncClient(transport=transport, base_url="http://host") as client:
-            return await client.post(
-                "/alpha/login", json=login_data("alice", password)
-            )
+            return await client.post("/alpha/login", json=login_data("alice", password))
 
     assert (await post(a, "203.0.113.1", "incorrect")).status_code == 401
     assert (await post(b, "203.0.113.2", "incorrect")).status_code == 401

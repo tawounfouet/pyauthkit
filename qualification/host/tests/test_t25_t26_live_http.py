@@ -73,12 +73,8 @@ async def test_t25_real_network_denials_have_identical_status_body_headers(
     await infra.seed("tenant-alpha", "alice", b"real-test-phrase", "alpha-id")
     app = infra.app(max_per_source=500, max_per_identity=500)
     async with live_host(app) as url, httpx.AsyncClient(base_url=url) as client:
-        bad = await client.post(
-            "/alpha/login", json=login_data("alice", "invalid")
-        )
-        missing = await client.post(
-            "/alpha/login", json=login_data("unknown", "invalid")
-        )
+        bad = await client.post("/alpha/login", json=login_data("alice", "invalid"))
+        missing = await client.post("/alpha/login", json=login_data("unknown", "invalid"))
         await infra.pool.execute(
             "UPDATE m3q_credentials SET status='revoked', version=version+1 "
             "WHERE scope_id='tenant-alpha' AND identifier_value='alice'"
@@ -104,12 +100,8 @@ async def test_t25_real_network_denials_have_identical_status_body_headers(
     # Fresh host + reduced limit, real socket again: throttled refusal is identical.
     limiter = infra.app(max_per_source=1, max_per_identity=20)
     async with live_host(limiter) as url, httpx.AsyncClient(base_url=url) as client:
-        first = await client.post(
-            "/alpha/login", json={"username": "unknown", "password": "invalid"}
-        )
-        throttled = await client.post(
-            "/alpha/login", json=login_data("alice", "real-test-phrase")
-        )
+        first = await client.post("/alpha/login", json=login_data("unknown", "invalid"))
+        throttled = await client.post("/alpha/login", json=login_data("alice", "real-test-phrase"))
         assert denial_signature(first) == denial_signature(throttled)
         assert denial_signature(bad) == denial_signature(throttled)
 
