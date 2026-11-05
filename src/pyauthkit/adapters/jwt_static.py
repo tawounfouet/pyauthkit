@@ -8,6 +8,7 @@ from iss, jku, x5u or an unverified claim. Only RSA verification keys are admitt
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Mapping
 from types import MappingProxyType
 
@@ -65,7 +66,7 @@ def _validate_public_rsa_jwk(raw: str) -> tuple[str, str]:
         if type(value) is not str or not value or len(value) > 1024:
             raise ValueError("invalid RSA JWK component")
         # Canonical base64url components are additionally checked by the JOSE library.
-        if any(char not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" for char in value):
+        if re.fullmatch(r"[A-Za-z0-9_-]+", value) is None:
             raise ValueError("invalid RSA JWK encoding")
     return kid, json.dumps(jwk, sort_keys=True, separators=(",", ":"))
 
