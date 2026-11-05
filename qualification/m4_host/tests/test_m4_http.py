@@ -30,9 +30,9 @@ from .conftest import (
     SELECTOR,
     Infrastructure,
     encode,
-    test_digest as fixture_digest,
     wire,
 )
+from .conftest import test_digest as fixture_digest
 
 
 def unused_port() -> int:
