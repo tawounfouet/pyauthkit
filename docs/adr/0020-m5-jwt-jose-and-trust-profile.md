@@ -33,9 +33,11 @@ proof, not a final authorization decision.
 6. Reuse AuthenticatorRegistryBuilder, JWTAuthenticator async SPI,
    _issue_verified_outcome and AuthenticationPolicyGate.final_decision.
    Claims roles, scope and tenant never grant IAM permissions.
-7. Initial static trusted JWK adapter is a constrained development slice.
-   A **remote JWKS feature is not authorized** until HTTPS/DNS/redirect/egress
-   safeguards, cache isolation, rotation, timeout and independent tests exist.
+7. Static trusted JWK adapter is supported. A reference remote HTTPS JWKS
+   adapter with exact public IP allowlists, DNS-to-IP pinning, verified TLS,
+   bounded HTTP and profile-isolated cache has been implemented under
+   **candidate ADR-0021**. Real-host egress qualification and reviewer approval
+   are still required; this code is not production-authorized.
 
 ## Alternatives and tradeoffs
 
@@ -51,8 +53,9 @@ proof, not a final authorization decision.
 ## Evidence and limits
 
 PR #80 contains code and synthetic tests, which only become TESTED after CI
-at an exact SHA passes. Tests from the same JOSE library are not independent
-cryptographic vectors. No independent reviewer has signed any M5 oracle or
+at an exact SHA passes. The branch also carries OpenSSL CLI-produced independent JWS
+construction vectors verified by PyJWT; these do not constitute a third-party
+cryptographic audit. No independent reviewer has signed any M5 oracle or
 G6 criterion. This ADR remains a proposal until explicitly accepted.
 
 ## Learning card
