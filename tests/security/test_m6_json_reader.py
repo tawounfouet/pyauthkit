@@ -70,18 +70,18 @@ def test_m6_t05_duplicate_v2_issuer_member_cannot_swap_authority() -> None:
     raw["schema_version"] = 2
     raw["jwt_profiles"] = [
         {
-        "scope": "tenant-a",
-        "profile_id": "p",
-        "profile_version": "v1",
-        "issuer": "https://approved.example.test",
-        "audience": "orders-api",
-        "expected_typ": "at+jwt",
-        "allowed_algorithms": ["RS256"],
-        "principal_type": "service",
-        "max_token_bytes": 8192,
-        "clock_skew_seconds": 0,
-        "max_age_seconds": None,
-        "key_source": {"kind": "static", "keyset_ref": "approved-public-jwk"},
+            "scope": "tenant-a",
+            "profile_id": "p",
+            "profile_version": "v1",
+            "issuer": "https://approved.example.test",
+            "audience": "orders-api",
+            "expected_typ": "at+jwt",
+            "allowed_algorithms": ["RS256"],
+            "principal_type": "service",
+            "max_token_bytes": 8192,
+            "clock_skew_seconds": 0,
+            "max_age_seconds": None,
+            "key_source": {"kind": "static", "keyset_ref": "approved-public-jwk"},
         }
     ]
     good = decode(json.dumps(raw).encode())
