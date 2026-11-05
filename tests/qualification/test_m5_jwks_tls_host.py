@@ -96,7 +96,8 @@ async def exercise_tls(monkeypatch, server_ctx, client_ctx):
             writer.write(
                 b"HTTP/1.1 200 OK\r\n"
                 b"Content-Type: application/jwk-set+json\r\n"
-                + f"Content-Length: {len(BODY)}\r\n\r\n".encode() + BODY
+                + f"Content-Length: {len(BODY)}\r\n\r\n".encode()
+                + BODY
             )
             await writer.drain()
         except (TimeoutError, ConnectionError, asyncio.IncompleteReadError):
@@ -104,9 +105,7 @@ async def exercise_tls(monkeypatch, server_ctx, client_ctx):
         finally:
             writer.close()
 
-    server = await asyncio.start_server(
-        service, "127.0.0.1", 0, ssl=server_ctx
-    )
+    server = await asyncio.start_server(service, "127.0.0.1", 0, ssl=server_ctx)
     port = server.sockets[0].getsockname()[1]
     original_connect = asyncio.open_connection
 
@@ -130,7 +129,8 @@ async def exercise_tls(monkeypatch, server_ctx, client_ctx):
     monkeypatch.setattr(asyncio, "open_connection", test_route)
     try:
         fetcher = PinnedHttpsJwksFetcher(
-            sources={REF: SOURCE}, allowed_ips={REF: (PINNED_IP,)},
+            sources={REF: SOURCE},
+            allowed_ips={REF: (PINNED_IP,)},
             ssl_context=client_ctx,
         )
         return await fetcher.fetch(source=SOURCE), requests
@@ -152,9 +152,7 @@ def test_real_tls_certificate_hostname_sni_and_body_are_verified(tmp_path, monke
 
 @pytest.mark.security
 def test_real_tls_wrong_certificate_hostname_fails_closed(tmp_path, monkeypatch) -> None:
-    server_ctx, client_ctx = test_context(
-        tmp_path, certificate_hostname="different.example.test"
-    )
+    server_ctx, client_ctx = test_context(tmp_path, certificate_hostname="different.example.test")
     with pytest.raises(DomainTechnicalError):
         asyncio.run(exercise_tls(monkeypatch, server_ctx, client_ctx))
 
