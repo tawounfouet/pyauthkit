@@ -1,0 +1,748 @@
+{
+  "schema_version": "1.0",
+  "kind": "M4_CANDIDATE_EVIDENCE_INDEX_NOT_CERTIFICATION",
+  "created_on": "2026-11-05",
+  "convention": "TESTED != QUALIFIED; DOCUMENTED != IMPLEMENTED",
+  "repository": "tawounfouet/pyauthkit",
+  "pull_request": "https://github.com/tawounfouet/pyauthkit/pull/76",
+  "issue": "https://github.com/tawounfouet/pyauthkit/issues/77",
+  "source_of_candidate_oracles": "docs/qualification/M4_PR07_SECURITY_ORACLES.md",
+  "source_of_candidate_gates": "docs/qualification/GATE27-05_M4_API_KEY_DECISION.md",
+  "normative_catalog_reconciliation": "PENDING",
+  "immutable_technical_checkpoint": {
+    "sha": "5f908614e597ea358b69cd469ee3d5ebd30cbb2d",
+    "run_id": 42060406108,
+    "workflow_url": "https://github.com/tawounfouet/pyauthkit/actions/runs/42060406108",
+    "status_observed": "SUCCESS",
+    "ci_jobs_observed": 8,
+    "core_tests_passed_observed": 207,
+    "reference_host_tests_passed_observed": 12,
+    "job_ids": {
+      "quality": 127360160012,
+      "security": 127360159499,
+      "m4_host": 127360160208,
+      "ubuntu_py312": 127360160070,
+      "ubuntu_py313": 127360160034,
+      "ubuntu_py314": 127360160080,
+      "macos_py312": 127360160028,
+      "windows_py312": 127360160074
+    },
+    "run_log_retention": "GitHub retention policy unknown. Archive and hash logs before expiry; NOT DONE."
+  },
+  "host_profile": {
+    "kind": "CI_ISOLATED_REFERENCE_ONLY",
+    "postgresql": "PostgreSQL 17 service in GitHub Actions",
+    "redis": "Redis 7 service in GitHub Actions",
+    "http": "loopback TCP/HTTP Uvicorn two OS processes; no reverse proxy or TLS",
+    "keys": "synthetic test fixture; not KMS",
+    "audit": "best effort engine events; no durability"
+  },
+  "oracles": [
+    {
+      "id": "M4-T01",
+      "assertion": "M2 method routing selects exactly API_KEY",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_full_secret_hmac_and_explicit_m2_allow_produce_authenticated"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T02",
+      "assertion": "M2 final policy rejects verified proof by default",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_valid_proof_cannot_bypass_final_policy"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T03",
+      "assertion": "Host-selected tenant rejects foreign claim",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_mismatched_tenant_claim_rejected_by_m2_preflight"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T04",
+      "assertion": "Malformed or too-long evidence fails parser",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/unit/test_m4_api_key_parser.py::test_noncanonical_truncated_or_modified_input_is_rejected"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T05",
+      "assertion": "Canonical ak1 selector and bearer lengths",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/unit/test_m4_api_key_parser.py::test_valid_opaque_key_has_exact_canonical_length"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T06",
+      "assertion": "Base64url spare bits, padding and UTF-8 rejected",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/unit/test_m4_api_key_parser.py::test_parser_rejects_noncanonical_unused_base64_bits"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T07",
+      "assertion": "Selector alone cannot authenticate",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_wrong_selector_even_with_correct_secret_fails_before_key_lookup"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T08",
+      "assertion": "Independent 32-byte HMAC proof vector",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_independent_openssl_vector_accepts_full_key_only"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T09",
+      "assertion": "Every changed bearer secret must fail",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_one_byte_secret_mutation_never_matches"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T10",
+      "assertion": "Tampered stored digest rejected",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_digest_tampering_is_rejected"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T11",
+      "assertion": "Same selector in distinct tenants isolated",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/contract/test_m4_api_key_resolver.py::test_same_selector_in_two_tenants_has_independent_results"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T12",
+      "assertion": "Foreign scope verifier record rejected",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/contract/test_m4_api_key_resolver.py::test_callback_foreign_scope_is_rejected"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T13",
+      "assertion": "Unknown selector is a negative outcome",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_missing_selector_never_reaches_proof"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T14",
+      "assertion": "Multiple records cannot select first",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_ambiguous_records_cannot_pick_first"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T15",
+      "assertion": "Unavailable resolver is an error, not a retry to another scope",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_store_unavailable_is_technical_error"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T16",
+      "assertion": "HMAC key must be approved by scope",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_unknown_hmac_key_reference_fails_closed_without_lookup"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T17",
+      "assertion": "Missing approved HMAC material is a technical error",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_missing_approved_hmac_key_is_technical_failure"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T18",
+      "assertion": "Unapproved hashing algorithm cannot downgrade",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_unsupported_algorithm_has_no_fallback"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T19",
+      "assertion": "Operator key-ref policy is frozen and scoped",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_protection_policy_is_immutable_and_scoped"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T20",
+      "assertion": "Key source exception does not authenticate",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_key_source_outage_is_technical"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T21",
+      "assertion": "Disabled, suspended or revoked credential denied",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_inactive_record_fails_before_cryptography"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T22",
+      "assertion": "not_before from trusted clock",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_missing_expiry_expired_or_not_yet_valid_rejected"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T23",
+      "assertion": "Expiry boundary denies at time >= expiration",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_missing_expiry_expired_or_not_yet_valid_rejected"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T24",
+      "assertion": "Missing expiry fails conservative M4 policy",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_missing_expiry_expired_or_not_yet_valid_rejected"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T25",
+      "assertion": "Revoke after HMAC before freshness denies",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_post_hmac_revocation_version_change_blocks_verified_outcome"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T26",
+      "assertion": "Authoritative record version replacement fails freshness",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/contract/test_m4_api_key_resolver.py::test_freshness_detects_replacement"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T27",
+      "assertion": "Client timestamp cannot override trusted clock",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_full_secret_hmac_and_explicit_m2_allow_produce_authenticated"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T28",
+      "assertion": "Only policy gate creates final Authenticated",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_valid_proof_cannot_bypass_final_policy"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T29",
+      "assertion": "Scoped positive may be approved only after full proof",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_full_secret_hmac_and_explicit_m2_allow_produce_authenticated"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T30",
+      "assertion": "Tenant claim never sets trusted scope",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_mismatched_tenant_claim_rejected_by_m2_preflight"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T31",
+      "assertion": "Missing guard cannot bootstrap Authenticator",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_authenticator_cannot_be_constructed_without_guard"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T32",
+      "assertion": "Guard denies before resolver/cryptography",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_guard_requires_exact_bool_true"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T33",
+      "assertion": "Guard outage is not success",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_guard_outage_is_technical_not_permissive"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Reviewer must confirm canonical mapping, assertions, boundary and negative evidence before qualification."
+    },
+    {
+      "id": "M4-T34",
+      "assertion": "Bearer replay limitations and transport policy reviewed",
+      "source_status": "PENDING_HOST",
+      "evidence_tier": "REFERENCE_HOST",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_bearer_replay_is_an_explicit_non_goal_of_api_keys"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Rejeu bearer observable. TLS/proxy, procedures de fuite, mitigation du rejeu et analyse de menace host non valides."
+    },
+    {
+      "id": "M4-T35",
+      "assertion": "Distributed revoke/rotate CAS correctness under races",
+      "source_status": "PENDING_HOST",
+      "evidence_tier": "REFERENCE_HOST",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_pg_cas_revocation_is_single_winner",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_pg_versioned_rotation_invalidates_stale_proof",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_revocation_between_hmac_and_pg_recheck_denies"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "CAS et recheck prouves seulement en labo. Delai maximum de revocation apres derniere lecture non etabli."
+    },
+    {
+      "id": "M4-T36",
+      "assertion": "Source-scoped SQL, multi-tenant and cache consistency",
+      "source_status": "PENDING_HOST",
+      "evidence_tier": "REFERENCE_HOST",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_source_scoped_sql_same_selector_tenants",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_two_uvicorn_os_processes_share_redis_and_pg"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "PostgreSQL scope-filtered et 2 processus testes. Caches, IAM owner et deployment prod non qualifies."
+    },
+    {
+      "id": "M4-T37",
+      "assertion": "HTTP refusals, timing and quota cross-worker effectiveness",
+      "source_status": "PENDING_HOST",
+      "evidence_tier": "REFERENCE_HOST",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_http_generic_denials_and_host_tenant_binding",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_loopback_timing_observation_no_equivalence_claim",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_redis_atomic_guard_shared_between_instances"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "HTTP loopback et Redis testes. Timing equivalence, veritable reverse proxy et charge sostenue non qualifies."
+    },
+    {
+      "id": "M4-T38",
+      "assertion": "Audit never discloses secret, subject or tenant claims",
+      "source_status": "CODE_TEST_PRESENT",
+      "evidence_tier": "CODE_TEST",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_redacted_event_has_no_secret_or_id_in_repr"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Redaction du repr/event testee. Durabilite audit, retention, SIEM et alertes non qualifies."
+    },
+    {
+      "id": "M4-T39",
+      "assertion": "CI matrix, package smoke and security scans are reproducible",
+      "source_status": "CI_EVIDENCE",
+      "evidence_tier": "CI_RUN",
+      "test_nodes": [],
+      "external_evidence": [
+        "CI-01"
+      ],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "CI observee au SHA fige. Conservation des logs et provenance des artefacts non archivees."
+    },
+    {
+      "id": "M4-T40",
+      "assertion": "Independent approval and explicit GATE27-05 GO/NO-GO",
+      "source_status": "PENDING_REVIEW",
+      "evidence_tier": "NOT_OBSERVED",
+      "test_nodes": [],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Aucune revue de securite independante, ADR acceptes ni decision GATE27-05."
+    }
+  ],
+  "g5": [
+    {
+      "id": "G5-01",
+      "candidate_requirement": "Architecture scope and M2 authority unchanged",
+      "prior_status": "PENDING REVIEW",
+      "oracle_links": [
+        "M4-T01",
+        "M4-T28",
+        "M4-T29"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-02",
+      "candidate_requirement": "Immutable scoped record, ownership and contract review",
+      "prior_status": "PENDING REVIEW",
+      "oracle_links": [
+        "M4-T11",
+        "M4-T12",
+        "M4-T26"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-03",
+      "candidate_requirement": "70-byte canonical parsing and public selector",
+      "prior_status": "TECHNICAL TEST ONLY",
+      "oracle_links": [
+        "M4-T04",
+        "M4-T05",
+        "M4-T06"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-04",
+      "candidate_requirement": "Full-secret HMAC and anti-downgrade",
+      "prior_status": "TECHNICAL TEST ONLY",
+      "oracle_links": [
+        "M4-T07",
+        "M4-T08",
+        "M4-T09",
+        "M4-T10",
+        "M4-T18"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-05",
+      "candidate_requirement": "Approval, rotation and key-source error semantics",
+      "prior_status": "PENDING HOST",
+      "oracle_links": [
+        "M4-T16",
+        "M4-T17",
+        "M4-T19",
+        "M4-T20",
+        "M4-T35"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-06",
+      "candidate_requirement": "Status, expiry and clock validation",
+      "prior_status": "TECHNICAL TEST ONLY",
+      "oracle_links": [
+        "M4-T21",
+        "M4-T22",
+        "M4-T23",
+        "M4-T24",
+        "M4-T27"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-07",
+      "candidate_requirement": "Authoritative revocation/version CAS guarantee",
+      "prior_status": "PENDING HOST",
+      "oracle_links": [
+        "M4-T25",
+        "M4-T26",
+        "M4-T35"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-08",
+      "candidate_requirement": "M2 explicit policy, no shadow Authenticated",
+      "prior_status": "TECHNICAL TEST ONLY",
+      "oracle_links": [
+        "M4-T02",
+        "M4-T28",
+        "M4-T29"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-09",
+      "candidate_requirement": "Distributed abuse control, peer provenance",
+      "prior_status": "PENDING HOST",
+      "oracle_links": [
+        "M4-T31",
+        "M4-T32",
+        "M4-T33",
+        "M4-T37"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-10",
+      "candidate_requirement": "Tenant isolation at persistence source",
+      "prior_status": "PENDING HOST",
+      "oracle_links": [
+        "M4-T03",
+        "M4-T11",
+        "M4-T12",
+        "M4-T30",
+        "M4-T36"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-11",
+      "candidate_requirement": "Audit and telemetry privacy, operational contracts",
+      "prior_status": "PENDING HOST",
+      "oracle_links": [
+        "M4-T38"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-12",
+      "candidate_requirement": "Concurrency, crash/retry and overload behavior",
+      "prior_status": "PENDING HOST",
+      "oracle_links": [
+        "M4-T15",
+        "M4-T25",
+        "M4-T35",
+        "M4-T37"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-13",
+      "candidate_requirement": "40 independently adjudicated M4 oracles",
+      "prior_status": "PENDING REVIEW",
+      "oracle_links": [
+        "M4-T01",
+        "M4-T40"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-14",
+      "candidate_requirement": "All CI/test/build/security checks on exact SHA",
+      "prior_status": "TECHNICAL CI ONLY",
+      "oracle_links": [
+        "M4-T39"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-15",
+      "candidate_requirement": "Independent crypto/security review and ADR owner signoff",
+      "prior_status": "PENDING REVIEW",
+      "oracle_links": [
+        "M4-T34",
+        "M4-T40"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-16",
+      "candidate_requirement": "Explicit owner GO/NO-GO and residual risks",
+      "prior_status": "**NO-GO**",
+      "oracle_links": [
+        "M4-T40"
+      ],
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    }
+  ],
+  "adrs": [
+    {
+      "path": "docs/adr/0016-m4-api-key-format-and-hmac-verification.md",
+      "decision": "PROPOSED",
+      "owner_review": "PENDING",
+      "security_review": "PENDING"
+    },
+    {
+      "path": "docs/adr/0017-m4-scoped-api-key-credential-resolution.md",
+      "decision": "PROPOSED",
+      "owner_review": "PENDING",
+      "security_review": "PENDING"
+    },
+    {
+      "path": "docs/adr/0018-m4-revocation-time-and-policy-integration.md",
+      "decision": "PROPOSED",
+      "owner_review": "PENDING",
+      "security_review": "PENDING"
+    }
+  ],
+  "formal_gate": "NO-GO",
+  "independently_approved_oracles": 0,
+  "approved_gate_criteria": 0,
+  "reviewer_identity": null,
+  "acceptance_signature": null,
+  "merged": false,
+  "released": false
+}
