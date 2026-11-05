@@ -33,9 +33,7 @@ class PyJwtRs256Verifier:
             if (
                 public_jwk.get("kty") != "RSA"
                 or public_jwk.get("alg", "RS256") != approved_algorithm
-                or not public_jwk.keys() <= {
-                    "kty", "kid", "alg", "use", "key_ops", "n", "e"
-                }
+                or not public_jwk.keys() <= {"kty", "kid", "alg", "use", "key_ops", "n", "e"}
             ):
                 return None
             key = jwt.algorithms.RSAAlgorithm.from_jwk(approved_key)
