@@ -1,3 +1,10 @@
+> **ATTENTION - ARCHIVE HISTORIQUE SUPERSEDEE.** La signification des identifiants
+> M4-T01..T40 / G5-01..16 dans ce fichier n'est pas alignée avec le
+> plan détaillé M4 du 05/11/2026. **NE PAS UTILISER POUR UNE DECISION.**
+> Matrice fidèle à la source : `docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md`.
+> Catalogue réconcilié : `docs/qualification/M4_CANDIDATE_ORACLE_CATALOG_V2.md`.
+> Les anciens chiffres/états ci-dessous décrivent uniquement les étapes historiques.
+>
 # Dossier de qualification securite M4 - API Key Authentication
 
 > **Date :** 05 novembre 2026 | **Statut :** DOSSIER CANDIDAT / TECHNICAL TESTED, **GATE27-05 NO-GO**  

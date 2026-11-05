@@ -1,3 +1,10 @@
+> **ATTENTION - ARCHIVE HISTORIQUE SUPERSEDEE.** La signification des identifiants
+> M4-T01..T40 / G5-01..16 dans ce fichier n'est pas alignée avec le
+> plan détaillé M4 du 05/11/2026. **NE PAS UTILISER POUR UNE DECISION.**
+> Matrice fidèle à la source : `docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md`.
+> Catalogue réconcilié : `docs/qualification/M4_CANDIDATE_ORACLE_CATALOG_V2.md`.
+> Les anciens chiffres/états ci-dessous décrivent uniquement les étapes historiques.
+>
 # M4 / PR-07 - API Key Authentication Security Oracle Register
 
 - Date: 2026-11-05
