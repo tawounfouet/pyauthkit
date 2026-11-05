@@ -49,6 +49,12 @@ class CachedApprovedJwksKeyResolver:
 
     __slots__ = ("_sources", "_fetcher", "_clock", "_cache", "_locks")
 
+    _sources: MappingProxyType[TrustProfileRef, ApprovedJwksSource]
+    _fetcher: ApprovedJwksFetcher
+    _clock: Callable[[], float]
+    _cache: dict[TrustProfileRef, tuple[float, MappingProxyType[str, str]]]
+    _locks: dict[TrustProfileRef, asyncio.Lock]
+
     def __init__(
         self,
         *,
