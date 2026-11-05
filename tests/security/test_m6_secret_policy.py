@@ -21,8 +21,8 @@ from pyauthkit.configuration.secrets import (
     SecretResolutionUnavailable,
     resolve_authorized_secret,
 )
-from pyauthkit.domain.secret import SecretRef
 from pyauthkit.domain.evidence import EvidenceMethod
+from pyauthkit.domain.secret import SecretRef
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.ports.events import AuthenticationEvent
 

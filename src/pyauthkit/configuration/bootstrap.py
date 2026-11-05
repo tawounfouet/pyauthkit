@@ -1,6 +1,6 @@
 """Compose an M6 runtime without changing the existing M2 authentication API."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 from pyauthkit.application.engine import AuthenticationEngine
