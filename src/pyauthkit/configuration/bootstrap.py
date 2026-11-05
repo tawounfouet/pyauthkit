@@ -9,6 +9,7 @@ from pyauthkit.application.policy import AuthenticationPolicyGate, FinalRule
 from pyauthkit.composition.registry import AuthenticatorRegistryBuilder
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.secret import SecretRef
+from pyauthkit.domain.trust import TrustProfileRef
 from pyauthkit.ports.authenticator import Authenticator
 from pyauthkit.ports.events import AuthenticationEventSink
 
@@ -70,12 +71,20 @@ def _compose_approved_runtime(
     final_rule: FinalRule | None,
     event_sink: AuthenticationEventSink | None,
     minimum_generation: int,
+    admitted_jwt_refs: frozenset[TrustProfileRef] = frozenset(),
 ) -> M6Runtime:
-    """Internal composition gate: only validated secret-backed paths may call."""
+    """Internal composition gate: admit only explicitly consumed trust profiles."""
+    if not isinstance(snapshot, ConfigurationSnapshot):
+        raise ConfigurationRejected("invalid configuration snapshot")
+    if type(minimum_generation) is not int or minimum_generation < 1:
+        raise ConfigurationRejected("invalid generation floor")
     if snapshot.generation.value < minimum_generation:
         raise ConfigurationRejected("configuration generation is stale")
     if admitted_secret_refs != frozenset(snapshot.secret_refs):
         raise ConfigurationRejected("unapproved secret consumer coverage")
+    expected_jwt_refs = frozenset(binding.profile.profile_ref for binding in snapshot.jwt_profiles)
+    if admitted_jwt_refs != expected_jwt_refs:
+        raise ConfigurationRejected("unapproved JWT trust consumer coverage")
     if final_rule is not None and not callable(final_rule):
         raise ConfigurationRejected("invalid final rule")
     try:
