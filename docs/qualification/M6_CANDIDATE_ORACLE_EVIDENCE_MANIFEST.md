@@ -13,16 +13,16 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 | --- | --- | --- |
 | M6-T01 | COVERED | test_m6_t01_valid_host_mapping_bootstraps_one_generation |
 | M6-T02 | COVERED | test_m6_t02_untrusted_provenance_is_denied |
-| M6-T03 | PARTIAL | M2 host-trust tests; no specific M6 JWT issuer oracle |
+| M6-T03 | COVERED | v2 signed JWT issuer/audience cannot select a foreign trust profile |
 | M6-T04 | COVERED | test_m6_t04_extra_security_field_is_denied |
 | M6-T05 | PARTIAL | duplicate routes/methods rejected; raw JSON duplicate member parsing is out of reader scope |
 | M6-T06 | OPEN | single-source reader; multi-source merge scenarios require explicit decision |
 | M6-T07 | COVERED | test_m6_t07_env_override_is_not_a_source |
 | M6-T08 | COVERED | test_m6_t08_unknown_route_has_no_fallback |
-| M6-T09 | PARTIAL | M2 scope/profile mismatch tests; M6 snapshot delegates M2 HostTrustCatalog |
+| M6-T09 | COVERED | v2 route/JWT profile exact coverage plus M2 catalog scope matching |
 | M6-T10 | COVERED | test_m6_t10_unregistered_authenticator_prevents_activation |
-| M6-T11 | OPEN | M5 JWT policy is not yet built from the M6 configuration model |
-| M6-T12 | PARTIAL | M5 pinned JWKS adapters tested elsewhere; no M6-configurable JWKS source |
+| M6-T11 | COVERED | v2 parser rejects missing issuer/audience, alg none, invalid JWT constraints |
+| M6-T12 | PARTIAL | v2 rejects private IP/HTTP/unauthorized URI and requires separate exact egress grant; live network policy unqualified |
 | M6-T13 | COVERED | test_m6_t13_snapshot_does_not_share_mutable_host_input |
 | M6-T14 | COVERED | test_m6_t14_snapshot_and_nested_bindings_immutable |
 | M6-T15 | COVERED | test_m6_restart_to_new_key_does_not_mix_generations |
@@ -54,8 +54,9 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 
 ## Known security and governance gaps
 
-- M6 does not yet parse or instantiate the complete M5 JWT trust profile,
-  issuer/audience/egress controls as a unified trusted bootstrap config.
+- M6 now parses and composes a bounded M5 JWT trust profile with issuer,
+  audience and pinned JWKS controls under configuration schema v2. Real
+  host network egress and reviewer sign-off are still unqualified.
 - No source-merging policy is admitted by the current reader. It cannot detect
   duplicate raw JSON keys after another parser has already built a Mapping.
 - No metrics exporter exists. Audit events must not be treated as metric labels.
@@ -74,6 +75,6 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 - Baseline: `edeef0288ed9560324bac6f065a4d06057d5faeb`
 - Previous developer evidence: `46d8915b69f235256715465f6c49416f5bbbd9d3` -
   365 tests PASS, Ruff, mypy strict 52 modules, architecture fitness.
-- Final CI and new M6 job: PENDING at time of authoring.
+- Final JWT v2 CI: PENDING at time of this iteration's authoring.
 - Reviewer: NOT ASSIGNED.
 - GATE27-07: NO-GO / NOT INDEPENDENTLY QUALIFIED.

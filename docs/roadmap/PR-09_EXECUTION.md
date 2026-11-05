@@ -80,3 +80,26 @@ architecture fitness PASS. These are developer tests, not independent G7 sign-of
 
 Further verification: dedicated M6 boundary CI job, expanded audit event tests,
 candidate oracle evidence register and controlled restart runbook.
+
+## 2026-11-05 development iteration 3 - versioned M5 JWT policy from M6
+
+- Add `schema_version=2` and exactly populated `jwt_profiles` for enabled
+  JWT routes. Version 1 remains legacy and has no automatic JWT trust policy.
+- Require exact host-bound scope/profile/version, HTTPS issuer, non-empty
+  audience, RS256 only, access-token `typ`, explicit size/skew controls,
+  and exactly one static public keyset or pinned HTTPS JWKS source.
+- Do not let a JWT, its `iss`, `aud`, `jku`, `x5u` or `kid` choose a new
+  trust profile. The JWT may only select a kid within the existing profile.
+- `compose_trusted_jwt_runtime` performs exact out-of-band static public JWK
+  admission or requires independently host-approved source-id/URI/IP egress.
+  It composes M5 `JWTAuthenticator` with M2's original policy gate, not a
+  second authentication engine or an OAuth/OIDC provider.
+- The generic v2 composer denies JWT configurations without this dedicated
+  consumer. Mixed v2 secret-backed M4 + JWT composition is **not** admitted
+  by the present dedicated paths, preventing unqualified implicit wiring.
+- Local tests cover signed JWT success, negative claims, malformed trust
+  config, unknown or private JWK, prohibited SSRF URLs/private IP addresses
+  and missing or mismatched host egress grants. The M5 HTTPS transport
+  handles TLS/DNS/rebinding, but M6 tests do not prove live deployment egress.
+
+Final exact-head CI result: PENDING at time of writing. GATE27-07 remains NO-GO.

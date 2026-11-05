@@ -153,8 +153,8 @@ def compose_trusted_jwt_runtime(
         grants = approved_jwks_egress if approved_jwks_egress is not None else {}
         if set(grants) != set(remotes):
             raise ConfigurationRejected("unapproved JWKS egress admission")
-        for ref, source in remotes.items():
-            if grants[ref] != (source.source_id, source.uri, remote_ips[ref]):
+        for ref, approved_remote in remotes.items():
+            if grants[ref] != (approved_remote.source_id, approved_remote.uri, remote_ips[ref]):
                 raise ConfigurationRejected("JWKS egress grant mismatch")
 
         static_resolver: VerificationKeyResolver | None = (
