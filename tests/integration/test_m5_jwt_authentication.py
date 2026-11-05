@@ -24,7 +24,7 @@ from pyauthkit.domain.evidence import EvidenceMethod, PresentedEvidence
 from pyauthkit.domain.identity import PrincipalType
 from pyauthkit.domain.jwt import TrustedJwtVerificationProfile, parse_compact_jws
 from pyauthkit.domain.request import AuthenticationRequest
-from pyauthkit.domain.result import Authenticated, AuthError, Rejected
+from pyauthkit.domain.result import Authenticated, Rejected
 from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
@@ -198,7 +198,7 @@ def test_signed_roles_do_not_override_m2_denial(signing) -> None:
 @pytest.mark.security
 @pytest.mark.parametrize("bad", [
     b"abc", b"a.b", b"a.b.c.d.e", b"a.b.c.d", b"a..c",
-    b"eyJhbGciOiJub25lIn0.e30.", b" " * 16, b"x" * 9000,
+    (b64(b'{"alg":"none"}').encode() + b"." + b64(b"{}").encode() + b"."), b" " * 16, b"x" * 9000,
 ])
 def test_non_compact_oversized_and_unsigned_rejected(signing, bad) -> None:
     host = Host(signing)
@@ -232,7 +232,6 @@ def test_duplicate_claims_are_rejected_before_signature_check(signing) -> None:
     {"x5u": "https://unapproved.example.test/key"},
     {"jwk": '{"evil":true}'},
     {"crit": "b64"},
-    {"b64": "false"},
 ])
 def test_untrusted_key_discovery_headers_rejected(signing, injected) -> None:
     host = Host(signing)
@@ -295,3 +294,13 @@ def test_no_token_secrets_in_representation(signing) -> None:
     assert raw.decode() not in repr(result)
     assert raw.decode() not in repr(host.authenticator)
     assert raw.decode() not in repr(host.profile)
+
+
+@pytest.mark.security
+def test_explicit_unencoded_payload_header_rejected(signing) -> None:
+    host = Host(signing)
+    _header, payload, signature = host.issue().split(b".")
+    malicious = b64(b'{"alg":"RS256","kid":"key-1","typ":"at+jwt","b64":false}').encode()
+    raw = malicious + b"." + payload + b"." + signature
+    assert parse_compact_jws(raw) is None
+    assert isinstance(host.auth(raw), Rejected)
