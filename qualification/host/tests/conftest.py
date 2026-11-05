@@ -46,6 +46,7 @@ class Infrastructure:
         routes: dict[str, str] | None = None,
         hash_verifier: PasswordHashVerifier | None = None,
         redis_override: Redis | None = None,
+        postgres_override: asyncpg.Pool | None = None,
     ) -> FastAPI:
         worker_pool = KDFWorkerPool(
             max_workers=2,
@@ -55,7 +56,7 @@ class Infrastructure:
         )
         self.workers.append(worker_pool)
         return compose_qualification_app(
-            postgres_pool=self.pool,
+            postgres_pool=self.pool if postgres_override is None else postgres_override,
             redis=self.redis if redis_override is None else redis_override,
             hmac_key=self.secret_key,
             route_scopes=routes if routes is not None else {
