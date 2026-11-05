@@ -23,9 +23,9 @@ from pyauthkit.adapters.audit_required_sqlite import (
 from pyauthkit.application._verification import _issue_verified_outcome
 from pyauthkit.configuration import (
     ConfigurationGeneration,
-    compose_authentication_engine,
     SourcePolicy,
     SourceProvenance,
+    compose_authentication_engine,
     load_approved_configuration,
 )
 from pyauthkit.configuration.models import ConfigurationRejected
@@ -262,10 +262,9 @@ def test_m6_receipted_explicit_commit_conflict_is_not_idempotent(tmp_path: Path)
         # A direct duplicate commit also must not return an old receipt.
         earlier = committer.inspect_receipt(key)
         assert earlier is not None
-        from pyauthkit.ports.events import AuthenticationEvent
-
         from pyauthkit.domain.scope import TrustedScopeRef
         from pyauthkit.domain.trust import TrustProfileRef
+        from pyauthkit.ports.events import AuthenticationEvent
 
         direct = AuditDecisionRecord(
             attempt_id=key,
@@ -296,8 +295,7 @@ def test_m6_receipted_untrusted_entry_denied_before_positive(tmp_path: Path) -> 
     assert isinstance(result, AuthError)
 
 
-def test_m6_receipted_invalid_receipt_cannot_enable_positive(tmp_path: Path) -> None:
-    good = store(tmp_path)
+def test_m6_receipted_invalid_receipt_cannot_enable_positive() -> None:
 
     class FakeCommitter:
         async def commit(self, record: AuditDecisionRecord):
@@ -311,7 +309,7 @@ def test_m6_receipted_invalid_receipt_cannot_enable_positive(tmp_path: Path) -> 
 
     result = asyncio.run(check(gateway(FakeCommitter()), attempt()))
     assert isinstance(result, AuthError)
-    assert good.inspect_receipt(attempt()) is None
+    assert result.error_code is TechnicalErrorCode.DEPENDENCY_UNAVAILABLE
 
 
 def test_m6_receipted_slow_commit_never_releases_positive_early() -> None:
