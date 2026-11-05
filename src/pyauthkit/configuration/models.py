@@ -175,6 +175,7 @@ class ConfigurationSnapshot:
     audit_delivery: AuditDeliveryPolicy
     secret_refs: tuple[SecretRef, ...] = ()
     jwt_profiles: tuple[JwtTrustBinding, ...] = ()
+    operational_sources: tuple[SourceProvenance, ...] = ()
 
     def __post_init__(self) -> None:
         if type(self.schema_version) is not int or self.schema_version not in (1, 2):
@@ -202,6 +203,10 @@ class ConfigurationSnapshot:
             raise ConfigurationRejected("invalid secret references")
         if len(set(self.secret_refs)) != len(self.secret_refs):
             raise ConfigurationRejected("duplicate secret reference")
+        if type(self.operational_sources) is not tuple or not all(
+            isinstance(source, SourceProvenance) for source in self.operational_sources
+        ):
+            raise ConfigurationRejected("invalid operational source provenance")
         if type(self.jwt_profiles) is not tuple or not all(
             isinstance(binding, JwtTrustBinding) for binding in self.jwt_profiles
         ):
