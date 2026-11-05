@@ -1,5 +1,15 @@
 # GATE27-05 - Decision securite formelle M4 (version active v2)
 
+> **Decision du mainteneur unique du 05/11/2026 : GO POUR FUSION EN
+> DEVELOPPEMENT UNIQUEMENT, par derogation documentaire explicite.**
+> Voir [autorisation de merge solo](M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md).
+> **Ce GO de gestion de branche ne constitue pas un GO de qualification
+> securite GATE27-05**, qui reste NO-GO pour une utilisation en production,
+> des preuves P0/G5 completes et une revue independante. Les prescriptions
+> historiques plus bas qui interdisaient toute fusion etaient anterieures
+> a cette autorisation expresse; elles sont maintenues comme historique.
+>
+
 - Date : 2026-11-05
 - Branch : `feat/m4-api-key-authentication-pr07`
 - PR : https://github.com/tawounfouet/pyauthkit/pull/76

@@ -55,7 +55,7 @@ def test_m4_source_plan_semantics_not_legacy_catalog() -> None:
     )
     assert data["source_of_candidate_oracles"].endswith("M4_2026_11_05_SOURCE_MATRIX.md")
     assert data["normative_catalog_reconciliation"] == (
-        "M4_DETAILED_PLAN_SOURCE_MAPPED_PENDING_OWNER_ADOPTION"
+        "M4_DETAILED_PLAN_SOURCE_MAPPED_OWNER_ADOPTED_FOR_DEV"
     )
     assert data["oracles"][36]["id"] == "M4-T37"
     assert data["oracles"][36]["assertion"] == "Contract tests sur deux resolvers"
@@ -63,3 +63,19 @@ def test_m4_source_plan_semantics_not_legacy_catalog() -> None:
     assert sum(row["priority"] == "P0" for row in data["oracles"]) == 39
     assert data["oracles"][27]["priority"] == "P1"
     assert all(row["independent_adjudication"] == "PENDING" for row in data["oracles"])
+
+
+def test_m4_owner_development_merge_waiver_never_grants_security_go() -> None:
+    data = json.loads(
+        (ROOT / "docs/qualification/M4_EVIDENCE_MANIFEST.json").read_text(encoding="utf-8")
+    )
+    decision = data["maintainer_development_merge_decision"]
+    assert decision["status"] == "AUTHORIZED_TO_MERGE_DEVELOPMENT_ONLY"
+    assert decision["independent_security_gate"] == "NO-GO"
+    assert decision["release_and_production"] == "NOT_AUTHORIZED"
+    assert decision["approved_rotation_for_reference_host"] == "NO_OVERLAP"
+    assert decision["bounded_overlap_oracle_M4_T28"].startswith("NOT_APPLICABLE")
+    assert data["formal_gate"] == "NO-GO"
+    assert all(row["independent_adjudication"] == "PENDING" for row in data["oracles"])
+    assert data["reviewer_identity"] is None
+    assert data["acceptance_signature"] is None

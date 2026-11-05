@@ -1,5 +1,15 @@
 # M4 - Paquet d'arbitrage du gate (v2, alignement plan detaille)
 
+> **Decision du mainteneur unique du 05/11/2026 : GO POUR FUSION EN
+> DEVELOPPEMENT UNIQUEMENT, par derogation documentaire explicite.**
+> Voir [autorisation de merge solo](M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md).
+> **Ce GO de gestion de branche ne constitue pas un GO de qualification
+> securite GATE27-05**, qui reste NO-GO pour une utilisation en production,
+> des preuves P0/G5 completes et une revue independante. Les prescriptions
+> historiques plus bas qui interdisaient toute fusion etaient anterieures
+> a cette autorisation expresse; elles sont maintenues comme historique.
+>
+
 > **Etat : PREPARED FOR HUMAN DECISION / NO-GO.**
 > PR #76, issues #77 (qualification), #78 (ratification), #79 (review).
 > Source precise : `M4_2026_11_05_SOURCE_MATRIX.md` et plan M4 05/11 §20/§22.

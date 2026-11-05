@@ -1,5 +1,9 @@
 # M4 - Catalogue des 40 oracles et 16 G5 (v2 active, plan detaille)
 
+> **Mainteneur : transcription du plan adoptee pour integration developpement, pas de validation independante.**
+> Voir `M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md`.
+
+
 > Source : `M4_2026_11_05_SOURCE_MATRIX.md`, plan d'implementation
 > M4 du 05/11/2026 §§20/22. **39 P0, 1 P1 : M4-T28.**
 > Les ID V1 preexistants etaient mal attribues et sont SUPERSEDED.

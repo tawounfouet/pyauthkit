@@ -8,7 +8,7 @@
   "issue": "https://github.com/tawounfouet/pyauthkit/issues/77",
   "source_of_candidate_oracles": "docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md",
   "source_of_candidate_gates": "docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md",
-  "normative_catalog_reconciliation": "M4_DETAILED_PLAN_SOURCE_MAPPED_PENDING_OWNER_ADOPTION",
+  "normative_catalog_reconciliation": "M4_DETAILED_PLAN_SOURCE_MAPPED_OWNER_ADOPTED_FOR_DEV",
   "immutable_technical_checkpoint": {
     "run_id": 42060406108,
     "workflow_url": "https://github.com/tawounfouet/pyauthkit/actions/runs/42060406108",
@@ -939,5 +939,17 @@
   "acceptance_signature": null,
   "merged": false,
   "released": false,
-  "canonical_source_note": "Detailed project-provided 2026-11-05 M4 implementation plan sections 20 and 22. Source excerpt reproduced in M4_2026_11_05_SOURCE_MATRIX.md. No independent acceptance yet."
+  "canonical_source_note": "Detailed project-provided 2026-11-05 M4 implementation plan sections 20 and 22. Source excerpt reproduced in M4_2026_11_05_SOURCE_MATRIX.md. No independent acceptance yet. Maintainer adopted source transcription for DEVELOPMENT BRANCH MERGE ONLY; independent adjudication remains pending.",
+  "maintainer_development_merge_decision": {
+    "date": "2026-11-05",
+    "status": "AUTHORIZED_TO_MERGE_DEVELOPMENT_ONLY",
+    "decision_source": "Explicit sole-maintainer user instruction in ChatGPT conversation; assistant-recorded, not a GitHub independent review.",
+    "decision_file": "docs/qualification/M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md",
+    "technical_checkpoint_sha": "e9a3613666be685482a7ab141b4bbcf7ce797eaa",
+    "approved_rotation_for_reference_host": "NO_OVERLAP",
+    "bounded_overlap_oracle_M4_T28": "NOT_APPLICABLE_TO_REFERENCE_HOST_BY_OWNER_DEV_SCOPE",
+    "M3_dependency": "M4_ALLOWED_ON_M2_BASE_WITH_M3_PR75_UNMERGED",
+    "independent_security_gate": "NO-GO",
+    "release_and_production": "NOT_AUTHORIZED"
+  }
 }

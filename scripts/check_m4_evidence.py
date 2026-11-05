@@ -57,9 +57,21 @@ def evaluate(root: Path) -> list[str]:
         errors.append("candidate must not assert merge or release")
     if (
         manifest.get("normative_catalog_reconciliation")
-        != "M4_DETAILED_PLAN_SOURCE_MAPPED_PENDING_OWNER_ADOPTION"
+        != "M4_DETAILED_PLAN_SOURCE_MAPPED_OWNER_ADOPTED_FOR_DEV"
     ):
         errors.append("canonical-plan reconciliation not evidenced")
+    owner_merge = manifest.get("maintainer_development_merge_decision", {})
+    if (
+        not isinstance(owner_merge, dict)
+        or owner_merge.get("status") != "AUTHORIZED_TO_MERGE_DEVELOPMENT_ONLY"
+        or owner_merge.get("independent_security_gate") != "NO-GO"
+        or owner_merge.get("release_and_production") != "NOT_AUTHORIZED"
+        or owner_merge.get("decision_file") != (
+            "docs/qualification/M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md"
+        )
+        or not (root / owner_merge.get("decision_file", "")).is_file()
+    ):
+        errors.append("owner merge exception is absent, malformed or not scoped to development")
     checkpoint = manifest.get("immutable_technical_checkpoint", {})
     if not isinstance(checkpoint, dict):
         return ["invalid checkpoint structure"]
