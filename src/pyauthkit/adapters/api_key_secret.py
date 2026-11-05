@@ -40,6 +40,12 @@ class ScopedApiKeySecretSource:
 
     __slots__ = ("_snapshot", "_policy", "_resolver", "_bindings", "_approved_refs")
 
+    _snapshot: ConfigurationSnapshot
+    _policy: SecretAccessPolicy
+    _resolver: SecretResolver
+    _bindings: Mapping[tuple[TrustedScopeRef, str], SecretRef]
+    _approved_refs: Mapping[TrustedScopeRef, frozenset[str]]
+
     def __init__(
         self,
         *,
