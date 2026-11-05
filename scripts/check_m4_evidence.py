@@ -63,8 +63,8 @@ def evaluate(root: Path) -> list[str]:
     segments = checkpoint.get("sha_segments", [])
     if (
         not isinstance(segments, list)
-        or len(segments) != 2
-        or not all(isinstance(part, str) and len(part) == 20 for part in segments)
+        or len(segments) != 5
+        or not all(isinstance(part, str) and len(part) == 8 for part in segments)
         or not SHA.fullmatch("".join(segments))
     ):
         errors.append("checkpoint SHA segments must reconstruct one 40-char lowercase SHA")
