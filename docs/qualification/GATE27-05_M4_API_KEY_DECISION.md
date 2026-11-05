@@ -66,3 +66,14 @@ before marking them accepted.**
 NO-GO / NOT ADJUDICATED means **do not merge, publish, deploy or describe M4 as
 production-secure.** A draft PR and 7/7 CI are insufficient. Post-GO merging
 and post-merge main CI are distinct subsequent actions, not performed here.
+
+## Reference-host implementation checkpoint (candidate, not gate approval)
+
+A PR-07D reference harness now proposes SQL-scoped records and CAS,
+Redis distributed quotas, HTTP refusals, post-proof revocation tests
+and two separate OS processes. These are **proposed technical tests**,
+not signed evidence until corresponding exact-SHA CI logs are linked.
+
+No production deployment profile, trusted-proxy policy, independent
+security reviewer, ADR approvals or residual-risk acceptance is
+established by including test code. **Formal verdict remains NO-GO.**

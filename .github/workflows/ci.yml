@@ -115,3 +115,49 @@ jobs:
         run: |
           .audit-venv/bin/detect-secrets scan --all-files --exclude-files '([.]audit-venv/|[.]secret-scan[.]json|[.]git/)' > .secret-scan.json
           python scripts/check_secret_scan.py .secret-scan.json
+
+  m4_host:
+    name: M4 PostgreSQL Redis HTTP qualification (reference only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: m4qual
+          POSTGRES_USER: m4qual
+          POSTGRES_PASSWORD: ${{ github.run_id }}
+        ports:
+          - 54328:5432
+        options: >-
+          --health-cmd "pg_isready -U m4qual -d m4qual"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+      redis:
+        image: redis:7
+        ports:
+          - 63798:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      M4_PG_DSN: postgresql://m4qual:${{ github.run_id }}@127.0.0.1:54328/m4qual
+      M4_REDIS_URL: redis://127.0.0.1:63798/15
+    steps:
+      - name: Checkout without credentials
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
+        with:
+          python-version: "3.12"
+      - name: Install standalone M4 qualification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev]" "asyncpg>=0.30" "redis>=5" "fastapi>=0.110" "uvicorn>=0.30" "httpx>=0.27" "pytest-asyncio>=0.24"
+      - name: PostgreSQL CAS Redis atomic and real two-process HTTP tests
+        run: python -m pytest -v -s qualification/m4_host/tests

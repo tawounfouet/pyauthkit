@@ -62,3 +62,22 @@
 M3 PR #75 still lacks GATE27-04 signoff. PR-07 #76 remains a draft. No formal
 M4 GO, release, merge into main or production authorization. Neither 207 green
 tests nor this roadmap update can replace real-host and independent evidence.
+
+## Slice D - reference-host qualification workstream (2026-11-05)
+
+- A standalone fixture exists under `qualification/m4_host` with actual
+  PostgreSQL scoped reads and authoritative state/version recheck,
+  source-level CAS revocation and verifier rotation, Redis Lua atomic
+  quotas for tenant, socket peer and key selector, plus an explicit FastAPI
+  composition boundary and Uvicorn runner.
+- A dedicated GitHub Actions job uses disposable PostgreSQL/Redis services
+  and installs reference-host packages only in CI, not core PyAuthKit.
+- Tests include same-selector tenant separation, concurrent CAS single
+  winner, post-HMAC revocation race, 64 concurrent Redis admissions,
+  uniform HTTP refusal surfaces, two distinct Uvicorn OS processes and
+  randomized loopback timing observations.
+- This is a **candidate test fixture** only. No test evidence is claimed
+  until the exact-HEAD CI completes; real TLS/proxy, SIEM, deployment-scale
+  overload and external timing equivalence are not covered.
+- M4-T34..40 and G5-01..G5-16 remain formally **PENDING**; ADRs and
+  independent review are not waived by reference-host success.
