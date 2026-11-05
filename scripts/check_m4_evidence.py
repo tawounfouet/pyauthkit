@@ -66,9 +66,8 @@ def evaluate(root: Path) -> list[str]:
         or owner_merge.get("status") != "AUTHORIZED_TO_MERGE_DEVELOPMENT_ONLY"
         or owner_merge.get("independent_security_gate") != "NO-GO"
         or owner_merge.get("release_and_production") != "NOT_AUTHORIZED"
-        or owner_merge.get("decision_file") != (
-            "docs/qualification/M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md"
-        )
+        or owner_merge.get("decision_file")
+        != ("docs/qualification/M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md")
         or not (root / owner_merge.get("decision_file", "")).is_file()
     ):
         errors.append("owner merge exception is absent, malformed or not scoped to development")
