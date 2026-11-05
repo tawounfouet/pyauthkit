@@ -469,3 +469,153 @@ def test_m4_not_before_exact_utc_boundary_is_conditionally_admissible() -> None:
     at_boundary = Harness(record=record, clock=FixedClock(WHEN))
     assert isinstance(at_boundary.authenticate(), Authenticated)
     assert at_boundary.owner.current_checks == 1
+
+
+@pytest.mark.security
+def test_m4_t04_selector_only_never_reaches_credential_owner() -> None:
+    """M4-T04: a selector without a secret is not authentication evidence."""
+    harness = Harness()
+    raw = b"ak1." + _encode(SELECTOR) + b"."
+    result = harness.authenticate(harness.request(raw=raw))
+    assert isinstance(result, Rejected)
+    assert harness.guard.calls == [(SCOPE, None)]
+    assert harness.owner.lookups == []
+    assert harness.key_source.calls == 0
+
+
+@pytest.mark.security
+def test_m4_t14_foreign_host_context_is_rejected_before_key_access() -> None:
+    """M4-T14: M2 must own the context; a foreign catalog cannot inject it."""
+    harness = Harness()
+    foreign_catalog = HostTrustCatalog(
+        [
+            HostBinding(
+                "foreign",
+                OTHER_SCOPE,
+                TrustProfileRef("api-profile", "v1", OTHER_SCOPE),
+                frozenset({EvidenceMethod.API_KEY}),
+            )
+        ]
+    )
+    result = asyncio.run(
+        harness.engine.authenticate(
+            harness.request(), entry=foreign_catalog.resolve_for_host_route("foreign")
+        )
+    )
+    assert isinstance(result, AuthError)
+    assert result.error_code is TechnicalErrorCode.INVALID_TRUST_CONFIGURATION
+    assert harness.guard.calls == []
+    assert harness.owner.lookups == []
+
+
+@pytest.mark.security
+def test_m4_t23_revoke_between_lookup_and_proof_never_promotes() -> None:
+    """M4-T23: even a correct MAC computed after owner revocation is stale."""
+    harness = Harness()
+    actual_proof = harness.proof
+
+    class RevokeBeforeProof:
+        async def verify(self, *, scope_ref, presented, record) -> bool:
+            harness.owner.records[:] = [
+                _record(status=ApiKeyRecordStatus.REVOKED, version=2)
+            ]
+            return await actual_proof.verify(
+                scope_ref=scope_ref, presented=presented, record=record
+            )
+
+    verifier = ApiKeyAuthenticator(
+        resolver=harness.owner,
+        proof_verifier=RevokeBeforeProof(),
+        attempt_guard=harness.guard,
+        clock=harness.clock,
+    )
+    registry = AuthenticatorRegistryBuilder()
+    registry.register(verifier)
+    harness.engine = AuthenticationEngine(
+        policy=AuthenticationPolicyGate(
+            harness.catalog, final_rule=lambda _subject, _entry: True
+        ),
+        registry=registry.freeze(),
+    )
+    result = harness.authenticate()
+    assert isinstance(result, Rejected)
+    assert harness.owner.current_checks == 1
+
+
+@pytest.mark.security
+def test_m4_t33_owner_timeout_cancels_inflight_lookup_without_late_success() -> None:
+    """M4-T33: async owner cleanup is observed after engine timeout."""
+    harness = Harness()
+
+    class StuckOwner:
+        def __init__(self) -> None:
+            self.started = False
+            self.cancelled = False
+
+        async def resolve(self, *, scope_ref, key_id):
+            self.started = True
+            try:
+                await asyncio.sleep(3600)
+            finally:
+                self.cancelled = True
+
+        async def is_current(self, *, record):
+            raise AssertionError("must never reach freshness")
+
+    owner = StuckOwner()
+    verifier = ApiKeyAuthenticator(
+        resolver=owner,
+        proof_verifier=harness.proof,
+        attempt_guard=harness.guard,
+        clock=harness.clock,
+    )
+    registry = AuthenticatorRegistryBuilder()
+    registry.register(verifier)
+    engine = AuthenticationEngine(
+        policy=AuthenticationPolicyGate(
+            harness.catalog, final_rule=lambda _subject, _entry: True
+        ),
+        registry=registry.freeze(),
+        timeout_seconds=0.05,
+    )
+    result = asyncio.run(
+        engine.authenticate(
+            harness.request(),
+            entry=harness.catalog.resolve_for_host_route("route-a"),
+        )
+    )
+    assert isinstance(result, AuthError)
+    assert result.error_code is TechnicalErrorCode.DEPENDENCY_UNAVAILABLE
+    assert owner.started and owner.cancelled
+    assert not hasattr(result, "principal")
+
+
+@pytest.mark.security
+def test_m4_t36_registry_with_only_password_never_falls_back() -> None:
+    """M4-T36: absence of API_KEY cannot invoke an unrelated method."""
+    harness = Harness()
+
+    class PasswordOnly:
+        @property
+        def method(self) -> EvidenceMethod:
+            return EvidenceMethod.PASSWORD
+
+        async def verify(self, request, context):
+            raise AssertionError("API_KEY request must not reach PASSWORD")
+
+    registry = AuthenticatorRegistryBuilder()
+    registry.register(PasswordOnly())
+    engine = AuthenticationEngine(
+        policy=AuthenticationPolicyGate(
+            harness.catalog, final_rule=lambda _subject, _entry: True
+        ),
+        registry=registry.freeze(),
+    )
+    result = asyncio.run(
+        engine.authenticate(
+            harness.request(),
+            entry=harness.catalog.resolve_for_host_route("route-a"),
+        )
+    )
+    assert isinstance(result, AuthError)
+    assert result.error_code is TechnicalErrorCode.INVALID_TRUST_CONFIGURATION
