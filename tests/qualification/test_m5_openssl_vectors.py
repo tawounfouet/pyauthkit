@@ -48,9 +48,7 @@ def _urlsafe(data: bytes) -> bytes:
 
 
 def _openssl(*args: str) -> None:
-    subprocess.run(
-        ["openssl", *args], check=True, capture_output=True, timeout=15
-    )
+    subprocess.run(["openssl", *args], check=True, capture_output=True, timeout=15)
 
 
 @pytest.fixture(scope="module")
@@ -59,10 +57,18 @@ def openssl_material():
         root = Path(temporary)
         private = root / "signer.pem"
         other_private = root / "other.pem"
-        _openssl("genpkey", "-algorithm", "RSA", "-pkeyopt", "rsa_keygen_bits:2048",
-                 "-out", str(private))
-        _openssl("genpkey", "-algorithm", "RSA", "-pkeyopt", "rsa_keygen_bits:2048",
-                 "-out", str(other_private))
+        _openssl(
+            "genpkey", "-algorithm", "RSA", "-pkeyopt", "rsa_keygen_bits:2048", "-out", str(private)
+        )
+        _openssl(
+            "genpkey",
+            "-algorithm",
+            "RSA",
+            "-pkeyopt",
+            "rsa_keygen_bits:2048",
+            "-out",
+            str(other_private),
+        )
         public_key = serialization.load_pem_private_key(
             private.read_bytes(), password=None
         ).public_key()
@@ -71,8 +77,14 @@ def openssl_material():
         def number(value: int) -> str:
             return _urlsafe(value.to_bytes((value.bit_length() + 7) // 8, "big")).decode()
         jwk = json.dumps(
-            {"kty": "RSA", "kid": "openssl-key", "use": "sig",
-             "alg": "RS256", "n": number(numbers.n), "e": number(numbers.e)}
+            {
+                "kty": "RSA",
+                "kid": "openssl-key",
+                "use": "sig",
+                "alg": "RS256",
+                "n": number(numbers.n),
+                "e": number(numbers.e),
+            }
         )
         yield root, private, other_private, jwk
 
@@ -86,10 +98,17 @@ def _jws(
     protected: dict[str, str] = {"alg": "RS256", "kid": "openssl-key", "typ": "at+jwt"}
     if headers is not None:
         protected.update(headers)
-    payload = claims if claims is not None else {
-        "iss": ISS, "sub": "openssl-subject", "aud": AUD,
-        "exp": NOW + 300, "iat": NOW - 30,
-    }
+    payload = (
+        claims
+        if claims is not None
+        else {
+            "iss": ISS,
+            "sub": "openssl-subject",
+            "aud": AUD,
+            "exp": NOW + 300,
+            "iat": NOW - 30,
+        }
+    )
     signing_input = b".".join(
         (
             _urlsafe(json.dumps(protected, separators=(",", ":")).encode()),
@@ -188,8 +207,11 @@ def test_openssl_signature_from_other_rsa_key_is_rejected(openssl_material) -> N
 def test_openssl_valid_signature_wrong_claims_rejected(openssl_material, overrides) -> None:
     root, private, _other, jwk = openssl_material
     claims: dict[str, object] = {
-        "iss": ISS, "sub": "openssl-subject", "aud": AUD,
-        "exp": NOW + 300, "iat": NOW - 30,
+        "iss": ISS,
+        "sub": "openssl-subject",
+        "aud": AUD,
+        "exp": NOW + 300,
+        "iat": NOW - 30,
     }
     claims.update(overrides)
     assert isinstance(OpenSslHarness(jwk).authenticate(_jws(root, private, claims)), Rejected)
