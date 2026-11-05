@@ -64,8 +64,11 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 - Only an optional bounded metrics port and synthetic memory recorder exist;
   no production metrics exporter exists. Metrics are never an audit receipt and
   source identifiers, correlation IDs, scopes and credentials are not labels.
-- Memory audit is best-effort only. No exactly-once, idempotence or persisted
-  receipt is asserted; `required` is rejected.
+- An optional local SQLite reference now persists a minimized HMAC-pseudonymized
+  audit projection and survives ordinary reopen, but M2 still swallows failed
+  audit writes. Best-effort is the only admitted runtime mode; required is
+  rejected. No exactly-once guarantee, append-only file protection,
+  distributed outbox, or committed acknowledgement to the caller is asserted.
 - M6 includes an optional AWS Secrets Manager adapter, strict botocore client
   profile admission, and offline Stubber contract tests including M4 HMAC.
   A guarded manual live test harness exists but has NOT been run. AWS IAM,

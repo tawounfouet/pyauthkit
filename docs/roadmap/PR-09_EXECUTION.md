@@ -216,3 +216,36 @@ Final exact-head CI: PENDING at authoring. GATE27-07 stays NO-GO.
   independent reviewer sign-off. GATE27-07 remains NO-GO.
 
 Exact-head CI result: PENDING for this iteration until verified.
+
+## 2026-11-05 development iteration 9 - local pseudonymized SQLite audit
+
+- Added `provision_sqlite_audit_store` and
+  `SqliteAuthenticationAuditSink` as an optional, explicitly provisioned,
+  **local** reference for persisted M2 AuthenticationEvent values. Normal
+  opening refuses missing files; the API never silently replaces/recreates a
+  store. File provisioning refuses collisions and uses private local mode.
+- Each audit event is validated for bounded method, outcome and duration.
+  Correlation identifiers are pseudonymized using a host-provided 32-byte
+  HMAC key, with explicit key version tags and no raw correlation identifier,
+  subject, token or credential columns. Events have distinct random IDs and
+  bounded record capacity; a full store fails rather than auto-pruning
+  security evidence. Rotation changes the correlation tag for future records
+  without rewriting historical records.
+- Synchronous SQLite transactions commit before a normal `emit` return,
+  while an async `to_thread` execution preserves M2's nonblocking API.
+  The adapter validates local rollback journal mode and attempts synchronous
+  EXTRA before writes. This is NOT file tamper-resistance, a cluster-wide
+  log, or a power-loss guarantee on arbitrary host storage.
+- **Critical:** M2's `AuthenticationEngine._emit_event` still suppresses
+  audit sink exceptions. Therefore a successful AuthN result can be returned
+  even when the local SQLite sink fails. This is intentional backward
+  compatibility; the M6 configuration still refuses `audit_delivery=required`.
+  A separately designed commit-before-positive-response protocol with a
+  durable receipt/denial contract is necessary to enable required audit.
+- Tests cover local persistence across process-style reopen, corruption,
+  deletion, capacity refusal, concurrent inserts, key rotation, no
+  credential/raw-correlation leakage, M2 positive authentication and
+  best-effort audit outage. The reference does not simulate a power cut,
+  privileged DB modification or a live managed audit store.
+
+**CI and G7:** pending exact-head qualification. GATE27-07 remains NO-GO.
