@@ -38,7 +38,11 @@ class ApprovedJwksSource:
             or not re.fullmatch(r"[A-Za-z0-9_.:-]+", self.source_id)
         ):
             raise ValueError("invalid JWKS source id")
-        if type(self.uri) is not str or len(self.uri) > 512:
+        if (
+            type(self.uri) is not str
+            or len(self.uri) > 512
+            or any(ord(char) <= 32 or ord(char) == 127 or char == "\\" for char in self.uri)
+        ):
             raise ValueError("invalid JWKS URL")
         try:
             parsed = urlsplit(self.uri)
