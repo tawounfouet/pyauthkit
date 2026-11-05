@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Never, TypeAlias
+from typing import Never
 
 from .identity import PrincipalType, ScopedSubjectRef
 from .scope import TrustedScopeRef
@@ -101,7 +101,7 @@ class ApiKeyVerifierRecord:
             raise ValueError("invalid credential scope")
         if not isinstance(subject_ref, ScopedSubjectRef) or subject_ref.scope_ref != scope_ref:
             raise ValueError("credential subject/scope mismatch")
-        if principal_type not in (
+        if not isinstance(principal_type, PrincipalType) or principal_type not in (
             PrincipalType.SERVICE,
             PrincipalType.APPLICATION,
             PrincipalType.WORKLOAD,
@@ -182,6 +182,6 @@ class ApiKeyUnavailable:
     """Source unavailable, contract broken or inconsistent: never fallback."""
 
 
-ApiKeyRecordLookup: TypeAlias = (
+type ApiKeyRecordLookup = (
     ApiKeyFound | ApiKeyMissing | ApiKeyAmbiguous | ApiKeyUnavailable
 )

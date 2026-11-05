@@ -3,7 +3,7 @@
 import copy
 import pickle
 from dataclasses import asdict
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import pytest
 
@@ -27,7 +27,7 @@ def make_record(**overrides: object) -> ApiKeyVerifierRecord:
         ),
         "principal_type": PrincipalType.SERVICE,
         "key_id": "key-identifier-1",
-        "verifier_digest": b"CANARY_SENSITIVE_DIGEST_123456789",  # 32 bytes
+        "verifier_digest": b"CANARY_SENSITIVE_DIGEST_12345678",  # 32 bytes
         "verifier_algorithm": "hmac-sha256",
         "protection_key_ref": "hmac-v1",
         "status": ApiKeyRecordStatus.ACTIVE,
@@ -87,7 +87,7 @@ def test_invalid_record_versions_fail_closed(version: object) -> None:
 
 @pytest.mark.security
 def test_invalid_digest_length_or_status_is_rejected() -> None:
-    with pytest.raises(ValueError, match="digest length"):
+    with pytest.raises(ValueError, match="verifier digest"):
         make_record(verifier_digest=b"wrong")
     with pytest.raises(ValueError, match="status"):
         make_record(status="active")
