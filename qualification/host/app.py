@@ -5,7 +5,9 @@ JSON body. No forwarded-IP headers are trusted. Run behind a trusted proxy
 only with an explicitly designed proxy trust policy.
 """
 
+import asyncio
 import json
+import time
 from collections.abc import Mapping
 
 import asyncpg
@@ -54,12 +56,15 @@ def compose_qualification_app(
     max_per_identity: int = 200,
     window_seconds: int = 60,
     hash_verifier: PasswordHashVerifier | None = None,
+    minimum_reject_seconds: float = 0.10,
 ) -> FastAPI:
     """Create a reference host with explicit scope mappings.
 
     The large default quotas are for repeatable measurement only. Production
     security depends on operator-reviewed limits and multiple rate dimensions.
     """
+    if not 0.0 <= minimum_reject_seconds <= 1.0:
+        raise ValueError("qualification refusal floor must be bounded")
     scopes = {route: TrustedScopeRef(scope) for route, scope in route_scopes.items()}
     if not scopes:
         raise ValueError("qualification host needs approved routes")
@@ -117,6 +122,7 @@ def compose_qualification_app(
 
     def route_handler(route_id: str):
         async def login(request: Request) -> JSONResponse:
+            started = time.monotonic()
             # Bounded streaming before parsing avoids unbounded request.body().
             raw = bytearray()
             async for chunk in request.stream():
@@ -153,6 +159,12 @@ def compose_qualification_app(
             if isinstance(result, Authenticated):
                 return response(200, {"status": "authenticated"})
             if isinstance(result, Rejected):
+                # Host-only minimum envelope equalizes routine absent/invalid
+                # paths in this isolated environment. It does NOT promise
+                # constant time under arbitrary KDF cost, load or proxies.
+                remaining = minimum_reject_seconds - (time.monotonic() - started)
+                if remaining > 0:
+                    await asyncio.sleep(remaining)
                 return response(401, REJECT_BODY)
             return response(503, ERROR_BODY)
 
