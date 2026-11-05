@@ -354,7 +354,6 @@ def test_explicit_unencoded_payload_header_rejected(signing) -> None:
     assert isinstance(host.auth(raw), Rejected)
 
 
-
 @pytest.mark.security
 @pytest.mark.parametrize(
     "unapproved",
@@ -398,9 +397,7 @@ def test_client_supplied_tenant_is_not_a_trust_profile_selector(signing) -> None
         ),
     )
     result = asyncio.run(
-        host.engine.authenticate(
-            request, entry=host.catalog.resolve_for_host_route("orders")
-        )
+        host.engine.authenticate(request, entry=host.catalog.resolve_for_host_route("orders"))
     )
     assert isinstance(result, Rejected)
 
@@ -412,11 +409,7 @@ def test_profile_revision_cannot_fallback_to_another_versions_keys(signing) -> N
     other_ref = TrustProfileRef("jwt-api", "v2", SCOPE)
     foreign = TrustedJwtVerificationProfile(SCOPE, other_ref, ISSUER, AUDIENCE)
     assert (
-        asyncio.run(
-            resolver.resolve_key(
-                profile=foreign, kid_hint="key-1", algorithm_hint="RS256"
-            )
-        )
+        asyncio.run(resolver.resolve_key(profile=foreign, kid_hint="key-1", algorithm_hint="RS256"))
         is None
     )
 
