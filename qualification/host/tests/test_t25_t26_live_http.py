@@ -18,7 +18,7 @@ import pytest
 import uvicorn
 from fastapi import FastAPI
 
-from .conftest import Infrastructure
+from .conftest import Infrastructure, login_data
 
 
 @asynccontextmanager
@@ -74,10 +74,10 @@ async def test_t25_real_network_denials_have_identical_status_body_headers(
     app = infra.app(max_per_source=500, max_per_identity=500)
     async with live_host(app) as url, httpx.AsyncClient(base_url=url) as client:
         bad = await client.post(
-            "/alpha/login", json={"username": "alice", "password": "invalid"}  # pragma: allowlist secret
+            "/alpha/login", json=login_data("alice", "invalid")
         )
         missing = await client.post(
-            "/alpha/login", json={"username": "unknown", "password": "invalid"}
+            "/alpha/login", json=login_data("unknown", "invalid")
         )
         await infra.pool.execute(
             "UPDATE m3q_credentials SET status='revoked', version=version+1 "
@@ -85,7 +85,7 @@ async def test_t25_real_network_denials_have_identical_status_body_headers(
         )
         revoked = await client.post(
             "/alpha/login",
-            json={"username": "alice", "password": "real-test-phrase"},  # pragma: allowlist secret
+            json=login_data("alice", "real-test-phrase"),
         )
         assert denial_signature(bad) == denial_signature(missing)
         assert denial_signature(bad) == denial_signature(revoked)
@@ -95,7 +95,7 @@ async def test_t25_real_network_denials_have_identical_status_body_headers(
         # Unknown routes cannot mint an approved trust profile by body/header.
         unknown = await client.post(
             "/not-registered/login",
-            json={"username": "alice", "password": "real-test-phrase"},
+            json=login_data("alice", "real-test-phrase"),
             headers={"X-Tenant": "tenant-alpha"},
         )
         assert unknown.status_code == 404
@@ -108,7 +108,7 @@ async def test_t25_real_network_denials_have_identical_status_body_headers(
             "/alpha/login", json={"username": "unknown", "password": "invalid"}
         )
         throttled = await client.post(
-            "/alpha/login", json={"username": "alice", "password": "real-test-phrase"}
+            "/alpha/login", json=login_data("alice", "real-test-phrase")
         )
         assert denial_signature(first) == denial_signature(throttled)
         assert denial_signature(bad) == denial_signature(throttled)
@@ -175,10 +175,7 @@ async def test_t26_real_http_randomized_timing_statistical_study(
 
     async with live_host(app) as url, httpx.AsyncClient(base_url=url, timeout=5.0) as client:
         for case in randomized:
-            payload = {
-                "username": "alice" if case == "wrong" else "unknown",
-                "password": "invalid",
-            }
+            payload = login_data("alice" if case == "wrong" else "unknown", "invalid")
             before = time.perf_counter_ns()
             result = await client.post("/alpha/login", json=payload)
             elapsed_ms = (time.perf_counter_ns() - before) / 1_000_000

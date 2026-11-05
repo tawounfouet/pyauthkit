@@ -9,7 +9,7 @@ from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import CorrelationId
 from qualification.host.guard import HOST_SOURCE, RedisPasswordAttemptGuard
 
-from .conftest import Infrastructure
+from .conftest import Infrastructure, login_data
 
 
 @pytest.mark.asyncio
@@ -35,14 +35,14 @@ async def test_t24_two_fastapi_replicas_share_limits_but_isolate_tenants(
         httpx.AsyncClient(transport=transport_b, base_url="http://qualifier") as b,
         httpx.AsyncClient(transport=transport_new_peer, base_url="http://qualifier") as second_peer,
     ):
-        login = {"username": "ghost", "password": "incorrect"}  # pragma: allowlist secret
+        login = login_data("ghost", "incorrect")
         assert (await a.post("/alpha/login", json=login)).status_code == 401
         assert (await b.post("/alpha/login", json=login)).status_code == 401
 
         # A spoofed forwarded header does not alter the peer identity.
         blocked = await b.post(
             "/alpha/login",
-            json={"username": "alice", "password": "alpha-phrase"},  # pragma: allowlist secret
+            json=login_data("alice", "alpha-phrase"),
             headers={"X-Forwarded-For": "203.0.113.55"},
         )
         assert blocked.status_code == 401
@@ -50,19 +50,19 @@ async def test_t24_two_fastapi_replicas_share_limits_but_isolate_tenants(
 
         # Source buckets are tenant-scoped; another approved tenant remains viable.
         cross_tenant = await b.post(
-            "/beta/login", json={"username": "alice", "password": "beta-phrase"}  # pragma: allowlist secret
+            "/beta/login", json=login_data("alice", "beta-phrase")
         )
         assert cross_tenant.status_code == 200
         assert (
             await second_peer.post(
-                "/alpha/login", json={"username": "alice", "password": "alpha-phrase"}
+                "/alpha/login", json=login_data("alice", "alpha-phrase")
             )
         ).status_code == 200
         # No body-controlled tenant swap.
         assert (
             await second_peer.post(
                 "/alpha/login",
-                json={"username": "alice", "password": "beta-phrase"},
+                json=login_data("alice", "beta-phrase"),
             )
         ).status_code == 401
 
@@ -115,7 +115,7 @@ async def test_t24_global_account_limit_applies_across_different_peers(
         transport = httpx.ASGITransport(app=app, client=(ip, 60000))
         async with httpx.AsyncClient(transport=transport, base_url="http://host") as client:
             return await client.post(
-                "/alpha/login", json={"username": "alice", "password": password}
+                "/alpha/login", json=login_data("alice", password)
             )
 
     assert (await post(a, "203.0.113.1", "incorrect")).status_code == 401

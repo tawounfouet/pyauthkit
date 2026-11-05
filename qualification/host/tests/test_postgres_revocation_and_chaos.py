@@ -18,7 +18,7 @@ from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.password.records import PasswordRecordFound
 from qualification.host.storage import PostgresPasswordCredentialResolver
 
-from .conftest import Infrastructure
+from .conftest import Infrastructure, login_data
 
 
 class PostKDFBarrier:
@@ -61,7 +61,7 @@ async def test_t33_real_postgres_revocation_between_kdf_and_freshness_check(
             pending = asyncio.create_task(
                 client.post(
                     "/alpha/login",
-                    json={"username": "alice", "password": "good-phrase"},  # pragma: allowlist secret
+                    json=login_data("alice", "good-phrase"),
                 )
             )
             assert await asyncio.to_thread(barrier.entered.wait, 3)
@@ -99,7 +99,7 @@ async def test_t09_closed_postgres_pool_returns_503_and_no_authentication(
     async with httpx.AsyncClient(transport=transport, base_url="http://host") as client:
         result = await client.post(
             "/alpha/login",
-            json={"username": "alice", "password": "good-phrase"},
+            json=login_data("alice", "good-phrase"),
         )
         assert result.status_code == 503
         assert result.json() == {"error": "temporarily_unavailable"}
@@ -124,7 +124,7 @@ async def test_t23_redis_outage_returns_503_without_credential_lookup(
             base_url="http://host",
         ) as client:
             result = await client.post(
-                "/alpha/login", json={"username": "alice", "password": "good-phrase"}
+                "/alpha/login", json=login_data("alice", "good-phrase")
             )
             assert result.status_code == 503
             assert result.json() == {"error": "temporarily_unavailable"}

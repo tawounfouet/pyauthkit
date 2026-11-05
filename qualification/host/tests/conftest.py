@@ -17,6 +17,11 @@ from qualification.host.app import compose_qualification_app
 from qualification.host.storage import insert_fixture_record, prepare_qualification_schema
 
 
+def login_data(username: str, phrase: str) -> dict[str, str]:
+    """Return user-facing JSON input; never embed credentials in logs."""
+    return {"username": username, "password": phrase}
+
+
 class Infrastructure:
     def __init__(self, pool: asyncpg.Pool, redis: Redis) -> None:
         self.pool = pool
