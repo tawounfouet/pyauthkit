@@ -69,11 +69,7 @@ def compose_authentication_engine(
             policy=gate,
             registry=registry,
             timeout_seconds=snapshot.timeout_seconds,
-            event_sink=(
-                BoundedBestEffortAuditSink(event_sink)
-                if event_sink is not None
-                else None
-            ),
+            event_sink=(BoundedBestEffortAuditSink(event_sink) if event_sink is not None else None),
         )
     except Exception:
         # Never expose an adapter's exception text or raw config values.

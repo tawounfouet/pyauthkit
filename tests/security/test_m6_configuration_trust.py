@@ -47,9 +47,7 @@ def raw_config() -> dict[str, object]:
     }
 
 
-def load(
-    raw: dict[str, object] | None = None, *, generation: int = 1
-):
+def load(raw: dict[str, object] | None = None, *, generation: int = 1):
     return load_approved_configuration(
         raw_config() if raw is None else raw,
         provenance=PROVENANCE,

@@ -21,12 +21,8 @@ from .models import (
     SourceProvenance,
 )
 
-_ROOT_KEYS = frozenset(
-    {"schema_version", "routes", "timeout_seconds", "audit_delivery", "secrets"}
-)
-_ROUTE_KEYS = frozenset(
-    {"route_id", "scope", "profile_id", "profile_version", "allowed_methods"}
-)
+_ROOT_KEYS = frozenset({"schema_version", "routes", "timeout_seconds", "audit_delivery", "secrets"})
+_ROUTE_KEYS = frozenset({"route_id", "scope", "profile_id", "profile_version", "allowed_methods"})
 _SECRET_KEYS = frozenset({"provider", "namespace", "key_id", "version", "purpose"})
 
 

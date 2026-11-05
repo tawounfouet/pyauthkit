@@ -51,9 +51,10 @@ class SourcePolicy:
                 raise ConfigurationRejected("invalid source policy")
 
     def admit(self, provenance: SourceProvenance) -> None:
-        if not isinstance(provenance, SourceProvenance) or (
-            provenance.source_id, provenance.source_kind
-        ) not in self.approved_sources:
+        if (
+            not isinstance(provenance, SourceProvenance)
+            or (provenance.source_id, provenance.source_kind) not in self.approved_sources
+        ):
             raise ConfigurationRejected("configuration source not approved")
 
     def __repr__(self) -> str:

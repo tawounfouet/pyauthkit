@@ -35,15 +35,26 @@ POLICY = SecretAccessPolicy(frozenset({SecretGrant("test-vault", "tenant-a", "pe
 def snapshot(refs: tuple[SecretRef, ...] = (REF_A,)):
     mapping: dict[str, object] = {
         "schema_version": 1,
-        "routes": [{
-            "route_id": "api", "scope": "tenant-a",
-            "profile_id": "p", "profile_version": "v2", "allowed_methods": ["jwt"],
-        }],
+        "routes": [
+            {
+                "route_id": "api",
+                "scope": "tenant-a",
+                "profile_id": "p",
+                "profile_version": "v2",
+                "allowed_methods": ["jwt"],
+            }
+        ],
         "timeout_seconds": 1.0,
         "audit_delivery": "best_effort",
         "secrets": [
-            dict(provider=r.provider, namespace=r.namespace, key_id=r.key_id,
-                 version=r.version, purpose=r.purpose) for r in refs
+            dict(
+                provider=r.provider,
+                namespace=r.namespace,
+                key_id=r.key_id,
+                version=r.version,
+                purpose=r.purpose,
+            )
+            for r in refs
         ],
     }
     return load_approved_configuration(
@@ -60,10 +71,15 @@ def test_m6_t16_cross_scope_secret_denied_without_provider_call() -> None:
             raise AssertionError("forbidden provider call")
 
     with pytest.raises(SecretResolutionUnavailable, match="denied"):
-        asyncio.run(resolve_authorized_secret(
-            snapshot=snapshot((REF_A, REF_B)), policy=POLICY,
-            resolver=UnexpectedProvider(), ref=REF_B, purpose="pepper",
-        ))
+        asyncio.run(
+            resolve_authorized_secret(
+                snapshot=snapshot((REF_A, REF_B)),
+                policy=POLICY,
+                resolver=UnexpectedProvider(),
+                ref=REF_B,
+                purpose="pepper",
+            )
+        )
 
 
 def test_m6_t17_malformed_reference_and_purpose_denied() -> None:
@@ -78,33 +94,53 @@ def test_m6_t17_malformed_reference_and_purpose_denied() -> None:
 def test_m6_t18_missing_provider_is_sanitized() -> None:
     store = SyntheticSecretResolver({})
     with pytest.raises(SecretResolutionUnavailable, match="secret unavailable"):
-        asyncio.run(resolve_authorized_secret(
-            snapshot=snapshot(), policy=POLICY,
-            resolver=store, ref=REF_A, purpose="pepper",
-        ))
+        asyncio.run(
+            resolve_authorized_secret(
+                snapshot=snapshot(),
+                policy=POLICY,
+                resolver=store,
+                ref=REF_A,
+                purpose="pepper",
+            )
+        )
 
 
 def test_m6_t19_revoked_secret_has_no_fallback() -> None:
     store = SyntheticSecretResolver({REF_A: CANARY}, revoked=frozenset({REF_A}))
     with pytest.raises(SecretResolutionUnavailable):
-        asyncio.run(resolve_authorized_secret(
-            snapshot=snapshot(), policy=POLICY,
-            resolver=store, ref=REF_A, purpose="pepper",
-        ))
+        asyncio.run(
+            resolve_authorized_secret(
+                snapshot=snapshot(),
+                policy=POLICY,
+                resolver=store,
+                ref=REF_A,
+                purpose="pepper",
+            )
+        )
 
 
 def test_m6_t20_approved_scoped_secret_is_exact_match() -> None:
     store = SyntheticSecretResolver({REF_A: CANARY, REF_B: b"other-tenant"})
-    result = asyncio.run(resolve_authorized_secret(
-        snapshot=snapshot((REF_A, REF_B)), policy=POLICY,
-        resolver=store, ref=REF_A, purpose="pepper",
-    ))
+    result = asyncio.run(
+        resolve_authorized_secret(
+            snapshot=snapshot((REF_A, REF_B)),
+            policy=POLICY,
+            resolver=store,
+            ref=REF_A,
+            purpose="pepper",
+        )
+    )
     assert result == CANARY
     with pytest.raises(SecretResolutionUnavailable):
-        asyncio.run(resolve_authorized_secret(
-            snapshot=snapshot((REF_A, REF_B)), policy=POLICY,
-            resolver=store, ref=REF_B, purpose="pepper",
-        ))
+        asyncio.run(
+            resolve_authorized_secret(
+                snapshot=snapshot((REF_A, REF_B)),
+                policy=POLICY,
+                resolver=store,
+                ref=REF_B,
+                purpose="pepper",
+            )
+        )
 
 
 def test_m6_t21_references_and_snapshot_never_dump_material() -> None:
@@ -121,10 +157,15 @@ def test_m6_t22_provider_exception_cannot_leak_canary() -> None:
             raise RuntimeError(CANARY.decode())
 
     with pytest.raises(SecretResolutionUnavailable) as exc:
-        asyncio.run(resolve_authorized_secret(
-            snapshot=snapshot(), policy=POLICY,
-            resolver=LeakyProvider(), ref=REF_A, purpose="pepper",
-        ))
+        asyncio.run(
+            resolve_authorized_secret(
+                snapshot=snapshot(),
+                policy=POLICY,
+                resolver=LeakyProvider(),
+                ref=REF_A,
+                purpose="pepper",
+            )
+        )
     assert CANARY.decode() not in str(exc.value)
     assert exc.value.__cause__ is None
     assert exc.value.__context__ is not None  # suppressed, not exposed to the caller
