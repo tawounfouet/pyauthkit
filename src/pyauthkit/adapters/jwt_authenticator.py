@@ -40,11 +40,7 @@ def _numeric_date(claims: dict[str, object], name: str, *, required: bool) -> fl
         if required:
             raise ValueError("missing required JWT date")
         return None
-    if (
-        type(value) not in (int, float)
-        or not math.isfinite(value)
-        or not 0 <= value <= 4102444800
-    ):
+    if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 4102444800:
         raise ValueError("invalid JWT NumericDate")
     return float(value)
 
@@ -93,9 +89,7 @@ def _claims_match(
             return None
         if profile.max_age_seconds is not None and now - iat > profile.max_age_seconds:
             return None
-    if "jti" in claims and (
-        type(claims["jti"]) is not str or not claims["jti"]
-    ):
+    if "jti" in claims and (type(claims["jti"]) is not str or not claims["jti"]):
         return None
     return subject
 
@@ -152,8 +146,7 @@ class JWTAuthenticator:
         except Exception:
             return ErrorOutcome(TechnicalErrorCode.DEPENDENCY_UNAVAILABLE)
         if not isinstance(profile, TrustedJwtVerificationProfile) or (
-            profile.scope_ref != context.scope_ref
-            or profile.profile_ref != context.profile_ref
+            profile.scope_ref != context.scope_ref or profile.profile_ref != context.profile_ref
         ):
             return ErrorOutcome(TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
 
@@ -195,15 +188,15 @@ class JWTAuthenticator:
             return RejectedOutcome()
         try:
             verified_at = ObservedAt.from_clock(self._clock)
-            subject_id = _claims_match(
-                verified_claims, profile, now=verified_at.value.timestamp()
-            )
+            subject_id = _claims_match(verified_claims, profile, now=verified_at.value.timestamp())
             if subject_id is None:
                 return RejectedOutcome()
             subject = ScopedSubjectRef(subject_id, profile.issuer, context.scope_ref)
         except Exception:
             return ErrorOutcome(TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
         return _issue_verified_outcome(
-            context, subject=subject, principal_type=profile.principal_type,
+            context,
+            subject=subject,
+            principal_type=profile.principal_type,
             verified_at=verified_at,
         )
