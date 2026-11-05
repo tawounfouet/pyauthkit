@@ -109,7 +109,8 @@ def load_layered_configuration(
             raise ConfigurationRejected("operational source changed trust-bearing fields")
         raw_timeout = values["timeout_seconds"]
         if (
-            type(raw_timeout) not in (float, int)
+            isinstance(raw_timeout, bool)
+            or not isinstance(raw_timeout, (float, int))
             or not math.isfinite(raw_timeout)
             or not 0 < raw_timeout <= 30
         ):
