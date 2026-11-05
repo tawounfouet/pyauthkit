@@ -50,13 +50,17 @@ def test_v1_json_round_trip_keeps_single_approved_route() -> None:
 
 
 def test_m6_t05_duplicate_top_level_security_member_rejected() -> None:
-    raw = json.dumps(v1()).replace('"schema_version": 1', '"schema_version": 1, "schema_version": 2')
+    raw = json.dumps(v1()).replace(
+        '"schema_version": 1', '"schema_version": 1, "schema_version": 2'
+    )
     with pytest.raises(ConfigurationRejected, match="duplicate configuration member"):
         decode(raw.encode())
 
 
 def test_m6_t05_duplicate_nested_route_member_rejected() -> None:
-    raw = json.dumps(v1()).replace('"scope": "tenant-a"', '"scope": "tenant-a", "scope": "tenant-b"')
+    raw = json.dumps(v1()).replace(
+        '"scope": "tenant-a"', '"scope": "tenant-a", "scope": "tenant-b"'
+    )
     with pytest.raises(ConfigurationRejected, match="duplicate configuration member"):
         decode(raw.encode())
 
@@ -64,7 +68,8 @@ def test_m6_t05_duplicate_nested_route_member_rejected() -> None:
 def test_m6_t05_duplicate_v2_issuer_member_cannot_swap_authority() -> None:
     raw = v1()
     raw["schema_version"] = 2
-    raw["jwt_profiles"] = [{
+    raw["jwt_profiles"] = [
+        {
         "scope": "tenant-a",
         "profile_id": "p",
         "profile_version": "v1",
@@ -77,7 +82,8 @@ def test_m6_t05_duplicate_v2_issuer_member_cannot_swap_authority() -> None:
         "clock_skew_seconds": 0,
         "max_age_seconds": None,
         "key_source": {"kind": "static", "keyset_ref": "approved-public-jwk"},
-    }]
+        }
+    ]
     good = decode(json.dumps(raw).encode())
     assert good.schema_version == 2
     injected = json.dumps(raw).replace(

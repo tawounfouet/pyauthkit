@@ -245,6 +245,8 @@ def load_approved_configuration(
         )
     except (ValueError, TypeError):
         raise ConfigurationRejected("configuration bootstrap rejected") from None
+
+
 _MAX_CONFIG_JSON_BYTES = 262144
 _MAX_CONFIG_JSON_NODES = 8192
 
@@ -294,9 +296,7 @@ def load_approved_json_configuration(
         raise
     except (ValueError, TypeError, UnicodeError, RecursionError, OverflowError):
         raise ConfigurationRejected("invalid JSON configuration") from None
-    if not isinstance(document, dict) or not all(
-        isinstance(key, str) for key in document
-    ):
+    if not isinstance(document, dict) or not all(isinstance(key, str) for key in document):
         raise ConfigurationRejected("expected JSON configuration object")
     visited = 0
 
