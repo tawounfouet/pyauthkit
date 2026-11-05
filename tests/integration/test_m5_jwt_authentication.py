@@ -49,8 +49,14 @@ def signing() -> tuple[rsa.RSAPrivateKey, str]:
         return b64(value.to_bytes((value.bit_length() + 7) // 8, "big"))
 
     public_jwk = json.dumps(
-        {"kty": "RSA", "kid": "key-1", "use": "sig", "alg": "RS256",
-         "n": integer(numbers.n), "e": integer(numbers.e)}
+        {
+            "kty": "RSA",
+            "kid": "key-1",
+            "use": "sig",
+            "alg": "RS256",
+            "n": integer(numbers.n),
+            "e": integer(numbers.e),
+        }
     )
     return private_key, public_jwk
 
@@ -65,15 +71,24 @@ class FixedClock:
 
 class Host:
     def __init__(
-        self, signing: tuple[rsa.RSAPrivateKey, str], *,
-        allow: bool | None = True, ref: TrustProfileRef = REF,
-        scope: TrustedScopeRef = SCOPE, issuer: str = ISSUER,
-        jwk: str | None = None, max_age: int | None = None
+        self,
+        signing: tuple[rsa.RSAPrivateKey, str],
+        *,
+        allow: bool | None = True,
+        ref: TrustProfileRef = REF,
+        scope: TrustedScopeRef = SCOPE,
+        issuer: str = ISSUER,
+        jwk: str | None = None,
+        max_age: int | None = None,
     ) -> None:
         self.private, public = signing
         self.clock = FixedClock()
         self.profile = TrustedJwtVerificationProfile(
-            scope, ref, issuer, AUDIENCE, principal_type=PrincipalType.SERVICE,
+            scope,
+            ref,
+            issuer,
+            AUDIENCE,
+            principal_type=PrincipalType.SERVICE,
             max_age_seconds=max_age,
         )
         self.catalog = HostTrustCatalog(
@@ -97,13 +112,21 @@ class Host:
         )
 
     def issue(
-        self, *, claims: dict[str, object] | None = None,
+        self,
+        *,
+        claims: dict[str, object] | None = None,
         headers: dict[str, str] | None = None,
     ) -> bytes:
         payload = (
-            {"iss": ISSUER, "aud": AUDIENCE, "sub": "service-42",
-             "exp": int(NOW + 300), "iat": int(NOW - 30)}
-            if claims is None else claims
+            {
+                "iss": ISSUER,
+                "aud": AUDIENCE,
+                "sub": "service-42",
+                "exp": int(NOW + 300),
+                "iat": int(NOW - 30),
+            }
+            if claims is None
+            else claims
         )
         jose = {"typ": "at+jwt", "kid": "key-1"}
         if headers is not None:
@@ -116,9 +139,7 @@ class Host:
             CorrelationId("m5-test"),
         )
         return asyncio.run(
-            self.engine.authenticate(
-                request, entry=self.catalog.resolve_for_host_route("orders")
-            )
+            self.engine.authenticate(request, entry=self.catalog.resolve_for_host_route("orders"))
         )
 
 
@@ -161,25 +182,31 @@ def test_wrong_typ_cannot_substitute_id_token(signing) -> None:
 
 
 @pytest.mark.security
-@pytest.mark.parametrize("overrides", [
-    {"iss": "https://evil.example.test"},
-    {"aud": "orders-api-evil"},
-    {"aud": ["other-api"]},
-    {"aud": 123},
-    {"sub": ""},
-    {"sub": True},
-    {"exp": True},
-    {"exp": float("inf")},
-    {"exp": int(NOW)},
-    {"nbf": int(NOW + 1)},
-    {"iat": int(NOW + 1)},
-    {"cnf": {"jkt": "unverified-key-binding"}},
-])
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"iss": "https://evil.example.test"},
+        {"aud": "orders-api-evil"},
+        {"aud": ["other-api"]},
+        {"aud": 123},
+        {"sub": ""},
+        {"sub": True},
+        {"exp": True},
+        {"exp": float("inf")},
+        {"exp": int(NOW)},
+        {"nbf": int(NOW + 1)},
+        {"iat": int(NOW + 1)},
+        {"cnf": {"jkt": "unverified-key-binding"}},
+    ],
+)
 def test_signed_claims_invalidities_fail_closed(signing, overrides) -> None:
     host = Host(signing)
     payload = {
-        "iss": ISSUER, "aud": AUDIENCE, "sub": "service-42",
-        "iat": int(NOW - 30), "exp": int(NOW + 300),
+        "iss": ISSUER,
+        "aud": AUDIENCE,
+        "sub": "service-42",
+        "iat": int(NOW - 30),
+        "exp": int(NOW + 300),
     }
     payload.update(overrides)
     assert isinstance(host.auth(host.issue(claims=payload)), Rejected)
@@ -189,17 +216,30 @@ def test_signed_claims_invalidities_fail_closed(signing, overrides) -> None:
 def test_signed_roles_do_not_override_m2_denial(signing) -> None:
     host = Host(signing, allow=False)
     claims = {
-        "iss": ISSUER, "aud": AUDIENCE, "sub": "service-42",
-        "exp": int(NOW + 300), "roles": ["admin"], "scope": "write:*",
+        "iss": ISSUER,
+        "aud": AUDIENCE,
+        "sub": "service-42",
+        "exp": int(NOW + 300),
+        "roles": ["admin"],
+        "scope": "write:*",
     }
     assert isinstance(host.auth(host.issue(claims=claims)), Rejected)
 
 
 @pytest.mark.security
-@pytest.mark.parametrize("bad", [
-    b"abc", b"a.b", b"a.b.c.d.e", b"a.b.c.d", b"a..c",
-    (b64(b'{"alg":"none"}').encode() + b"." + b64(b"{}").encode() + b"."), b" " * 16, b"x" * 9000,
-])
+@pytest.mark.parametrize(
+    "bad",
+    [
+        b"abc",
+        b"a.b",
+        b"a.b.c.d.e",
+        b"a.b.c.d",
+        b"a..c",
+        (b64(b'{"alg":"none"}').encode() + b"." + b64(b"{}").encode() + b"."),
+        b" " * 16,
+        b"x" * 9000,
+    ],
+)
 def test_non_compact_oversized_and_unsigned_rejected(signing, bad) -> None:
     host = Host(signing)
     assert parse_compact_jws(bad) is None
@@ -227,12 +267,15 @@ def test_duplicate_claims_are_rejected_before_signature_check(signing) -> None:
 
 
 @pytest.mark.security
-@pytest.mark.parametrize("injected", [
-    {"jku": "http://169.254.169.254/latest/meta-data/"},
-    {"x5u": "https://unapproved.example.test/key"},
-    {"jwk": '{"evil":true}'},
-    {"crit": "b64"},
-])
+@pytest.mark.parametrize(
+    "injected",
+    [
+        {"jku": "http://169.254.169.254/latest/meta-data/"},
+        {"x5u": "https://unapproved.example.test/key"},
+        {"jwk": '{"evil":true}'},
+        {"crit": "b64"},
+    ],
+)
 def test_untrusted_key_discovery_headers_rejected(signing, injected) -> None:
     host = Host(signing)
     assert isinstance(host.auth(host.issue(headers=injected)), Rejected)
@@ -281,8 +324,13 @@ def test_clock_and_expiry_do_not_use_untrusted_request_time(signing) -> None:
 @pytest.mark.security
 def test_age_bound_requires_iat(signing) -> None:
     host = Host(signing, max_age=60)
-    stale = {"iss": ISSUER, "aud": AUDIENCE, "sub": "service-42",
-             "exp": int(NOW + 300), "iat": int(NOW - 120)}
+    stale = {
+        "iss": ISSUER,
+        "aud": AUDIENCE,
+        "sub": "service-42",
+        "exp": int(NOW + 300),
+        "iat": int(NOW - 120),
+    }
     assert isinstance(host.auth(host.issue(claims=stale)), Rejected)
 
 
