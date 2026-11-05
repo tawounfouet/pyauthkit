@@ -24,9 +24,11 @@ class StaticJwtProfileResolver:
     def __init__(self, profiles: Mapping[TrustProfileRef, TrustedJwtVerificationProfile]) -> None:
         checked: dict[TrustProfileRef, TrustedJwtVerificationProfile] = {}
         for ref, profile in profiles.items():
-            if not isinstance(ref, TrustProfileRef) or not isinstance(
-                profile, TrustedJwtVerificationProfile
-            ) or ref != profile.profile_ref:
+            if (
+                not isinstance(ref, TrustProfileRef)
+                or not isinstance(profile, TrustedJwtVerificationProfile)
+                or ref != profile.profile_ref
+            ):
                 raise ValueError("invalid JWT profile catalog")
             checked[ref] = profile
         if not checked:
