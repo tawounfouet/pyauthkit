@@ -277,9 +277,7 @@ async def test_m4_loopback_timing_observation_no_equivalence_claim(
         "sample_size_each": n,
         "randomized_order_seed": 20261105,
         "units": "milliseconds",
-        "p50_ms": {
-            name: round(statistics.median(values), 3) for name, values in times.items()
-        },
+        "p50_ms": {name: round(statistics.median(values), 3) for name, values in times.items()},
         "p95_ms": {name: round(percentile(values, 0.95), 3) for name, values in times.items()},
         "p99_ms": {name: round(percentile(values, 0.99), 3) for name, values in times.items()},
         "median_difference_wrong_minus_missing_ms": round(
