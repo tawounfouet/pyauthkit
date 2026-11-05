@@ -20,7 +20,8 @@ import pytest
 import uvicorn
 from fastapi import FastAPI
 
-from qualification.m4_host.storage import revoke_cas
+from qualification.m4_host.app import compose_app
+from qualification.m4_host.storage import revoke_cas, rotate_cas
 
 from .conftest import (
     BUCKET_KEY,
@@ -29,6 +30,7 @@ from .conftest import (
     SELECTOR,
     Infrastructure,
     encode,
+    test_digest,
     wire,
 )
 
@@ -73,11 +75,11 @@ async def live_host(app: FastAPI) -> AsyncIterator[str]:
 
 
 @asynccontextmanager
-async def process_host(port: int) -> AsyncIterator[str]:
+async def process_host(port: int, *, peer_limit: int = 2) -> AsyncIterator[str]:
     env = os.environ.copy()
     env["M4_REFERENCE_KEY_HEX"] = REFERENCE_KEY.hex()
     env["M4_BUCKET_KEY_HEX"] = BUCKET_KEY.hex()
-    env["M4_PEER_LIMIT"] = "2"
+    env["M4_PEER_LIMIT"] = str(peer_limit)
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
@@ -301,3 +303,128 @@ async def test_m4_duplicate_authorization_headers_never_authenticate(
         assert len(await infra.redis.keys("m4q:scope:*")) == 1
         unique = await client.post("/alpha/authenticate", headers={"Authorization": valid})
         assert unique.status_code == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_dev_credential_never_authenticates_production_scope(
+    infra: Infrastructure,
+) -> None:
+    """M4-T26: the host route chooses the environment, not the bearer/header."""
+    dev = "tenant-alpha:development"
+    production = "tenant-alpha:production"
+    await infra.seed(scope=dev, secret=bytes(range(32)))
+    await infra.seed(scope=production, secret=OTHER_SECRET)
+    app = compose_app(
+        pool=infra.pool,
+        redis=infra.redis,
+        verifier_key=REFERENCE_KEY,
+        bucket_key=BUCKET_KEY,
+        routes={"development": dev, "production": production},
+    )
+    async with live_host(app) as url, httpx.AsyncClient(base_url=url, timeout=4) as client:
+        dev_header = auth_header(bytes(range(32)))
+        dev_valid = await client.post("/development/authenticate", headers=dev_header)
+        foreign = await client.post(
+            "/production/authenticate",
+            headers={**dev_header, "X-Tenant": dev},
+        )
+        prod_valid = await client.post(
+            "/production/authenticate", headers=auth_header(OTHER_SECRET)
+        )
+    assert dev_valid.status_code == 200
+    assert foreign.status_code == 401
+    assert prod_valid.status_code == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_no_overlap_rotation_rejects_old_bearer_after_commit(
+    infra: Infrastructure,
+) -> None:
+    """M4-T27: rotation replaces the one record without accepting old proof."""
+    await infra.seed()
+    async with (
+        live_host(infra.app()) as url,
+        httpx.AsyncClient(base_url=url, timeout=4) as client,
+    ):
+        old_valid = await client.post(
+            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
+        )
+        assert old_valid.status_code == 200
+        assert await rotate_cas(
+            infra.pool,
+            scope="tenant-alpha",
+            selector=encode(SELECTOR).decode("ascii"),
+            expected_version=1,
+            digest=test_digest("tenant-alpha", secret=OTHER_SECRET),
+            protection_ref="key-v1",
+        )
+        old_rejected = await client.post(
+            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
+        )
+        new_valid = await client.post(
+            "/alpha/authenticate", headers=auth_header(OTHER_SECRET)
+        )
+    assert old_rejected.status_code == 401
+    assert new_valid.status_code == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_m4_two_processes_reject_revoked_bearer_after_commit(
+    infra: Infrastructure,
+) -> None:
+    """M4-T25 lab: two OS processes must both deny after Postgres commit."""
+    await infra.seed()
+    p1, p2 = unused_port(), unused_port()
+    assert p1 != p2
+    async with (
+        process_host(p1, peer_limit=50) as url_a,
+        process_host(p2, peer_limit=50) as url_b,
+        httpx.AsyncClient(base_url=url_a, timeout=4) as client_a,
+        httpx.AsyncClient(base_url=url_b, timeout=4) as client_b,
+    ):
+        first = await client_a.post(
+            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
+        )
+        second = await client_b.post(
+            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
+        )
+        assert first.status_code == second.status_code == 200
+        assert await revoke_cas(
+            infra.pool,
+            scope="tenant-alpha",
+            selector=encode(SELECTOR).decode("ascii"),
+            expected_version=1,
+        )
+        blocked_a = await client_a.post(
+            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
+        )
+        blocked_b = await client_b.post(
+            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
+        )
+    assert blocked_a.status_code == blocked_b.status_code == 401
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_inactive_records_match_generic_http_refusal(
+    infra: Infrastructure,
+) -> None:
+    """M4-T30: wrong, suspended, disabled and revoked share refusal signature."""
+    await infra.seed()
+    async with live_host(infra.app()) as url, httpx.AsyncClient(
+        base_url=url, timeout=4
+    ) as client:
+        wrong = await client.post("/alpha/authenticate", headers=auth_header(OTHER_SECRET))
+        for status in ("suspended", "disabled", "revoked"):
+            await infra.pool.execute(
+                "UPDATE m4q_credentials SET status=$1 WHERE scope_id=$2",
+                status,
+                "tenant-alpha",
+            )
+            denied = await client.post(
+                "/alpha/authenticate", headers=auth_header(bytes(range(32)))
+            )
+            assert refusal_signature(denied) == refusal_signature(wrong)

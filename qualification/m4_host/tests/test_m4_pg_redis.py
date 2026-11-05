@@ -6,13 +6,19 @@ import httpx
 import pytest
 from redis.asyncio import Redis
 
+from pyauthkit.adapters.api_key import HostCallbackApiKeyResolver
 from pyauthkit.adapters.api_key_authenticator import ApiKeyAuthenticator
 from pyauthkit.adapters.hmac_api_key import HmacApiKeyVerifier
 from pyauthkit.application.engine import AuthenticationEngine
 from pyauthkit.application.host_context import HostBinding, HostTrustCatalog
 from pyauthkit.application.policy import AuthenticationPolicyGate
 from pyauthkit.composition.registry import AuthenticatorRegistry
-from pyauthkit.domain.api_key import ApiKeyFound, ApiKeyMissing
+from pyauthkit.domain.api_key import (
+    ApiKeyFound,
+    ApiKeyMissing,
+    ApiKeyRecordLookup,
+    ApiKeyVerifierRecord,
+)
 from pyauthkit.domain.evidence import EvidenceMethod, PresentedEvidence
 from pyauthkit.domain.request import AuthenticationRequest
 from pyauthkit.domain.result import Rejected
@@ -273,3 +279,135 @@ async def test_m4_unreachable_redis_quota_yields_503_not_success(
         assert result.json() == {"error": "temporarily_unavailable"}
     finally:
         await unavailable.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.contract
+async def test_m4_two_resolvers_share_source_scope_and_freshness_contract(
+    infra: Infrastructure,
+) -> None:
+    """M4-T37: host callback and PostgreSQL adapter have matching outcomes."""
+    await infra.seed()
+    await infra.seed(scope="tenant-beta", secret=bytes(range(1, 33)))
+    direct = PostgresApiKeyCredentialResolver(infra.pool)
+
+    async def lookup(scope: TrustedScopeRef, key_id: str) -> ApiKeyRecordLookup:
+        return await direct.resolve(scope_ref=scope, key_id=key_id)
+
+    async def freshness(record: ApiKeyVerifierRecord) -> bool:
+        return await direct.is_current(record=record)
+
+    callback = HostCallbackApiKeyResolver(lookup=lookup, freshness=freshness)
+    selector = encode(SELECTOR).decode("ascii")
+    for name in ("tenant-alpha", "tenant-beta", "tenant-gamma"):
+        scope = TrustedScopeRef(name)
+        a = await direct.resolve(scope_ref=scope, key_id=selector)
+        b = await callback.resolve(scope_ref=scope, key_id=selector)
+        assert type(a) is type(b)
+        if isinstance(a, ApiKeyFound):
+            assert isinstance(b, ApiKeyFound)
+            assert a.record.subject_ref == b.record.subject_ref
+            assert a.record.verifier_digest == b.record.verifier_digest
+            assert await direct.is_current(record=a.record)
+            assert await callback.is_current(record=b.record)
+        else:
+            assert isinstance(a, ApiKeyMissing)
+    known = await direct.resolve(
+        scope_ref=TrustedScopeRef("tenant-alpha"), key_id=selector
+    )
+    assert isinstance(known, ApiKeyFound)
+    assert await revoke_cas(
+        infra.pool, scope="tenant-alpha", selector=selector, expected_version=1
+    )
+    assert not await direct.is_current(record=known.record)
+    assert not await callback.is_current(record=known.record)
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_128_concurrent_attempts_bounded_on_slow_postgresql(
+    infra: Infrastructure,
+) -> None:
+    """M4-T32 lab: 128 simultaneous bad keys, slow source, bounded access."""
+    await infra.seed()
+    source = PostgresApiKeyCredentialResolver(infra.pool)
+
+    class BoundedSlowResolver:
+        def __init__(self) -> None:
+            self.semaphore = asyncio.Semaphore(8)
+            self.active = 0
+            self.peak = 0
+
+        async def resolve(
+            self, *, scope_ref: TrustedScopeRef, key_id: str
+        ) -> ApiKeyRecordLookup:
+            async with self.semaphore:
+                self.active += 1
+                self.peak = max(self.peak, self.active)
+                try:
+                    await asyncio.sleep(0.03)
+                    return await source.resolve(scope_ref=scope_ref, key_id=key_id)
+                finally:
+                    self.active -= 1
+
+        async def is_current(self, *, record: ApiKeyVerifierRecord) -> bool:
+            return await source.is_current(record=record)
+
+    slow = BoundedSlowResolver()
+    scope = TrustedScopeRef("tenant-alpha")
+    catalog = HostTrustCatalog(
+        [
+            HostBinding(
+                "alpha",
+                scope,
+                TrustProfileRef("reference", "v1", scope),
+                frozenset({EvidenceMethod.API_KEY}),
+            )
+        ]
+    )
+    verifier = HmacApiKeyVerifier(
+        key_source=FixtureProtectionKeySource(
+            REFERENCE_KEY, approved_scopes=frozenset({"tenant-alpha"})
+        ),
+        approved_refs={scope: frozenset({"key-v1"})},
+    )
+    guard = RedisApiKeyAttemptGuard(
+        redis=infra.redis,
+        identifier_key=BUCKET_KEY,
+        scope_limit=256,
+        peer_limit=256,
+        selector_limit=256,
+    )
+    engine = AuthenticationEngine(
+        policy=AuthenticationPolicyGate(catalog, final_rule=lambda _sub, _entry: True),
+        registry=AuthenticatorRegistry(
+            {
+                EvidenceMethod.API_KEY: ApiKeyAuthenticator(
+                    resolver=slow, proof_verifier=verifier, attempt_guard=guard
+                )
+            }
+        ),
+        timeout_seconds=5.0,
+    )
+    entry = catalog.resolve_for_host_route("alpha")
+    peer = HOST_PEER.set("198.51.100.44")
+    try:
+        decisions = await asyncio.gather(
+            *(
+                engine.authenticate(
+                    AuthenticationRequest(
+                        PresentedEvidence(
+                            EvidenceMethod.API_KEY, wire(secret=bytes(range(1, 33))).encode()
+                        ),
+                        CorrelationId(f"load-{index}"),
+                    ),
+                    entry=entry,
+                )
+                for index in range(128)
+            )
+        )
+    finally:
+        HOST_PEER.reset(peer)
+    assert all(isinstance(result, Rejected) for result in decisions)
+    assert 1 <= slow.peak <= 8
+    assert slow.active == 0
