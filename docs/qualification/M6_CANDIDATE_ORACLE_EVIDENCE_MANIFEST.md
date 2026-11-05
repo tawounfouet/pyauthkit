@@ -66,11 +66,11 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
   source identifiers, correlation IDs, scopes and credentials are not labels.
 - Memory audit is best-effort only. No exactly-once, idempotence or persisted
   receipt is asserted; `required` is rejected.
-- M6 includes an optional AWS Secrets Manager adapter and exercises the
-  botocore request/response contract with Stubber, including the actual M4
-  HMAC consumer path. This is NOT a live AWS IAM/KMS/TLS/CloudTrail or failure
-  injection qualification. No AWS account or production credential was used.
-  Other providers (Vault, Azure Key Vault) are not wired.
+- M6 includes an optional AWS Secrets Manager adapter, strict botocore client
+  profile admission, and offline Stubber contract tests including M4 HMAC.
+  A guarded manual live test harness exists but has NOT been run. AWS IAM,
+  KMS, VPC endpoints, CloudTrail and live provider failure injection remain
+  unqualified. Other providers (Vault, Azure Key Vault) are not wired.
 - An optional SQLite ledger now stores a local generation floor and CAS, but
   it is neither cryptographically authenticated nor a multi-replica fencing
   system. Privileged file replacement and host routing/activation remain

@@ -192,3 +192,27 @@ Final developer CI SHA: PENDING validation. GATE27-07 remains NO-GO.
   standard Python. No production deployment is authorized.
 
 Final exact-head CI: PENDING at authoring. GATE27-07 stays NO-GO.
+
+## 2026-11-05 development iteration 8 - AWS SDK admission and manual live-read harness
+
+- Added `admit_aws_client_profile` and `build_admitted_aws_resolver` as
+  an explicit preflight path for host-created boto3/botocore clients. It
+  rejects wrong service, region, noncanonical endpoint, HTTP/custom URL,
+  unbounded connect/read timeouts, unsigned/unknown signature policies,
+  nonstandard retry mode, too many retry attempts or explicit SDK proxies.
+- The low-level `AwsSecretsManagerResolver` remains available for isolated
+  SDK-shaped fakes, but the documented real-host path now goes through
+  `build_admitted_aws_resolver`. Neither path authenticates a cloud IAM
+  principal or validates a VPC endpoint policy by itself.
+- Added `qualification/m6_aws_live/run_live.py` and its README with an
+  explicit environmental approval gate, exact expected STS assumed-role
+  identity, isolated account/resource/VersionId and no plaintext logging.
+  **No live AWS read was performed** in this ChatGPT session or in PR CI.
+- Added offline tests for hostile client endpoints, wrong regions/services,
+  excessive timeouts/retries, unsigned signature, missing admission, and
+  missing explicit live approval. Integrated tests into M6 CI.
+- Remaining AWS qualification: separately approved test account and role,
+  IAM/KMS/VPC policies, real endpoint/timeout/throttle/revocation tests and
+  independent reviewer sign-off. GATE27-07 remains NO-GO.
+
+Exact-head CI result: PENDING for this iteration until verified.

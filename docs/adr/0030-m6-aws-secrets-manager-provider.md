@@ -59,3 +59,19 @@ KMS, TLS or region-to-account isolation.
 AWS SDK API: https://docs.aws.amazon.com/boto3/latest/reference/services/secretsmanager/client/get_secret_value.html
 
 GATE27-07 remains NO-GO until independent security qualification.
+
+## Addendum - strict SDK profile and manual test-account readiness
+
+The preferred real-host entrypoint is `build_admitted_aws_resolver`, which
+requires an explicitly configured botocore Secrets Manager client with
+matching region and canonical HTTPS endpoint, SigV4, parameter validation,
+bounded connect/read deadlines and standard bounded retries. Custom endpoints
+and explicit proxy configuration fail admission. This protects a subset of
+local client misconfiguration, NOT the client's true IAM identity, network
+environment proxy routing, KMS authorization or TLS certificate chain.
+
+A manual, opt-in test-account harness is stored under
+`qualification/m6_aws_live/`. It checks an exact STS principal before a
+single read of an approved secret version. It does not print material and
+does not run in normal CI. Executing it requires separate human authorization,
+test-only IAM/KMS/network controls and an independent reviewer.

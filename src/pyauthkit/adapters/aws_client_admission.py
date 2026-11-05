@@ -34,7 +34,8 @@ class AwsClientProfile(Protocol):
 
 def _bounded_timeout(value: object) -> bool:
     return (
-        type(value) in (int, float)
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
         and math.isfinite(value)
         and 0 < value <= 2
     )
@@ -64,6 +65,7 @@ def admit_aws_client_profile(
     service_model = getattr(meta, "service_model", None)
     config = getattr(meta, "config", None)
     retries = getattr(config, "retries", None)
+    attempts = retries.get("total_max_attempts") if isinstance(retries, Mapping) else None
     if (
         getattr(service_model, "service_name", None) != "secretsmanager"
         or getattr(meta, "region_name", None) != region
@@ -75,8 +77,9 @@ def admit_aws_client_profile(
         or getattr(config, "proxies", None) not in (None, {})
         or not isinstance(retries, Mapping)
         or retries.get("mode") != "standard"
-        or type(retries.get("total_max_attempts")) is not int
-        or not 1 <= retries["total_max_attempts"] <= 2
+        or not isinstance(attempts, int)
+        or isinstance(attempts, bool)
+        or not 1 <= attempts <= 2
     ):
         raise AwsClientAdmissionRejected("AWS SDK client profile not approved")
 
