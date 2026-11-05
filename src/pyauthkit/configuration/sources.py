@@ -7,7 +7,6 @@ SourceProvenance inside a client request would not make it trustworthy.
 import json
 import math
 from collections.abc import Mapping, Sequence
-
 from typing import cast
 from urllib.parse import urlsplit
 
