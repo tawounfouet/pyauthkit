@@ -46,7 +46,8 @@ def _approved_ip(raw: str) -> _IPAddress:
     if (
         not ip.is_global
         or ip.is_multicast
-        or isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped is not None
+        or isinstance(ip, ipaddress.IPv6Address)
+        and ip.ipv4_mapped is not None
     ):
         raise ValueError("non-public egress destination")
     return ip
@@ -153,8 +154,7 @@ class PinnedHttpsJwksFetcher:
         checked_ips: dict[TrustProfileRef, frozenset[_IPAddress]] = {}
         for ref, source in sources.items():
             if not isinstance(ref, TrustProfileRef) or (
-                not isinstance(source, ApprovedJwksSource)
-                or source.profile_ref != ref
+                not isinstance(source, ApprovedJwksSource) or source.profile_ref != ref
             ):
                 raise ValueError("invalid JWKS authority binding")
             raw_ips = allowed_ips[ref]
