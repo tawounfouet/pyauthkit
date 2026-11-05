@@ -7,7 +7,6 @@ fakes. They do NOT prove firewall enforcement or public-provider TLS operations.
 import asyncio
 import json
 import ssl
-from collections.abc import Callable
 
 import pytest
 
