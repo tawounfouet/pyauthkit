@@ -66,6 +66,14 @@ def main() -> int:
         env = os.environ.copy()
         env.pop("PYTHONPATH", None)
         subprocess.run([str(binary), "-c", script], cwd=temp_path, env=env, check=True)
+        # Execute a real PR-07 verifier in the isolated wheel environment on every OS.
+        # No optional FastAPI/PostgreSQL/Redis package is installed in that venv.
+        subprocess.run(
+            [str(binary), str(root / "scripts" / "smoke_m4_wheel.py")],
+            cwd=temp_path,
+            env=env,
+            check=True,
+        )
     return 0
 
 

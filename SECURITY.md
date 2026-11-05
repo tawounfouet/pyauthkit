@@ -33,7 +33,21 @@ For the licensing/disclosure decision, see
 
 ## Current implementation limitations
 
-Only the bootstrap package and a *syntax-only* `TrustedScopeRef` exist on
-`main` until subsequent implementation PRs are merged. A syntactically
-valid reference is not host-approved provenance or proof of authentication.
-There is no production-ready `authenticate()` success path.
+The protected `main` branch includes the **M0-M2 engine/domain baseline**
+and, after PR #76 has been merged, the **M4 API Key experimental
+implementation** (strict parser, scoped verification, reference-only
+PostgreSQL/Redis/HTTP qualification fixtures). PR #75 / M3 Password
+Authentication remains a separate workstream; its formal gate is not GO.
+
+M4 was authorized by its sole maintainer for **development integration
+only**, documented in
+`docs/qualification/M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md`.
+**GATE27-05 independent security qualification remains NO-GO.**
+A syntactically valid scope or locally successful verifier does not prove
+production identity, authorization, real KMS/TLS/proxy controls, audit
+durability or revocation consistency after the final freshness check.
+The reference host under `qualification/m4_host` is **NOT deployable
+as a production authentication service**.
+
+There is **no supported production-ready authentication deployment**,
+and no permission to publish or deploy M4 follows from merging to `main`.
