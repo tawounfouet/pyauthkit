@@ -409,3 +409,24 @@ async def test_m4_128_concurrent_attempts_bounded_on_slow_postgresql(
     assert any(isinstance(result, Rejected) for result in decisions)
     assert 1 <= slow.peak <= 8
     assert slow.active == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_no_stale_positive_cache_after_postgresql_shutdown(
+    infra: Infrastructure,
+) -> None:
+    """M4-T35: previous success cannot survive owner store outage as a cache hit."""
+    await infra.seed()
+    app = infra.app()
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://reference"
+    ) as client:
+        request_headers = {"Authorization": "ApiKey " + wire()}
+        valid = await client.post("/alpha/authenticate", headers=request_headers)
+        assert valid.status_code == 200
+        await infra.pool.close()
+        later = await client.post("/alpha/authenticate", headers=request_headers)
+    assert later.status_code == 503
+    assert later.json() == {"error": "temporarily_unavailable"}
+    assert "service-alpha" not in later.text
