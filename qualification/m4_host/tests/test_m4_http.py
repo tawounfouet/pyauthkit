@@ -300,4 +300,3 @@ async def test_m4_duplicate_authorization_headers_never_authenticate(
         assert len(await infra.redis.keys("m4q:scope:*")) == 1
         unique = await client.post("/alpha/authenticate", headers={"Authorization": valid})
         assert unique.status_code == 200
-
