@@ -352,3 +352,92 @@ def test_explicit_unencoded_payload_header_rejected(signing) -> None:
     raw = malicious + b"." + payload + b"." + signature
     assert parse_compact_jws(raw) is None
     assert isinstance(host.auth(raw), Rejected)
+
+
+
+@pytest.mark.security
+@pytest.mark.parametrize(
+    "unapproved",
+    [
+        {"kty": "oct"},
+        {"use": "enc"},
+        {"key_ops": ["sign"]},
+        {"alg": "HS256"},
+    ],
+)
+def test_unapproved_jwk_algorithm_key_use_and_type_rejected_at_bootstrap(
+    signing, unapproved
+) -> None:
+    _private, raw_jwk = signing
+    document = json.loads(raw_jwk)
+    document.update(unapproved)
+    with pytest.raises(ValueError):
+        StaticJwksKeyResolver({REF: (json.dumps(document),)})
+
+
+@pytest.mark.security
+def test_jws_excessive_json_depth_and_noncanonical_base64url_rejected() -> None:
+    header = b64(b'{"alg":"RS256","kid":"key-1","typ":"at+jwt"}').encode()
+    nested = b'{"claim":' + b"[" * 16 + b"1" + b"]" * 16 + b"}"
+    raw = header + b"." + b64(nested).encode() + b".AAAA"
+    assert parse_compact_jws(raw) is None
+    noncanonical = header + b"." + b64(b"{}").encode() + b"=.AAAA"
+    assert parse_compact_jws(noncanonical) is None
+
+
+@pytest.mark.security
+def test_client_supplied_tenant_is_not_a_trust_profile_selector(signing) -> None:
+    host = Host(signing)
+    from pyauthkit.domain.identity import ClaimedIdentity
+
+    request = AuthenticationRequest(
+        PresentedEvidence(EvidenceMethod.JWT, host.issue()),
+        CorrelationId("jwt-tenant-spoofing"),
+        claimed_identity=ClaimedIdentity(
+            "service", "service-42", claimed_tenant="foreign:production"
+        ),
+    )
+    result = asyncio.run(
+        host.engine.authenticate(
+            request, entry=host.catalog.resolve_for_host_route("orders")
+        )
+    )
+    assert isinstance(result, Rejected)
+
+
+@pytest.mark.security
+def test_profile_revision_cannot_fallback_to_another_versions_keys(signing) -> None:
+    _private, jwk = signing
+    resolver = StaticJwksKeyResolver({REF: (jwk,)})
+    other_ref = TrustProfileRef("jwt-api", "v2", SCOPE)
+    foreign = TrustedJwtVerificationProfile(SCOPE, other_ref, ISSUER, AUDIENCE)
+    assert (
+        asyncio.run(
+            resolver.resolve_key(
+                profile=foreign, kid_hint="key-1", algorithm_hint="RS256"
+            )
+        )
+        is None
+    )
+
+
+@pytest.mark.security
+def test_jwt_registry_has_no_other_authenticator_fallback(signing) -> None:
+    host = Host(signing)
+    from pyauthkit.composition.registry import AuthenticatorNotConfigured
+
+    registry = AuthenticatorRegistryBuilder()
+    registry.register(host.authenticator)
+    frozen = registry.freeze()
+    with pytest.raises(AuthenticatorNotConfigured):
+        frozen.resolve(EvidenceMethod.PASSWORD)
+    with pytest.raises(AuthenticatorNotConfigured):
+        frozen.resolve(EvidenceMethod.API_KEY)
+    assert isinstance(host.auth(host.issue(headers={"kid": "unknown"})), Rejected)
+
+
+@pytest.mark.security
+def test_signed_missing_expiry_is_rejected(signing) -> None:
+    host = Host(signing)
+    payload = {"iss": ISSUER, "aud": AUDIENCE, "sub": "service-42"}
+    assert isinstance(host.auth(host.issue(claims=payload)), Rejected)
