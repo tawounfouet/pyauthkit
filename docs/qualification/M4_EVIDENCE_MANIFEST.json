@@ -487,11 +487,12 @@
       "test_nodes": [
         "qualification/m4_host/tests/test_m4_http.py::test_m4_http_generic_denials_and_host_tenant_binding",
         "qualification/m4_host/tests/test_m4_http.py::test_m4_loopback_timing_observation_no_equivalence_claim",
-        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_redis_atomic_guard_shared_between_instances"
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_redis_atomic_guard_shared_between_instances",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_duplicate_authorization_headers_never_authenticate"
       ],
       "external_evidence": [],
       "independent_adjudication": "PENDING",
-      "unproven_scope": "HTTP loopback et Redis testes. Timing equivalence, veritable reverse proxy et charge sostenue non qualifies."
+      "unproven_scope": "Reference-host HTTP duplicate Authorization handling, Redis quotas and localhost refusals now have tests. Real TLS/proxy normalization, cross-protocol header smuggling, timing equivalence and production stress are NOT proven."
     },
     {
       "id": "M4-T38",
