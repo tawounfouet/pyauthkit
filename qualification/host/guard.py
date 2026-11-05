@@ -87,7 +87,7 @@ class RedisPasswordAttemptGuard:
         # Source and identifier are separately limited across all app replicas.
         peer_key = "m3q:src:" + self._digest(scope_ref.value, source)
         account_key = "m3q:acct:" + self._digest(
-            scope_ref.value, identifier_kind or "unknown", identifier_value or "unknown"
+            scope_ref.value, identifier_kind or "unknown", identifier_value or "unknown"  # pragma: allowlist secret
         )
         decision = await self._redis.eval(
             _ATOMIC_LIMITS,

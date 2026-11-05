@@ -74,7 +74,7 @@ async def test_t25_real_network_denials_have_identical_status_body_headers(
     app = infra.app(max_per_source=500, max_per_identity=500)
     async with live_host(app) as url, httpx.AsyncClient(base_url=url) as client:
         bad = await client.post(
-            "/alpha/login", json={"username": "alice", "password": "invalid"}
+            "/alpha/login", json={"username": "alice", "password": "invalid"}  # pragma: allowlist secret
         )
         missing = await client.post(
             "/alpha/login", json={"username": "unknown", "password": "invalid"}
@@ -85,7 +85,7 @@ async def test_t25_real_network_denials_have_identical_status_body_headers(
         )
         revoked = await client.post(
             "/alpha/login",
-            json={"username": "alice", "password": "real-test-phrase"},
+            json={"username": "alice", "password": "real-test-phrase"},  # pragma: allowlist secret
         )
         assert denial_signature(bad) == denial_signature(missing)
         assert denial_signature(bad) == denial_signature(revoked)

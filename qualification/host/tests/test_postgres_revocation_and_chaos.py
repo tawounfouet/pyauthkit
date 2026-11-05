@@ -61,7 +61,7 @@ async def test_t33_real_postgres_revocation_between_kdf_and_freshness_check(
             pending = asyncio.create_task(
                 client.post(
                     "/alpha/login",
-                    json={"username": "alice", "password": "good-phrase"},
+                    json={"username": "alice", "password": "good-phrase"},  # pragma: allowlist secret
                 )
             )
             assert await asyncio.to_thread(barrier.entered.wait, 3)

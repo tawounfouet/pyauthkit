@@ -62,7 +62,7 @@ No real passwords, identities or credential material should be used.
 ```bash
 docker compose -f qualification/host/compose.yaml up -d --wait
 python -m pip install -e '.[dev,password,qualification]'
-export M3_PG_DSN='postgresql://m3qual:m3qual_ci_synthetic_only@127.0.0.1:54329/m3qual'
+export M3_PG_DSN='postgresql://m3qual:m3qual_ci_synthetic_only@127.0.0.1:54329/m3qual' # pragma: allowlist secret
 export M3_REDIS_URL='redis://127.0.0.1:63799/15'
 python -m pytest -v -s qualification/host/tests
 docker compose -f qualification/host/compose.yaml down -v

@@ -5,7 +5,7 @@ services:
     image: postgres:16.6-alpine
     environment:
       POSTGRES_USER: m3qual
-      POSTGRES_PASSWORD: m3qual_ci_synthetic_only
+      POSTGRES_PASSWORD: m3qual_ci_synthetic_only  # pragma: allowlist secret
       POSTGRES_DB: m3qual
     ports:
       - "127.0.0.1:54329:5432"

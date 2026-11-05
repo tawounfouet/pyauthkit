@@ -37,14 +37,14 @@ async def test_t24_two_fastapi_replicas_share_limits_but_isolate_tenants(
             transport=transport_new_peer, base_url="http://qualifier"
         ) as second_peer,
     ):
-        login = {"username": "ghost", "password": "incorrect"}
+        login = {"username": "ghost", "password": "incorrect"}  # pragma: allowlist secret
         assert (await a.post("/alpha/login", json=login)).status_code == 401
         assert (await b.post("/alpha/login", json=login)).status_code == 401
 
         # A spoofed forwarded header does not alter the peer identity.
         blocked = await b.post(
             "/alpha/login",
-            json={"username": "alice", "password": "alpha-phrase"},
+            json={"username": "alice", "password": "alpha-phrase"},  # pragma: allowlist secret
             headers={"X-Forwarded-For": "203.0.113.55"},
         )
         assert blocked.status_code == 401
@@ -52,7 +52,7 @@ async def test_t24_two_fastapi_replicas_share_limits_but_isolate_tenants(
 
         # Source buckets are tenant-scoped; another approved tenant remains viable.
         cross_tenant = await b.post(
-            "/beta/login", json={"username": "alice", "password": "beta-phrase"}
+            "/beta/login", json={"username": "alice", "password": "beta-phrase"}  # pragma: allowlist secret
         )
         assert cross_tenant.status_code == 200
         assert (await second_peer.post(
