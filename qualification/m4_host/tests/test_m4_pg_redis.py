@@ -120,9 +120,7 @@ async def test_m4_revocation_between_hmac_and_pg_recheck_denies(infra: Infrastru
     start_revoke = asyncio.Event()
     proceed = asyncio.Event()
     key_source = FixtureProtectionKeySource(REFERENCE_KEY)
-    proof = HmacApiKeyVerifier(
-        key_source=key_source, approved_refs={scope: frozenset({"key-v1"})}
-    )
+    proof = HmacApiKeyVerifier(key_source=key_source, approved_refs={scope: frozenset({"key-v1"})})
 
     class PausedProof:
         async def verify(self, *, scope_ref: TrustedScopeRef, presented, record) -> bool:
@@ -131,9 +129,7 @@ async def test_m4_revocation_between_hmac_and_pg_recheck_denies(infra: Infrastru
             await proceed.wait()
             return matched
 
-    guard = RedisApiKeyAttemptGuard(
-        redis=infra.redis, identifier_key=BUCKET_KEY, peer_limit=20
-    )
+    guard = RedisApiKeyAttemptGuard(redis=infra.redis, identifier_key=BUCKET_KEY, peer_limit=20)
     authenticator = ApiKeyAuthenticator(
         resolver=PostgresApiKeyCredentialResolver(infra.pool),
         proof_verifier=PausedProof(),

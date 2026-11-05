@@ -177,9 +177,7 @@ async def test_m4_http_generic_denials_and_host_tenant_binding(
             selector=encode(SELECTOR).decode("ascii"),
             expected_version=1,
         )
-        revoked = await client.post(
-            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
-        )
+        revoked = await client.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
         assert refusal_signature(wrong) == refusal_signature(revoked)
 
     await infra.redis.flushdb()

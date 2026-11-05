@@ -155,9 +155,7 @@ async def revoke_cas(
     pool: asyncpg.Pool, *, scope: str, selector: str, expected_version: int
 ) -> bool:
     """Atomic source-level version check; returns false on racing updates."""
-    return (
-        await pool.fetchval(CAS_REVOKE, scope, selector, expected_version)
-    ) is not None
+    return (await pool.fetchval(CAS_REVOKE, scope, selector, expected_version)) is not None
 
 
 async def rotate_cas(
@@ -171,7 +169,5 @@ async def rotate_cas(
 ) -> bool:
     """Test-only verifier rotation with version CAS, no bearer reissue API."""
     return (
-        await pool.fetchval(
-            CAS_ROTATE, scope, selector, expected_version, digest, protection_ref
-        )
+        await pool.fetchval(CAS_ROTATE, scope, selector, expected_version, digest, protection_ref)
     ) is not None

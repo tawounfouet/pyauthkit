@@ -58,12 +58,14 @@ class RedisApiKeyAttemptGuard:
     def _bucket(self, kind: str, *items: str) -> str:
         parts = [kind, *items]
         message = b"".join(
-            len(part.encode("utf-8")).to_bytes(4, "big") + part.encode("utf-8")
-            for part in parts
+            len(part.encode("utf-8")).to_bytes(4, "big") + part.encode("utf-8") for part in parts
         )
-        return "m4q:" + kind + ":" + hmac.new(
-            self._identifier_key, message, hashlib.sha256
-        ).hexdigest()
+        return (
+            "m4q:"
+            + kind
+            + ":"
+            + hmac.new(self._identifier_key, message, hashlib.sha256).hexdigest()
+        )
 
     async def admit(
         self,
@@ -81,7 +83,5 @@ class RedisApiKeyAttemptGuard:
             self._bucket("key", scope_ref.value, key_id if key_id is not None else "unknown"),
         )
         # Redis failures propagate to ApiKeyAuthenticator as technical errors.
-        result = await self._redis.eval(
-            _LUA, len(keys), *keys, self._window, *self._limits
-        )
+        result = await self._redis.eval(_LUA, len(keys), *keys, self._window, *self._limits)
         return result == 1

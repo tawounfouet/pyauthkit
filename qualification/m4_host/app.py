@@ -148,7 +148,5 @@ def compose_app(
         return authenticate
 
     for route_id in scopes:
-        app.add_api_route(
-            f"/{route_id}/authenticate", build_handler(route_id), methods=["POST"]
-        )
+        app.add_api_route(f"/{route_id}/authenticate", build_handler(route_id), methods=["POST"])
     return app
