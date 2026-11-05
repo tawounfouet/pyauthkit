@@ -15,7 +15,7 @@ import asyncio
 import math
 import time
 from collections.abc import Callable, Iterable
-from typing import Literal, Never
+from typing import Literal, Never, cast
 
 from pyauthkit.adapters.audit_required_sqlite import SqliteRequiredAuditCommitter
 from pyauthkit.application.host_context import HostTrustCatalog, TrustedEntryContext
@@ -99,9 +99,12 @@ class ReceiptedDecisionGateway:
             return AuthError(request.correlation_id, TechnicalErrorCode.INTERNAL_ERROR)
         status: Literal["AUTHENTICATED", "REJECTED", "ERROR"]
         if isinstance(result, Authenticated):
+            # Authenticated.__new__ is deliberately annotated Never. Mypy
+            # does not narrow this restricted runtime variant automatically.
+            verified = cast(Authenticated, result)
             status = "AUTHENTICATED"
-            subject = result.principal.subject
-            principal_type = result.principal.principal_type
+            subject = verified.principal.subject
+            principal_type = verified.principal.principal_type
         elif isinstance(result, Rejected):
             status = "REJECTED"
             subject = None
