@@ -40,7 +40,9 @@ def _numeric_date(claims: dict[str, object], name: str, *, required: bool) -> fl
         if required:
             raise ValueError("missing required JWT date")
         return None
-    if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 4102444800:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError("invalid JWT NumericDate")
+    if not 0 <= value <= 4102444800 or (isinstance(value, float) and not math.isfinite(value)):
         raise ValueError("invalid JWT NumericDate")
     return float(value)
 
@@ -98,6 +100,11 @@ class JWTAuthenticator:
     """Explicitly registered verifier. No implicit issuer, JWKS or final allow."""
 
     __slots__ = ("_profiles", "_keys", "_crypto", "_clock")
+
+    _profiles: TrustedJwtProfileResolver
+    _keys: VerificationKeyResolver
+    _crypto: SignedTokenVerifier
+    _clock: Clock
 
     def __init__(
         self,
