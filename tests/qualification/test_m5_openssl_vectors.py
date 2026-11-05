@@ -21,7 +21,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from pyauthkit.adapters.jwt_authenticator import JWTAuthenticator
 from pyauthkit.adapters.jwt_crypto import PyJwtRs256Verifier
-from pyauthkit.adapters.jwt_static import StaticJwtProfileResolver, StaticJwksKeyResolver
+from pyauthkit.adapters.jwt_static import StaticJwksKeyResolver, StaticJwtProfileResolver
 from pyauthkit.application.engine import AuthenticationEngine
 from pyauthkit.application.host_context import HostBinding, HostTrustCatalog
 from pyauthkit.application.policy import AuthenticationPolicyGate
