@@ -189,8 +189,13 @@ class PinnedHttpsJwksFetcher:
             raise ValueError("invalid DNS answer count")
         permitted = self._allowed_ips[source.profile_ref]
         addresses: list[_IPAddress] = []
-        for _family, _type, _proto, _canonical, sockaddr in records:
-            ip = _approved_ip(sockaddr[0])
+        for family, _type, _proto, _canonical, sockaddr in records:
+            if family not in (socket.AF_INET, socket.AF_INET6):
+                raise ValueError("invalid DNS address family")
+            raw_ip = sockaddr[0]
+            if not isinstance(raw_ip, str):
+                raise ValueError("invalid DNS address value")
+            ip = _approved_ip(raw_ip)
             if ip not in permitted:
                 # Reject the whole DNS response, never choose the one good address.
                 raise ValueError("DNS destination outside egress allowlist")
