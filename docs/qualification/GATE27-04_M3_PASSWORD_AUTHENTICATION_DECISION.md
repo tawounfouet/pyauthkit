@@ -2,10 +2,10 @@
 
 > **Date de coupe :** 5 novembre 2026  
 > **Verdict :** **NO-GO FORMEL / TECHNIQUE DE RÉFÉRENCE QUALIFIÉE PAR CI**  
-> **PR :** [#75](https://github.com/tawounfouet/pyauthkit/pull/75), sans merge ni publication  
+> **PR :** [#75](https://github.com/tawounfouet/pyauthkit/pull/75), READY FOR REVIEW, sans merge ni publication  
 > **Gate :** [#74](https://github.com/tawounfouet/pyauthkit/issues/74), OPEN  
 > **Code testé :** `2c6ea7173b44ce314c61f680b436d493c994de3c`  
-> **CI code exact :** [42031794016](https://github.com/tawounfouet/pyauthkit/actions/runs/42031794016), **7/7 SUCCESS**  
+> **CI code exact :** [42031794016](https://github.com/tawounfouet/pyauthkit/actions/runs/42031794016), **7/7 SUCCESS**; CI HEAD précédent [42032506665](https://github.com/tawounfouet/pyauthkit/actions/runs/42032506665), **7/7 SUCCESS**.  
 > **Important :** ce rapport n'est **pas** une signature de revue indépendante.
 
 ## 1. Portée de la décision

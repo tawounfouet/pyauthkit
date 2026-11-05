@@ -3,7 +3,7 @@
 - Date: 2026-11-02
 - Milestone: M3 (#4), WP27-019..022 / WP28-029..044
 - Branch: `feat/m3-password-authentication-pr06`
-- Pull request: [#75](https://github.com/tawounfouet/pyauthkit/pull/75), **DRAFT**
+- Pull request: [#75](https://github.com/tawounfouet/pyauthkit/pull/75), **READY FOR INDEPENDENT SECURITY REVIEW, NOT MERGED**
 - Gate: [GATE27-04 #74](https://github.com/tawounfouet/pyauthkit/issues/74), **OPEN / NO GO**
 - Entry M2 SHA: `55c550d292f2a4294d25dc7b710fcbc4d5ff4f92`
 
@@ -51,3 +51,10 @@ online anti-enumeration timing guarantees or global rate limits.
 - Le scanner de secrets inclut les fixtures; Bandit inclut `qualification/host`; deps facultatives incluses au pip-audit CI.
 - ADR technical review `docs/qualification/M3_SECURITY_AND_ADR_REVIEW_2026-11-05.md`; **aucune approbation indépendante**, risques non signés.
 - **NO-GO GATE27-04** jusqu'à la validation formelle; aucune fusion ni release.
+
+## Revue de sortie technique - 2026-11-05
+
+- HEAD dossier `08eecce6913a7a12cd928cf5be0e8ae89ccc818c`, [CI 42032506665](https://github.com/tawounfouet/pyauthkit/actions/runs/42032506665) **7/7 SUCCESS**. Les éléments du dossier sont disponibles dans `qualification/host` et `docs/qualification`.
+- La PR #75 a été mise **READY FOR REVIEW**, mais ni la PR ni `main` n'ont été fusionnés. L'issue #64 demande une **revue indépendante humaine** et la protection associée.
+- T24 / T25 sont couverts par le banc de référence, T26 reste limité par une différence parfois statistiquement détectable. Sans propriétaire des risques ni déploiement cible, aucune garantie universelle anti-énumération n'est établie.
+- **GATE27-04 #74 reste NO-GO formel** et n'a pas été signé. Handoff conditionnel vers M4 : `docs/roadmap/M3_TO_M4_HANDOFF.md`.

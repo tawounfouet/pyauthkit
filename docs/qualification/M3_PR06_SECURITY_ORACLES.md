@@ -2,9 +2,9 @@
 
 - Date: 2026-11-05
 - Source of truth: uploaded `2026-11-02_PYAUTHKIT_M3_PASSWORD_AUTHENTICATION_IMPLEMENTATION_PLAN.md` section 13.
-- Candidate: [PR #75](https://github.com/tawounfouet/pyauthkit/pull/75), DRAFT.
+- Candidate: [PR #75](https://github.com/tawounfouet/pyauthkit/pull/75), READY FOR REVIEW (not merged).
 - Gate: [GATE27-04 #74](https://github.com/tawounfouet/pyauthkit/issues/74), OPEN.
-- Qualification state: **NO-GO FORMEL / CODE ET HOST DE REFERENCE AUTOMATIQUEMENT TESTES**. Baseline source: `2c6ea7173b44ce314c61f680b436d493c994de3c`; CI [42031794016](https://github.com/tawounfouet/pyauthkit/actions/runs/42031794016) 7/7 SUCCESS, 160 tests coeur + 9 tests host, 5 roues, scan security.
+- Qualification state: **NO-GO FORMEL / CODE ET HOST DE REFERENCE AUTOMATIQUEMENT TESTES**. Baseline source: `2c6ea7173b44ce314c61f680b436d493c994de3c`; CI code [42031794016](https://github.com/tawounfouet/pyauthkit/actions/runs/42031794016) 7/7 SUCCESS, 160 tests coeur + 9 tests host, 5 roues, scan security. Documentation / HEAD validés par [42032506665](https://github.com/tawounfouet/pyauthkit/actions/runs/42032506665), 7/7 SUCCESS.
 - **Observé sur CI** = vérification automatisée, NON une validation indépendante. Un test PASS de laboratoire n'atteste pas un reverse-proxy ni une exploitation en production. **Statut formel** = `INCONCLUSIVE` pour 40/40 avant revue et acceptation des risques. T26 présente une différence de timing parfois statistiquement détectable malgré une faible amplitude.
 
 | Oracle | Scénario | Résultat attendu | Test / preuve (racine `tests/` sauf script) | Observé sur CI | SHA testé | CI Run | Reviewer indépendant | Statut formel |

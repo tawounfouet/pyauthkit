@@ -5,7 +5,7 @@ A modular, framework-agnostic authentication engine for the Python ecosystem.
 > **Current main:** M2 engine and ports qualified for their limited scope. Main is
 > **not a production authentication system**.
 >
-> **M3 candidate:** Password Authentication in [draft PR #75](https://github.com/tawounfouet/pyauthkit/pull/75).
+> **M3 candidate:** Password Authentication in [PR #75 ready for security review](https://github.com/tawounfouet/pyauthkit/pull/75).
 > [GATE27-04 #74](https://github.com/tawounfouet/pyauthkit/issues/74)
 > remains OPEN / NOT QUALIFIED. No release or deployment is authorized.
 
