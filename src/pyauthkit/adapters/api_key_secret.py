@@ -115,9 +115,7 @@ class ScopedApiKeySecretSource:
         self, *, scope_ref: TrustedScopeRef, protection_key_ref: str
     ) -> ApiKeyProtectionKey | None:
         """Never resolve a key from another scope or a non-approved version."""
-        if not isinstance(scope_ref, TrustedScopeRef) or not isinstance(
-            protection_key_ref, str
-        ):
+        if not isinstance(scope_ref, TrustedScopeRef) or not isinstance(protection_key_ref, str):
             raise DomainTechnicalError(TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
         ref = self._bindings.get((scope_ref, protection_key_ref))
         if ref is None:
