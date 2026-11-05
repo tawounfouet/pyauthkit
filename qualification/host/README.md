@@ -48,7 +48,9 @@ It demonstrates adapter integration without changing the core PyAuthKit API.
    mandatory final policy. The synthetic positive final rule is allowed only
    inside this qualification fixture.
 6. **HTTP responses**: a uniform generic 401 body and selected headers for
-   bad, absent, revoked and throttled credentials. A technical backend error
+   bad, absent, revoked and throttled credentials. A bounded 100ms rejection
+   envelope in this reference host reduces timing differences; it is NOT a
+   constant-time guarantee, and may still leave a statistically measurable signal. A technical backend error
    maps to 503; malformed envelopes to 400, oversized bodies to 413. The API
    does not issue sessions, tokens, IAM rights or user directory lookups.
 7. **Audit**: M2's event sink is best-effort. This example does not claim a
@@ -85,15 +87,20 @@ PR head**, with the complete log and reviewer.
 
 - **T24**: independent FastAPI application objects sharing Redis, two
   approved tenants, source anti-spoofing tests, 64 concurrent atomic account
-  attempts and cross-peer global account cap. Network peer variation is
-  simulated with ASGITransport, not multiple physical network interfaces.
+  attempts and cross-peer global account cap; additionally **two distinct OS
+  Uvicorn processes** backed by the same Redis quotas. ASGITransport simulates
+  peer address variation and both processes run on localhost.
 - **T25**: real TCP/HTTP/1.1 Uvicorn test comparing status, content,
   content type/length and security headers across wrong/missing/revoked
   credentials and throttled attempts.
 - **T26**: randomized real TCP/HTTP/1.1 timings, 60 measurements per
   wrong/missing case, 500 permutations and 500 bootstrap replications.
-  Report p50/p95 and 95% bootstrap interval, with an explicitly loose
-  CI-only timing alarm. **A large p-value is not evidence of equivalence.**
+  Report p50/p95 and 95% bootstrap interval. CI tests a bounded practical
+  **5% median equivalence margin**, not a security standard. One run found
+  p=0.004 before the response floor; after the floor CI [42031794016](https://github.com/tawounfouet/pyauthkit/actions/runs/42031794016) found
+  p=0.0279 (difference median -0.063ms). The bootstrap 95% delta interval
+  [-0.892, 0.008]ms is within the 5% margin; a statistically detectable
+  signal may nonetheless remain. No constant-time or production guarantee.
 - **T33**: SQL revocation/version update during real native Argon2id work
   before `is_current`, causing a generic denial.
 - **Chaos**: Redis outage and a closed PostgreSQL pool produce technical
@@ -105,8 +112,7 @@ PR head**, with the complete log and reviewer.
 
 This runner's loopback study cannot validate CDN, proxy, L7 rate limiter,
 TLS, external latency, real IP metadata or a geographically distributed
-production deployment. Multi-node replicas in this harness share one CI
-Redis service but execute within one test Python interpreter. The HMAC key
+production deployment. Replica simulations share one CI Redis service; an additional test starts two separate Uvicorn OS processes to verify cross-process quotas. The HMAC key
 is ephemeral and shared only inside each fixture; an operator must manage
 its distribution/rotation securely for real deployment.
 

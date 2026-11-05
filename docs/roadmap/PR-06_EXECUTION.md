@@ -39,3 +39,15 @@ online anti-enumeration timing guarantees or global rate limits.
 - Benchmark CI (18 échantillons par scénario) : p50 correct 21.724 ms, incorrect 21.601 ms, absent 21.634 ms; RSS max 66 180 KiB sur GitHub Linux. **Aucune garantie de timing constant ou de production.**
 - Dossier formel : `docs/qualification/GATE27-04_M3_PASSWORD_AUTHENTICATION_DECISION.md` = **NO-GO** tant que T24/T25/T26 host, ADRs, risques et revue indépendante non soldés.
 - Ne pas fusionner ou publier sans sign-off ni post-merge main CI.
+
+## Qualification banc réel de référence - 2026-11-05
+
+- Code `2c6ea7173b44ce314c61f680b436d493c994de3c`, CI [42031794016](https://github.com/tawounfouet/pyauthkit/actions/runs/42031794016) : 7/7 SUCCESS; 160 tests source + 9 tests host; cinq plateformes wheel.
+- Infrastructure isolée `qualification/host` : FastAPI + PostgreSQL 16.6 + Redis 7.4; résolution SQL scoped, Argon2id et policy M2.
+- T24 : 2 instances FastAPI, **2 processus Uvicorn OS** utilisant une même clé HMAC et Redis, 64 admissions concurrentes et anti-spoof XFF, tests PASS.
+- T25 : réponses de refus uniformes sur véritable TCP HTTP/1.1 local, tests PASS.
+- T26 : 60 mesures par groupe, 500 permutations et 500 bootstraps; plancher 100 ms. Delta médian wrong/missing -0.063 ms, marge CI 5% satisfaite; **p-value 0.0279** : effet statistiquement détectable, aucune promesse de non-énumération en production.
+- Pannes PostgreSQL/Redis => 503; révocation PostgreSQL au milieu de la KDF => refus.
+- Le scanner de secrets inclut les fixtures; Bandit inclut `qualification/host`; deps facultatives incluses au pip-audit CI.
+- ADR technical review `docs/qualification/M3_SECURITY_AND_ADR_REVIEW_2026-11-05.md`; **aucune approbation indépendante**, risques non signés.
+- **NO-GO GATE27-04** jusqu'à la validation formelle; aucune fusion ni release.
