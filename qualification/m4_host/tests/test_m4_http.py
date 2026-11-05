@@ -268,9 +268,7 @@ async def test_m4_bearer_replay_is_an_explicit_non_goal_of_api_keys(
         httpx.AsyncClient(base_url=url, timeout=4) as client,
     ):
         first = await client.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
-        repeated = await client.post(
-            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
-        )
+        repeated = await client.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
     # Both successes expose the natural bearer replay property.
     # This is NOT replay prevention, session security or a production guarantee.
     assert first.status_code == repeated.status_code == 200
