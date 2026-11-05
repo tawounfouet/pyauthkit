@@ -184,7 +184,7 @@ jobs:
         run: openssl version
       - name: Verify M5 signed tokens, network boundaries and independent vectors
         run: |
-          python -m pytest -v tests/integration/test_m5_jwt_authentication.py tests/security/test_m5_jwks_cache.py tests/security/test_m5_jwks_https.py tests/qualification/test_m5_openssl_vectors.py
+          python -m pytest -v tests/integration/test_m5_jwt_authentication.py tests/security/test_m5_jwks_cache.py tests/security/test_m5_jwks_https.py tests/qualification/test_m5_openssl_vectors.py tests/qualification/test_m5_jwks_tls_host.py
       - name: Build wheel and install optional JOSE extra
         run: |
           python -m build
