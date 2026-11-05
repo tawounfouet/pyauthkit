@@ -94,3 +94,24 @@ register. Confirm mapping against the plan before formal gate review.
 
 **No deployment, package release, main merge, or security certification follows
 from the automated 207-test checkpoint.**
+
+## PR-07D reference-host checkpoint, not independent adjudication
+
+- Technical SHA: `0738fb740630a3aba45dc4c98466feb6d2e30b7e`.
+- CI proof: https://github.com/tawounfouet/pyauthkit/actions/runs/42059926314
+  - 8/8 checks succeed, 207 default tests and 12 dedicated host tests pass.
+- `M4-T35`: reference PostgreSQL `revoke_cas`, `rotate_cas` single-version
+  winners and post-HMAC stale proof denial. Deployment-wide linearizability
+  after the last read remains **NOT PROVEN**.
+- `M4-T36`: SQL `WHERE scope_id=$1 AND key_id=$2`, colliding selectors
+  across tenants, two separate Uvicorn OS processes using one PostgreSQL
+  and Redis. Production cache, proxy and identity owner not qualified.
+- `M4-T37`: localhost 401 denial signatures, shared Redis quotas, spoofed
+  forwarded IP headers ignored in no-proxy Uvicorn, 20+20 timing samples.
+  This is **NOT** a statistical non-enumerability or production perimeter proof.
+- Real PostgreSQL/Redis failure-path tests return technical 503. Synthetic
+  bearer replay is reproducible, documenting the limitation of API keys.
+- `M4-T34` replay-policy/TLS threat review, `M4-T40` independent acceptance
+  and **ALL 40 individual adjudications remain pending**.
+- All existing row labels remain candidate mapping, not canonical or
+  independently signed definitions. **No M4 GO.**

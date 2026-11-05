@@ -77,3 +77,23 @@ not signed evidence until corresponding exact-SHA CI logs are linked.
 No production deployment profile, trusted-proxy policy, independent
 security reviewer, ADR approvals or residual-risk acceptance is
 established by including test code. **Formal verdict remains NO-GO.**
+
+## Verified PR-07D reference-host CI evidence, without gate promotion
+
+- Candidate reference-host SHA: `0738fb740630a3aba45dc4c98466feb6d2e30b7e`.
+- CI: https://github.com/tawounfouet/pyauthkit/actions/runs/42059926314
+  **8/8 SUCCESS**, 207 default pytest PASS and 12 isolated
+  PostgreSQL/Redis/HTTP qualification tests PASS.
+- Demonstrates PostgreSQL source-scope queries and atomic revoke/rotate CAS
+  within a disposable schema; cross-process Redis quota; loopback HTTP
+  denial equivalence by status/body/selected headers; tested outages and
+  post-HMAC revoke before freshness check.
+- Does not establish linearizable revocation after the final check,
+  generalizable anti-enumeration, production peer/proxy/TLS,
+  real KMS-secret lifecycles, operational SIEM/audit durability,
+  real deployment SLOs or independent security signoff.
+- G5-07, G5-09, G5-10, G5-12 now have reference-lab technical evidence;
+  their full host/production policies and independent reviews remain
+  pending. No signed G5-01..16 or accepted ADR is implied.
+
+**GATE27-05 remains NO-GO / NOT FORMALLY ADJUDICATED.**

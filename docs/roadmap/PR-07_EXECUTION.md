@@ -81,3 +81,21 @@ tests nor this roadmap update can replace real-host and independent evidence.
   overload and external timing equivalence are not covered.
 - M4-T34..40 and G5-01..G5-16 remain formally **PENDING**; ADRs and
   independent review are not waived by reference-host success.
+
+## PR-07D reference-host CI evidence checkpoint (2026-11-05)
+
+- Verified technical checkpoint: `0738fb740630a3aba45dc4c98466feb6d2e30b7e`.
+- Exact-SHA workflow: https://github.com/tawounfouet/pyauthkit/actions/runs/42059926314
+  - **8/8 GitHub Actions SUCCESS**.
+  - Default quality job **207 pytest PASS**, Ruff, strict mypy, architecture;
+    five packaging/platform jobs and dependency/source/secret scans PASS.
+  - Dedicated M4 PostgreSQL/Redis test job **12 PASS** with disposable
+    containers, real PostgreSQL SQL/CAS, Redis Lua, two independent Uvicorn
+    OS processes, localhost HTTP, faults and replay observation.
+- Loopback timing sample: 20 wrong and 20 missing attempts; observed medians
+  ~82.988 ms vs ~82.966 ms on this CI run. Observation only, not constant
+  time, non-enumerability, SLO or generalizable equivalence.
+- Status: **REFERENCE-HOST TECHNICAL TESTED**, not deployment-qualified.
+  M4-T34, T39, T40 and G5 criteria still need independent adjudication;
+  proxy/TLS/KMS, audit durability, high load and full anti-replay policy
+  remain unqualified. Formal GATE27-05 stays **NO-GO**.

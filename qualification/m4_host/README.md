@@ -71,3 +71,14 @@ evidence, risk disposition and approved ADR-0016..0018. Production
 consistency, replay response, external identity-system integration,
 reverse-proxy/TLS and operational alerting require separate qualification.
 The formal M4 decision remains **NO-GO**.
+
+## PR-07D reference-lab outcome
+
+- Exact tested SHA: `0738fb740630a3aba45dc4c98466feb6d2e30b7e`.
+- CI: https://github.com/tawounfouet/pyauthkit/actions/runs/42059926314
+  8/8 SUCCESS (207 core + 12 dedicated host tests).
+- The timing observation printed in CI: wrong p50 82.988 ms, missing
+  p50 82.966 ms, 20 attempts each. No practical-equivalence gate,
+  systematic network timing threat qualification or constant-time claim.
+- All host secrets are synthetic. This test topology does not imply a
+  usable production key manager or a release-ready public service.
