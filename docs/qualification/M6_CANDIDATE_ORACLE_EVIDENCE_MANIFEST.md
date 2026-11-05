@@ -16,7 +16,7 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 | M6-T03 | COVERED | v2 signed JWT issuer/audience cannot select a foreign trust profile |
 | M6-T04 | COVERED | test_m6_t04_extra_security_field_is_denied |
 | M6-T05 | COVERED | strict JSON bytes loader rejects duplicate root/route/JWT issuer members; mapping-only caller still responsible for its own parser |
-| M6-T06 | OPEN | single-source reader; multi-source merge scenarios require explicit decision |
+| M6-T06 | COVERED | explicit host-authorized low-to-high timeout-only precedence; security-bearing overrides denied |
 | M6-T07 | COVERED | test_m6_t07_env_override_is_not_a_source |
 | M6-T08 | COVERED | test_m6_t08_unknown_route_has_no_fallback |
 | M6-T09 | COVERED | v2 route/JWT profile exact coverage plus M2 catalog scope matching |
@@ -36,7 +36,7 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 | M6-T23 | COVERED | test_m6_t23_audit_contains_only_correlation_method_result_duration |
 | M6-T24 | COVERED | test_m6_t24_rejected_and_error_events_never_echo_evidence |
 | M6-T25 | PARTIAL | JWT/API Key canaries, no dedicated password canary scenario |
-| M6-T26 | OPEN | no metrics label exporter in the current M6 runtime |
+| M6-T26 | PARTIAL | bounded method/outcome metrics port and synthetic recorder; no production OTel/Prometheus exporter |
 | M6-T27 | COVERED | test_m6_t27_best_effort_sink_failure_does_not_change_authn |
 | M6-T28 | COVERED | test_m6_t28_audit_submission_timeout_is_not_success_receipt |
 | M6-T29 | COVERED | test_m6_t29_audit_cancellation_propagates |
@@ -57,10 +57,13 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 - M6 now parses and composes a bounded M5 JWT trust profile with issuer,
   audience and pinned JWKS controls under configuration schema v2. Real
   host network egress and reviewer sign-off are still unqualified.
-- No source-merging policy is admitted by the current reader. The new JSON
-  bytes loader detects duplicate members, while a pre-parsed Mapping cannot
-  recover duplicates that a caller's JSON parser already discarded.
-- No metrics exporter exists. Audit events must not be treated as metric labels.
+- Timeout-only operational precedence is explicitly admitted with exact source
+  identities and provenance. Security-critical trust blocks are never merged;
+  cross-source JWT/profile or tenant merges require a separate reviewed design.
+  The strict JSON bytes loader rejects duplicates before mapping creation.
+- Only an optional bounded metrics port and synthetic memory recorder exist;
+  no production metrics exporter exists. Metrics are never an audit receipt and
+  source identifiers, correlation IDs, scopes and credentials are not labels.
 - Memory audit is best-effort only. No exactly-once, idempotence or persisted
   receipt is asserted; `required` is rejected.
 - The source adapter only supports synthetic-provider tests here. Any real

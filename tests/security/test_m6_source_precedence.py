@@ -18,11 +18,13 @@ AUTHORITY = SourceProvenance("security-root", "host", "rev-a")
 OPS_LOW = SourceProvenance("deployment", "host", "rev-b")
 OPS_HIGH = SourceProvenance("operator", "host", "rev-c")
 SOURCE_POLICY = SourcePolicy(
-    frozenset({
-        ("security-root", "host"),
-        ("deployment", "host"),
-        ("operator", "host"),
-    })
+    frozenset(
+        {
+            ("security-root", "host"),
+            ("deployment", "host"),
+            ("operator", "host"),
+        }
+    )
 )
 PRECEDENCE = SourceLayerPolicy(
     authority=("security-root", "host"),

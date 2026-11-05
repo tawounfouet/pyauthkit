@@ -45,6 +45,8 @@ class SourceLayerPolicy:
         ):
             raise ConfigurationRejected("invalid source precedence policy")
         identities = (self.authority, *self.operational_overrides)
+        if any(type(component) is not str for identity in identities for component in identity):
+            raise ConfigurationRejected("invalid source precedence policy")
         if len(set(identities)) != len(identities):
             raise ConfigurationRejected("duplicate source in precedence policy")
         try:
@@ -86,9 +88,8 @@ def load_layered_configuration(
     ):
         raise ConfigurationRejected("unapproved authoritative source")
     source_policy.admit(authority_provenance)
-    if (
-        type(operational_layers) is not tuple
-        or len(operational_layers) != len(layering_policy.operational_overrides)
+    if type(operational_layers) is not tuple or len(operational_layers) != len(
+        layering_policy.operational_overrides
     ):
         raise ConfigurationRejected("incomplete source precedence chain")
 

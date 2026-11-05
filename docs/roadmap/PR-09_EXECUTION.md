@@ -118,3 +118,26 @@ Final exact-head CI result: PENDING at time of writing. GATE27-07 remains NO-GO.
 - Add exact negative oracles to the M6 CI job and security tests.
 
 Evidence and GATE27-07: pending exact SHA CI review; no independent sign-off.
+
+## 2026-11-05 development iteration 5 - exact source precedence and metrics privacy
+
+- Introduced `SourceLayerPolicy` and `load_layered_configuration`:
+  authority is exactly one host-approved complete mapping, operational layers
+  are an exact host-approved low-to-high precedence chain. Only
+  `timeout_seconds` can vary. Any attempt to change JWT issuer, tenant,
+  routes, secret refs, audit mode, algorithm policy or schema fails before
+  activation. No trust-bearing field is deep-merged, and no layer is silently
+  skipped. The immutable snapshot records the ordered operational provenance.
+- Added optional `BestEffortTelemetrySink` to split minimal audit delivery
+  from identity-free metrics. An `AuthenticationMetricsSample` contains only
+  method enum, outcome enum and duration seconds. Its only labels are
+  `method` and `outcome`, with fixed enumerated values.
+- Each telemetry destination has an independent timeout and error handling
+  policy; audit failure does not hide a metrics attempt, nor does metrics
+  failure mutate an AuthN decision. Async cancellation still propagates.
+  In-memory metrics are bounded synthetic test adapters, not production
+  exporters, audit receipts or outbox storage.
+- Expanded dedicated M6 CI with source precedence and label privacy tests.
+  New ADRs and learning cards remain **PROPOSED**, not security approvals.
+
+Final developer CI SHA: PENDING validation. GATE27-07 remains NO-GO.
