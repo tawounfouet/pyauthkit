@@ -249,3 +249,36 @@ Exact-head CI result: PENDING for this iteration until verified.
   privileged DB modification or a live managed audit store.
 
 **CI and G7:** pending exact-head qualification. GATE27-07 remains NO-GO.
+
+## 2026-11-05 development iteration 10 - receipt-bearing audit application boundary
+
+- Added `AuditAttemptId`, `AuditDecisionRecord`,
+  `AuditCommitReceipt` and `RequiredAuditCommitter` port. The attempt is a
+  host-generated, 128-bit random identifier distinct from correlation IDs.
+- Added an **isolated** `SqliteRequiredAuditCommitter` with an explicitly
+  provisioned local database, one transaction per attempt and a unique
+  attempt-ID constraint. A duplicate attempt ID always fails, even after a
+  restart; no previously successful decision is replayed. The stored
+  HMAC-SHA256 decision tag is bound to the attempt, correlation, result,
+  trusted profile, principal type and verified subject, with no plaintext
+  subject, token or correlation in the DB.
+- Added experimental `ReceiptedDecisionGateway`. It calls the ordinary M2
+  verification engine, then awaits a result-bound local commit receipt
+  **before** returning the outcome. On a missing/invalid receipt or a failed
+  commit, it returns `AuthError(DEPENDENCY_UNAVAILABLE)`, not `Authenticated`.
+  Cancellation propagates without delivering a positive result.
+- The public candidate factory only admits the exact SQLite reference
+  committer, not a forged third-party receipt provider; tests separately
+  inject fake committers directly at the internal gateway boundary to
+  simulate corruption, delay and cancellation.
+- The existing M2 `AuthenticationEngine`, v1/v2 config loader and its
+  `AuditDeliveryPolicy` remain unchanged. `audit_delivery=required`
+  is STILL REJECTED. This is an experimental host-side application boundary,
+  not an authorized production `required` runtime, and the caller must not
+  bypass it by invoking its underlying M2 engine directly.
+- **Not proved:** host traffic routing and gateway exclusivity, IAM/KMS
+  key protection, storage tamper-resistance, power-loss durability,
+  distributed atomicity, delivery exactly once, uncertain-commit retries
+  and independent G7 qualification.
+
+Exact-head CI: PENDING. GATE27-07 remains NO-GO.

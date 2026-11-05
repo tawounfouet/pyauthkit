@@ -15,8 +15,9 @@ import asyncio
 import math
 import time
 from collections.abc import Callable, Iterable
-from typing import Never
+from typing import Literal, Never
 
+from pyauthkit.adapters.audit_required_sqlite import SqliteRequiredAuditCommitter
 from pyauthkit.application.host_context import HostTrustCatalog, TrustedEntryContext
 from pyauthkit.application.policy import FinalRule
 from pyauthkit.domain.failure import TechnicalErrorCode
@@ -96,6 +97,7 @@ class ReceiptedDecisionGateway:
             raise
         except Exception:
             return AuthError(request.correlation_id, TechnicalErrorCode.INTERNAL_ERROR)
+        status: Literal["AUTHENTICATED", "REJECTED", "ERROR"]
         if isinstance(result, Authenticated):
             status = "AUTHENTICATED"
             subject = result.principal.subject
@@ -158,8 +160,10 @@ def compose_receipted_audit_gateway(
         raise ConfigurationRejected("receipted audit candidate requires legacy v1")
     if snapshot.secret_refs or snapshot.jwt_profiles:
         raise ConfigurationRejected("receipted audit lacks approved consumer coverage")
-    if not callable(getattr(committer, "commit", None)):
-        raise ConfigurationRejected("missing trusted audit committer")
+    if type(committer) is not SqliteRequiredAuditCommitter:
+        # Fakes and arbitrary port implementations must never activate the
+        # candidate's positive route through the approved factory.
+        raise ConfigurationRejected("unapproved auditable commit store")
     base = compose_authentication_engine(
         snapshot,
         authenticators=authenticators,

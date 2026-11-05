@@ -23,12 +23,16 @@ from pyauthkit.adapters.audit_required_sqlite import (
 from pyauthkit.application._verification import _issue_verified_outcome
 from pyauthkit.configuration import (
     ConfigurationGeneration,
+    compose_authentication_engine,
     SourcePolicy,
     SourceProvenance,
     load_approved_configuration,
 )
 from pyauthkit.configuration.models import ConfigurationRejected
-from pyauthkit.configuration.receipted_audit import compose_receipted_audit_gateway
+from pyauthkit.configuration.receipted_audit import (
+    ReceiptedDecisionGateway,
+    compose_receipted_audit_gateway,
+)
 from pyauthkit.domain.evidence import EvidenceMethod, PresentedEvidence
 from pyauthkit.domain.failure import TechnicalErrorCode
 from pyauthkit.domain.identity import PrincipalType, ScopedSubjectRef
@@ -105,12 +109,22 @@ def store(tmp_path: Path, *, capacity: int = 10) -> SqliteRequiredAuditCommitter
 
 
 def gateway(committer):
-    return compose_receipted_audit_gateway(
+    if type(committer) is SqliteRequiredAuditCommitter:
+        return compose_receipted_audit_gateway(
+            approved_snapshot(),
+            authenticators=[PositiveSyntheticVerifier()],
+            committer=committer,
+            final_rule=lambda _subject, _entry: True,
+        )
+    # Deliberately bypass the approved *factory* in fault-injection-only tests
+    # of the gateway's internal receipt validation. Never deploy this path.
+    base = compose_authentication_engine(
         approved_snapshot(),
         authenticators=[PositiveSyntheticVerifier()],
-        committer=committer,
         final_rule=lambda _subject, _entry: True,
+        event_sink=None,
     )
+    return ReceiptedDecisionGateway(base=base, committer=committer)
 
 
 async def check(gw, attempt_id, *, method=EvidenceMethod.PASSWORD):
@@ -250,8 +264,8 @@ def test_m6_receipted_explicit_commit_conflict_is_not_idempotent(tmp_path: Path)
         assert earlier is not None
         from pyauthkit.ports.events import AuthenticationEvent
 
-        from pyauthkit.domain.trust import TrustProfileRef
         from pyauthkit.domain.scope import TrustedScopeRef
+        from pyauthkit.domain.trust import TrustProfileRef
 
         direct = AuditDecisionRecord(
             attempt_id=key,
@@ -274,10 +288,6 @@ def test_m6_receipted_attempt_id_requires_lowercase_random_shape(invalid: str) -
 
 def test_m6_receipted_untrusted_entry_denied_before_positive(tmp_path: Path) -> None:
     gw = gateway(store(tmp_path))
-    other = gateway(store(tmp_path / "other")) if False else None
-    assert other is None
-    from pyauthkit.application.host_context import TrustedEntryContext
-
     result = asyncio.run(
         gw.authenticate(
             req(), entry=object(), attempt_id=attempt()  # type: ignore[arg-type]
@@ -383,3 +393,21 @@ def test_m6_receipted_fake_committer_exception_is_sanitized() -> None:
     result = asyncio.run(check(gateway(HostileCommitter()), attempt()))
     assert isinstance(result, AuthError)
     assert CANARY not in repr(result)
+
+def test_m6_receipted_factory_refuses_untrusted_fake_committer() -> None:
+    class ForgingCommitter:
+        async def commit(self, record: AuditDecisionRecord):
+            return AuditCommitReceipt(
+                attempt_id=record.attempt_id,
+                record_id=uuid4().hex,
+                sequence=1,
+                result_status=record.event.result_status,
+                decision_tag="a" * 64,
+            )
+
+    with pytest.raises(ConfigurationRejected, match="unapproved auditable"):
+        compose_receipted_audit_gateway(
+            approved_snapshot(),
+            authenticators=[PositiveSyntheticVerifier()],
+            committer=ForgingCommitter(),
+        )
