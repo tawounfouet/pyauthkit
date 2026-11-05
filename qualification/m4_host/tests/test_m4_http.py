@@ -273,6 +273,7 @@ async def test_m4_bearer_replay_is_an_explicit_non_goal_of_api_keys(
     # This is NOT replay prevention, session security or a production guarantee.
     assert first.status_code == repeated.status_code == 200
 
+
 @pytest.mark.asyncio
 @pytest.mark.security
 async def test_m4_duplicate_authorization_headers_never_authenticate(
