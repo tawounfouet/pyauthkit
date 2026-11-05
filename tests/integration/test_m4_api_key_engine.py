@@ -455,3 +455,17 @@ def test_authenticator_cannot_be_constructed_without_guard() -> None:
         ApiKeyAuthenticator(
             resolver=harness.owner, proof_verifier=harness.proof, attempt_guard=None
         )
+
+
+@pytest.mark.security
+def test_m4_not_before_exact_utc_boundary_is_conditionally_admissible() -> None:
+    """M4-T10: before is denied, at the inclusive nbf boundary policy may allow."""
+    record = _record(not_before=WHEN)
+    too_early = Harness(
+        record=record,
+        clock=FixedClock(datetime(2026, 11, 4, tzinfo=UTC)),
+    )
+    assert isinstance(too_early.authenticate(), Rejected)
+    at_boundary = Harness(record=record, clock=FixedClock(WHEN))
+    assert isinstance(at_boundary.authenticate(), Authenticated)
+    assert at_boundary.owner.current_checks == 1

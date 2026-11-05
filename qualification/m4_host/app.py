@@ -39,13 +39,18 @@ OUTAGE = {"error": "temporarily_unavailable"}
 class FixtureProtectionKeySource:
     """Only the explicitly configured reference key, never client-selected."""
 
-    def __init__(self, key: bytes) -> None:
+    def __init__(self, key: bytes, *, approved_scopes: frozenset[str]) -> None:
+        if not approved_scopes or not all(
+            isinstance(scope, str) and scope for scope in approved_scopes
+        ):
+            raise ValueError("explicit fixture key scopes required")
         self._key = ApiKeyProtectionKey(key)
+        self._approved_scopes = approved_scopes
 
     async def get_key(
         self, *, scope_ref: TrustedScopeRef, protection_key_ref: str
     ) -> ApiKeyProtectionKey | None:
-        if scope_ref.value not in ("tenant-alpha", "tenant-beta"):
+        if scope_ref.value not in self._approved_scopes:
             return None
         return self._key if protection_key_ref == "key-v1" else None
 
@@ -92,7 +97,9 @@ def compose_app(
         resolver=PostgresApiKeyCredentialResolver(pool),
         attempt_guard=guard,
         proof_verifier=HmacApiKeyVerifier(
-            key_source=FixtureProtectionKeySource(verifier_key),
+            key_source=FixtureProtectionKeySource(
+                verifier_key, approved_scopes=frozenset(scope.value for scope in scopes.values())
+            ),
             approved_refs={scope: frozenset({"key-v1"}) for scope in scopes.values()},
         ),
     )
