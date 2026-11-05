@@ -74,8 +74,10 @@ def openssl_material():
         ).public_key()
         assert isinstance(public_key, rsa.RSAPublicKey)
         numbers = public_key.public_numbers()
+
         def number(value: int) -> str:
             return _urlsafe(value.to_bytes((value.bit_length() + 7) // 8, "big")).decode()
+
         jwk = json.dumps(
             {
                 "kty": "RSA",
