@@ -442,12 +442,9 @@ def test_m6_aws_version_revoked_after_preflight_fails_closed_in_m2() -> None:
     version = "0123456789abcdef" * 2
     arn = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:tenant-a/hmac-QWERTY"
     ref = SecretRef("aws-secrets-manager", SCOPE.value, "hmac", version, "verify")
-    client = get_session().create_client(
-        "secretsmanager",
-        region_name="eu-west-1",
-        aws_access_key_id="synthetic",
-        aws_secret_access_key="synthetic",
-    )
+    sdk_session = get_session()
+    sdk_session.set_credentials("synthetic", "synthetic")
+    client = sdk_session.create_client("secretsmanager", region_name="eu-west-1")
     request = {"SecretId": arn, "VersionId": version, "VersionStage": "AWSCURRENT"}
     response = {
         "ARN": arn,

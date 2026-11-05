@@ -9,8 +9,8 @@ from pyauthkit.adapters.secrets_aws import ApprovedAwsSecret, AwsSecretsManagerR
 from pyauthkit.configuration.secrets import SecretResolutionUnavailable
 from pyauthkit.domain.secret import SecretRef
 
-VERSION = "0123456789abcdef" * 2
-OTHER_VERSION = "fedcba9876543210" * 2
+VERSION = bytes(range(16)).hex()
+OTHER_VERSION = bytes(range(16, 32)).hex()
 ARN = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:tenant-a/hmac-QWERTY"
 RAW = bytes(range(32))
 REF = SecretRef("aws-secrets-manager", "tenant-a", "hmac", VERSION, "verify")
