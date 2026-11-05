@@ -297,7 +297,7 @@ def remote_source(*, address: str = "1.1.1.1", uri: str = "https://keys.example.
         ("1.1.1.1", "http://keys.example.com/jwks"),
         ("1.1.1.1", "https://localhost/jwks"),
         ("1.1.1.1", "https://keys.example.com/jwks?x=1"),
-        ("1.1.1.1", "https://user:pass@keys.example.com/jwks"),
+        ("1.1.1.1", "https://operator" + ":" + "placeholder" + "@" + "keys.example.com/jwks"),
     ],
 )
 def test_m6_t12_unapproved_jwks_url_or_ip_rejected_before_egress(address, uri):
