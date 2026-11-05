@@ -63,17 +63,20 @@ def _profile(scope: str) -> tuple[TrustedJwtVerificationProfile, ApprovedJwksSou
 
 
 @pytest.mark.security
-@pytest.mark.parametrize("uri", [
-    "http://keys.example.com/keys",
-    "https://127.0.0.1/keys",
-    "https://169.254.169.254/metadata",
-    "https://localhost/keys",
-    "https://bad.local/keys",
-    "https://" + "user" + ":" + "pw" + "@keys.example.com/keys",
-    "https://keys.example.com:8080/keys",
-    "https://keys.example.com/keys?user=token",
-    "https://[::1]/keys",
-])
+@pytest.mark.parametrize(
+    "uri",
+    [
+        "http://keys.example.com/keys",
+        "https://127.0.0.1/keys",
+        "https://169.254.169.254/metadata",
+        "https://localhost/keys",
+        "https://bad.local/keys",
+        "https://" + "user" + ":" + "pw" + "@keys.example.com/keys",
+        "https://keys.example.com:8080/keys",
+        "https://keys.example.com/keys?user=token",
+        "https://[::1]/keys",
+    ],
+)
 def test_unapproved_network_source_is_refused_at_bootstrap(uri: str) -> None:
     profile, source = _profile("a")
     del source
@@ -110,11 +113,13 @@ def test_same_kid_isolated_by_tenant_profile_and_source() -> None:
         sources={a.profile_ref: source_a, b.profile_ref: source_b},
         fetcher=network,
     )
+
     async def run():
         return await asyncio.gather(
             resolver.resolve_key(profile=a, kid_hint="shared", algorithm_hint="RS256"),
             resolver.resolve_key(profile=b, kid_hint="shared", algorithm_hint="RS256"),
         )
+
     first, second = asyncio.run(run())
     assert first is not None and second is not None and first != second
     assert sorted(network.calls) == ["a", "b"]
