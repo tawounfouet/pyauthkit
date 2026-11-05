@@ -180,9 +180,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install ".[dev,jwt]"
-      - name: Verify M5 signed tokens and key-source boundaries
+      - name: OpenSSL external signing tool required
+        run: openssl version
+      - name: Verify M5 signed tokens, network boundaries and independent vectors
         run: |
-          python -m pytest -v tests/integration/test_m5_jwt_authentication.py tests/security/test_m5_jwks_cache.py
+          python -m pytest -v tests/integration/test_m5_jwt_authentication.py tests/security/test_m5_jwks_cache.py tests/security/test_m5_jwks_https.py tests/qualification/test_m5_openssl_vectors.py
       - name: Build wheel and install optional JOSE extra
         run: |
           python -m build
