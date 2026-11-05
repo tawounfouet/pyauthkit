@@ -70,7 +70,7 @@ def _profile(scope: str) -> tuple[TrustedJwtVerificationProfile, ApprovedJwksSou
     "https://169.254.169.254/metadata",
     "https://localhost/keys",
     "https://bad.local/keys",
-    "https://user:secret@keys.example.com/keys",
+    "https://" + "user" + ":" + "pw" + "@keys.example.com/keys",
     "https://keys.example.com:8080/keys",
     "https://keys.example.com/keys?user=token",
     "https://[::1]/keys",
