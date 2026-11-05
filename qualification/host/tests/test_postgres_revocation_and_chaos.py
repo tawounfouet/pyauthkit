@@ -14,7 +14,8 @@ import pytest
 from redis.asyncio import Redis
 
 from pyauthkit.adapters.password.argon2id import Argon2idPasswordHashVerifier, Argon2idPolicy
-from pyauthkit.ports.password_hashing import PasswordHashVerifier
+from pyauthkit.domain.scope import TrustedScopeRef
+from pyauthkit.password.records import PasswordRecordFound
 from qualification.host.storage import PostgresPasswordCredentialResolver
 
 from .conftest import Infrastructure
@@ -75,12 +76,11 @@ async def test_t33_real_postgres_revocation_between_kdf_and_freshness_check(
             assert result.json() == {"error": "invalid_credentials"}
             async_post = PostgresPasswordCredentialResolver(infra.pool)
             current = await async_post.resolve(
-                scope_ref=__import__(
-                    "pyauthkit.domain.scope", fromlist=["TrustedScopeRef"]
-                ).TrustedScopeRef("tenant-alpha"),
+                scope_ref=TrustedScopeRef("tenant-alpha"),
                 identifier_kind="username",
                 identifier_value="alice",
             )
+            assert isinstance(current, PasswordRecordFound)
             assert current.record.version == 2
     finally:
         barrier.release.set()
