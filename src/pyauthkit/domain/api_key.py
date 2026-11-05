@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Never
+from typing import Never, SupportsIndex
 
 from .identity import PrincipalType, ScopedSubjectRef
 from .scope import TrustedScopeRef
@@ -149,7 +149,7 @@ class ApiKeyVerifierRecord:
     def __deepcopy__(self, _memo: dict[int, object]) -> Never:
         raise TypeError("sensitive verifier record cannot be deep-copied")
 
-    def __reduce_ex__(self, _protocol: int) -> Never:
+    def __reduce_ex__(self, _protocol: SupportsIndex) -> Never:
         raise TypeError("sensitive verifier record cannot be pickled")
 
 
