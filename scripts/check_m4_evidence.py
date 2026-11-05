@@ -13,14 +13,14 @@ import re
 from pathlib import Path
 
 MANIFEST = Path("docs/qualification/M4_EVIDENCE_MANIFEST.json")
-SHA = re.compile(r"[0-9a-f]{40}\\Z")
-ORACLE = re.compile(r"M4-T\\d{2}\\Z")
-GATE = re.compile(r"G5-\\d{2}\\Z")
+SHA = re.compile(r"[0-9a-f]{40}\Z")
 
 
 def _test_exists(root: Path, nodeid: str) -> bool:
     path, sep, function = nodeid.partition("::")
     if sep != "::" or not function.startswith("test_"):
+        return False
+    if ".." in Path(path).parts or not path.startswith(("tests/", "qualification/m4_host/tests/")):
         return False
     source = root / path
     if not source.is_file() or not path.endswith(".py"):
@@ -128,11 +128,11 @@ def evaluate(root: Path) -> list[str]:
     oracle_source = root / "docs/qualification/M4_PR07_SECURITY_ORACLES.md"
     gate_source = root / "docs/qualification/GATE27-05_M4_API_KEY_DECISION.md"
     if oracle_source.is_file():
-        rows = re.findall(r"^\\| \`?(M4-T\\d{2})\\`? \\|", oracle_source.read_text(encoding="utf-8"), flags=re.M)
+        rows = re.findall(r"^\| `?(M4-T\d{2})`? \|", oracle_source.read_text(encoding="utf-8"), flags=re.M)
         if rows != expected_oracles:
             errors.append("candidate source oracle count or sequence drift")
     if gate_source.is_file():
-        rows = re.findall(r"^\\| (G5-\\d{2}) \\|", gate_source.read_text(encoding="utf-8"), flags=re.M)
+        rows = re.findall(r"^\| (G5-\d{2}) \|", gate_source.read_text(encoding="utf-8"), flags=re.M)
         if rows != expected_gates:
             errors.append("candidate source gate count or sequence drift")
     workflow = root / ".github/workflows/ci.yml"
