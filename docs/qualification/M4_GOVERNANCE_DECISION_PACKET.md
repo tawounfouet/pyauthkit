@@ -1,58 +1,48 @@
-> **ATTENTION - ARCHIVE HISTORIQUE SUPERSEDEE.** La signification des identifiants
-> M4-T01..T40 / G5-01..16 dans ce fichier n'est pas alignée avec le
-> plan détaillé M4 du 05/11/2026. **NE PAS UTILISER POUR UNE DECISION.**
-> Matrice fidèle à la source : `docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md`.
-> Catalogue réconcilié : `docs/qualification/M4_CANDIDATE_ORACLE_CATALOG_V2.md`.
-> Les anciens chiffres/états ci-dessous décrivent uniquement les étapes historiques.
->
-# M4 - Paquet de decision de gouvernance et revue independante
+# M4 - Paquet d'arbitrage du gate (v2, alignement plan detaille)
 
-> **Statut : DRAFT / DEMANDE DE DECISION. Ce fichier n'autorise ni merge ni release.**
-> Date : 2026-11-05 | PR : https://github.com/tawounfouet/pyauthkit/pull/76 | Qualification : https://github.com/tawounfouet/pyauthkit/issues/77
+> **Etat : PREPARED FOR HUMAN DECISION / NO-GO.**
+> PR #76, issues #77 (qualification), #78 (ratification), #79 (review).
+> Source precise : `M4_2026_11_05_SOURCE_MATRIX.md` et plan M4 05/11 §20/§22.
 
-## 1. Les deux decisions distinctes
+## Decision A - Propriete et priorite des exigences
 
-**Decision A : ratifier ou corriger le catalogue M4 v1.0.** L'owner des exigences doit accepter, amender ou refuser la subdivision des 40 oracles et 16 criteres G5. Les specifications 27 et 28 n'en fournissent pas de numerotation normative. La proposition est `M4_CANDIDATE_ORACLE_CATALOG_V1.md`. Ne pas traiter son nombre de lignes comme un contrat signe.
+Confirmer la transcription fidele des **40 oracles, 39 P0 + 1 P1**, et
+des **16 criteres G5** du plan M4. Les anciens catalogues V1 sont
+SUPERSEDED, et non une source normative concurrente.
+- Decision : **ADOPT / AMEND / REJECT**, actuellement **PENDING**.
+- Owner, version, SHA, objections et date : **NON RENSEIGNE**.
+- Issue a traiter : #78.
 
-**Decision B : qualifier le systeme dans un profil d'hote defini.** Un examinateur securite/crypto independant doit suivre `M4_SECURITY_REVIEW_CHECKLIST.md` et `M4_SECURITY_RISK_REGISTER.md`, accepter/refuser les ADR-0016/0017/0018, verifier les 40 scenarios contre des preuves et arbitrer G5-01..16. La qualification ne peut pas preceder une decision A explicite.
+## Decision B - Evaluation independante et risques
 
-## 2. Dossier a remettre aux reviseurs
+Le reviewer doit conduire les controles de `M4_SECURITY_REVIEW_CHECKLIST.md`,
+rendre un verdict par oracle et gate, verifier ADR-0016/17/18 et
+nouvel ADR-0019 sur le guard, evaluer R-M4-01..10 et F-M4-01, decider
+la portee host et l'exemption eventuelle du P1 T28.
 
-- Plan source : `docs/specs/27_PYAUTHKIT_IMPLEMENTATION_ROADMAP.md` §17/§56 et `docs/specs/28_PYAUTHKIT_IMPLEMENTATION_BOOTSTRAP_PLAN.md` §49.
-- Rapprochement qualitatif : `M4_CANONICAL_REQUIREMENTS_CROSSWALK.md`; catalogue propose : `M4_CANDIDATE_ORACLE_CATALOG_V1.md`.
-- Registre des tests et donnees : `M4_EVIDENCE_MANIFEST.json`; dossier de qualification : `M4_SECURITY_QUALIFICATION_DOSSIER.md`.
-- Risques et limites : `M4_SECURITY_RISK_REGISTER.md`; modele de decision : `M4_SECURITY_REVIEW_CHECKLIST.md`.
-- Dernier checkpoint **technique** avant cette proposition : SHA `86ab6ce20f882aa86060cc0e0c9ae2e5143a7f0a`, run `42069178325`, 209 tests Python + 13 host, 8/8 jobs CI.
-- Les nouveaux commits documentaires devront etre verifies a nouveau sur leur SHA avant toute prise de decision.
+Le choix M4 sur base M2 doit etre arbitre en tenant compte de M3 PR #75.
+Le resultat ne peut pas etre inferé des checks GitHub (7 requis / 8 jobs
+Actions) ni d'une configuration ruleset 0 approbations.
 
-## 3. Questions bloquantes qui appellent une vraie autorite
+- Reviewer independant, autorite, conflits d'interets : **NON RENSEIGNE**.
+- Profil TLS/proxy, KMS, logs, limites revoke-to-deny : **NON RENSEIGNE**.
+- Statuts par G5, risques et decision ADR : **NON RENSEIGNE**.
+- Verdict actuel : **NO-GO**.
+- Issue a traiter : #79.
 
-1. **Domaine:** quelles exigences sont P0/P1 pour M4, en evitant la numerotation arbitraire ? Qui en est proprietaire ?
-2. **Crypto:** le protocole `ak1`, le format digest/HMAC, les allowlists et la politique de reissue/rotation sont-ils acceptes ? Quid du KMS reel ?
-3. **Revocation:** quelle garantie est exigee apres `is_current` et quelle fenetre TOCTOU residuelle est acceptable ?
-4. **Perimetre hote:** quel deploiement avec TLS/proxy, stockage, Redis, logs et SIEM est **effectivement** vise ?
-5. **Rejeu et fuite:** quelles mesures de mitigation bearer et de redaction seront verifiees dans cet environnement ?
-6. **Preuve:** quels journaux CI et artefacts avec empreintes sont archives, qui en garantit la conservation ?
-7. **Securite:** un relecteur independant du code est-il designe et habilite a conclure ?
-8. **Dependance:** quel traitement du GATE27-04 / PR #75 M3 avant la fusion du PR #76 ?
+## Decision C - Fusion conditionnelle et revalidation
 
-## 4. Formulaire de decision texte, a remplir dans une issue GitHub
+Seulement en cas de GO signe :
+1. Figer SHA de PR #76, CI exact-HEAD, exiger les reviews legitimement
+   approuvees et ruleset confirme.
+2. Lever Draft si les conditions de review sont reunies.
+3. Merger sans bypass; verifier nouveau SHA de `main` et ses checks.
+4. Mettre a jour le gate avec preuves de l'integration reelle et
+   fermer seulement les issues veritablement resolues.
+5. La release/production reste independante du merge.
 
-- Decision A : `ADOPT / AMEND / REJECT / PENDING` : **PENDING**.
-- Owner exigences, identifiant, role, date : **NON RENSEIGNE**.
-- Version catalogue/commit adopte : **NON RENSEIGNE**.
-- Ecarts et commentaires : **NON RENSEIGNE**.
-- Decision B : `GO / NO-GO / REPORT` : **NO-GO, non adjudique**.
-- Responsable securite independant : **NON RENSEIGNE**.
-- Perimetre teste et profil de confiance : **NON RENSEIGNE**.
-- Risques residuels acceptes et echeance : **NON RENSEIGNE**.
-- SHA exact et reference preuves/approbation : **NON RENSEIGNE**.
-- Autorisation de merge : **NON DONNEE** ; release : **NON DONNEE**.
+- Autorisation de merge : **NON DONNEE**.
+- Owner/date/SHA : **NON RENSEIGNE**.
 
-## 5. Regles de separation des devoirs
-
-- Ne jamais inferer qu'un auteur de test est un relecteur independant.
-- Ne pas demander une review GitHub au titulaire du depot au titre d'une independance fictive.
-- Une issue de decision sans approbation conserve un statut ouvert.
-- Le passage Draft -> Ready, le merge vers `main`, le tag ou le publish PyPI sont hors du present mandat de revue.
-- GATE27-05 reste **NO-GO** tant qu'une vraie decision, rattachee a un SHA, n'a pas ete enregistree.
+Un GO ne doit pas etre declare a partir d'une acceptation supposee
+ou d'un reviewer fictif. **GATE27-05 reste NO-GO.**

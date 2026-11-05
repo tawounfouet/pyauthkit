@@ -924,6 +924,12 @@
       "decision": "PROPOSED",
       "owner_review": "PENDING",
       "security_review": "PENDING"
+    },
+    {
+      "path": "docs/adr/0019-m4-host-attempt-guard-and-anti-enumeration.md",
+      "decision": "PROPOSED",
+      "owner_review": "PENDING",
+      "security_review": "PENDING"
     }
   ],
   "formal_gate": "NO-GO",

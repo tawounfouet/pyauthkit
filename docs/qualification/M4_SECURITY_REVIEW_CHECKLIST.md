@@ -1,86 +1,71 @@
-> **ATTENTION - ARCHIVE HISTORIQUE SUPERSEDEE.** La signification des identifiants
-> M4-T01..T40 / G5-01..16 dans ce fichier n'est pas alignée avec le
-> plan détaillé M4 du 05/11/2026. **NE PAS UTILISER POUR UNE DECISION.**
-> Matrice fidèle à la source : `docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md`.
-> Catalogue réconcilié : `docs/qualification/M4_CANDIDATE_ORACLE_CATALOG_V2.md`.
-> Les anciens chiffres/états ci-dessous décrivent uniquement les étapes historiques.
->
-# M4 - Protocole de revue independante et fiche de decision GATE27-05
+# M4 - Checklist de revue independante v2
 
-**Statut : A COMPLETER PAR DES PERSONNES HABILITEES.** Ce document est un **gabarit** et ne constitue aucune approbation.
+> **Source de reference :** `M4_2026_11_05_SOURCE_MATRIX.md`, extrait des sections 20 et 22 du plan M4 detaille. Anciennes interpretations V1 : SUPERSEDED.
+> **Statut : PENDING / GATE27-05 NO-GO**. Aucun auteur du code ne se declare reviewer independant.
 
-## I. Identification et separation des devoirs
+## Identification et conditions
 
-| Champ | Valeur requise |
-|---|---|
-| Referentiel / PR | `tawounfouet/pyauthkit` / PR #76 (Draft) |
-| SHA exact soumis a approbation | **A RENSEIGNER AU MOMENT DE LA REVUE** |
-| Date et environnement | **A RENSEIGNER** |
-| Mainteneur responsable du gate | **A RENSEIGNER** |
-| Relecteur securite independant | **A RENSEIGNER** |
-| Conflits d'interets / independence | **A EVALUER** |
-| Preuves CI, IDs, logs archives + SHA256 | **A RENSEIGNER** |
-| Plan canonique M4 / version / diff mapping | **A RENSEIGNER** |
+- SHA exact : **NON RENSEIGNE**
+- Owner des exigences : **NON RENSEIGNE**
+- Reviewer crypto/securite independant, role, date : **NON RENSEIGNE**
+- Environnement cible, TLS/proxy/KMS : **NON RENSEIGNE**
+- CI exacte, export des logs, empreinte SHA-256, retention : **NON RENSEIGNE**
+- M3 PR #75 / GATE27-04 : **A ARBITRER** par l'owner avant G5-01
+- ADR-0016/0017/0018/0019 : **PROPOSED / NOT ACCEPTED**
 
-## II. Checklist du relecteur
+## Checklist et gates
 
-- [ ] Le commit recu et la cible de la PR sont stables pendant la revue.
-- [ ] Les 40 oracles du plan source sont rapproches un par un du registre candidat : statut, preconditions, assertions, source de preuve, limites, auteur et approbateur.
-- [ ] Les 16 criteres G5 du plan source sont rapproches un par un; aucun resultat technique ne signifie approbation.
-- [ ] Les 207+12 tests du checkpoint historique sont relus sur le SHA qui les a produits; les tests du SHA final sont reexecutés.
-- [ ] Les journaux CI bruts sont archives et hashes, y compris checks quality, security, OS matrix, PostgreSQL/Redis/HTTP.
-- [ ] La permission des workflows, les images de services, secrets ephemeres et versions de dependances sont audites.
-- [ ] Les queries SQL sont verifiees par le reviewer : scope contraint a la source, collision selector cross-tenant, CAS/status/version et indexes.
-- [ ] L'etat de revocation stale et les risques TOCTOU sont testes dans un profil de deploiement cible avec une limite temporelle approuvee.
-- [ ] Le controle anti-abus s'appuie sur une source peer approuvee sous TLS/proxy, sans entetes client arbitraires.
-- [ ] Les refus HTTP, timeouts, erreurs, fuites de logs et mesures de timing sont testes sur un reseau representatif; les hypotheses et seuils sont definis.
-- [ ] Les secrets serveur HMAC sont recuperes via une source KMS approuvee; rotation/reissue et compromission sont traitees.
-- [ ] L'observabilite et l'audit durables sont prouves, avec retention, latence, redaction, alertes et scenario incident.
-- [ ] Le registre des risques R-M4-01..10 a un responsable et une decision sur chaque residu.
-- [ ] ADR-0016 / ADR-0017 / ADR-0018 ont une approbation explicite, datée et attribuable.
-- [ ] L'interaction avec M3 PR #75 / GATE27-04 NO-GO a ete tranchee par le mainteneur.
-- [ ] Les gates G5-01..G5-16 sont acceptes ou refuses **individuellement**, avec preuves et auteur.
-- [ ] Le verdict final est attribuable et le processus de merge autorise; la release reste un acte distinct.
+- [ ] L'owner ratifie les 39 P0 et T28 P1 issus du plan detaille (issue #78).
+- [ ] Chaque oracle M4-T01..40 inclut `expected/observed/test/SHA/CI/OS/backend/reviewer/limitations/formal_status`.
+- [ ] M4-T28 a un test `BOUNDED_OVERLAP` ou un `NOT_APPLICABLE` justifie et signe sous `NO_OVERLAP`.
+- [ ] Reviewer confronte les resultats des tests a des invariants P0, et non au seul code `pytest`.
+- [ ] Reviewer examine limites de la fenetre revoke-to-deny et le risque apres dernier `is_current`.
+- [ ] Revue de l'origine host, de l'isolement tenant source et des 2 resolvers.
+- [ ] Revue de la rotation KMS/key_ref, du bearer replay, des secrets et du logging.
+- [ ] Revue du guard Redis, provenances peer/TLS/proxy, DoS et anti-enumeration.
+- [ ] Revue du rapport timing sans pretention d'equivalence statistique.
+- [ ] Revue charge, timeout, cancellation, caches et absence de promotion tardive.
+- [ ] Controle M2/M3 non-regression selon la base d'integration effectivement approuvee.
+- [ ] Wheel M4 valide sur 5 jobs et tous les checks au SHA final.
+- [ ] Les 10 risques du registre et F-M4-01 ont une decision par un owner habilite.
+- [ ] Decisions d'ADR et des 16 G5 signees au SHA exact.
+- [ ] GO/NO-GO officiel signe, puis validation merge et `main` post-merge.
+- [ ] Publication PyPI/production conserve son gate distinct.
 
-## III. G5 - fiche de revue a remplir
+## GATE27-05, dispositions a signer
 
-| Critere candidat | Decision | URL preuve et SHA | Approbateur / date |
-|---|---|---|---|
-| G5-01 - Architecture scope and M2 authority unchanged | **PENDING** | A renseigner | A renseigner |
-| G5-02 - Immutable scoped record, ownership and contract review | **PENDING** | A renseigner | A renseigner |
-| G5-03 - 70-byte canonical parsing and public selector | **PENDING** | A renseigner | A renseigner |
-| G5-04 - Full-secret HMAC and anti-downgrade | **PENDING** | A renseigner | A renseigner |
-| G5-05 - Approval, rotation and key-source error semantics | **PENDING** | A renseigner | A renseigner |
-| G5-06 - Status, expiry and clock validation | **PENDING** | A renseigner | A renseigner |
-| G5-07 - Authoritative revocation/version CAS guarantee | **PENDING** | A renseigner | A renseigner |
-| G5-08 - M2 explicit policy, no shadow Authenticated | **PENDING** | A renseigner | A renseigner |
-| G5-09 - Distributed abuse control, peer provenance | **PENDING** | A renseigner | A renseigner |
-| G5-10 - Tenant isolation at persistence source | **PENDING** | A renseigner | A renseigner |
-| G5-11 - Audit and telemetry privacy, operational contracts | **PENDING** | A renseigner | A renseigner |
-| G5-12 - Concurrency, crash/retry and overload behavior | **PENDING** | A renseigner | A renseigner |
-| G5-13 - 40 independently adjudicated M4 oracles | **PENDING** | A renseigner | A renseigner |
-| G5-14 - All CI/test/build/security checks on exact SHA | **PENDING** | A renseigner | A renseigner |
-| G5-15 - Independent crypto/security review and ADR owner signoff | **PENDING** | A renseigner | A renseigner |
-| G5-16 - Explicit owner GO/NO-GO and residual risks | **PENDING** | A renseigner | A renseigner |
+| ID | Exigence provenant du plan M4 | NO-GO si | Verdict/reviewer/date |
+| --- | --- | --- | --- |
+| G5-01 | Préconditions M2/M3 satisfaites selon base | Dépendance non qualifiée masquée | **PENDING** |
+| G5-02 | Scope/source autoritatifs | Lookup global permissif | **PENDING** |
+| G5-03 | Full-key only | Selector authentifiant seul | **PENDING** |
+| G5-04 | Crypto choisie et explicitée | Fallback inconnu / digest naïf | **PENDING** |
+| G5-05 | États et UTC sûrs | Révoquée/expirée acceptée | **PENDING** |
+| G5-06 | Version/révocation cohérentes | Garantie revendiquée non démontrée | **PENDING** |
+| G5-07 | Séparation AuthN/AuthZ et type acteur | Service key -> permission implicite | **PENDING** |
+| G5-08 | Échecs sûrs et absence de secrets | Fuite brute ou succès sur erreur | **PENDING** |
+| G5-09 | Anti-abus selon exposition | Quota revendiqué sans preuve | **PENDING** |
+| G5-10 | Isolation multi-tenant | Foreign credential accepté | **PENDING** |
+| G5-11 | Anti-énumération qualifiée selon host | Fuite d'identifiant exploitable non traitée | **PENDING** |
+| G5-12 | Concurrence et résilience | Succès tardif / cache stale | **PENDING** |
+| G5-13 | Qualité CI multi-OS sur SHA final | Run SHA incorrect/skipped | **PENDING** |
+| G5-14 | ADR et contrats publics approuvés | ADR encore PROPOSED | **PENDING** |
+| G5-15 | Risques et revue indépendante | Auto-approval ou risques sans owner | **PENDING** |
+| G5-16 | Décision formelle et post-merge | Déclaration « closed » sans preuve | **PENDING** |
 
-## IV. ADR a arbitrer
+## Gabarit d'adjudication
 
-- **ADR-0016 :** approuver/refuser le format `ak1`, les 32 octets aleatoires, HMAC domaine-separe, key reference et source approuvee ; trancher le KMS, la rotation et le cycle de vie des cles.
-- **ADR-0017 :** approuver/refuser la frontiere source-scoped et le credential owner; valider requetes SQL, caches, collisions et provenance du scope.
-- **ADR-0018 :** approuver/refuser `expires_at` obligatoire, la source temporelle, `is_current` et la signification du risque TOCTOU; regler le lien vers le gate M2.
+```
+oracle_id, threat_id, invariant_id, implementation_path, test_path,
+expected, observed, evidence_level, head_sha, action_run_url,
+python_version, os, backend_version, reviewer, formal_status,
+limitations, waiver_id_if_applicable
+```
 
-Chaque ADR requiert statut, responsable, relecteur, objections, alternatives, conditions et lien a la decision.
+**Aucun de ces champs n'autorise un agent a forger une signature humaine.**
 
-## V. Decision a signer
+## Verdict actuel
 
-**Verdict courant : NO-GO (NOT FORMALLY ADJUDICATED).**
-
-- Verdict nouveau : [ ] GO / [ ] NO-GO / [ ] REPORT
-- SHA exact, tags, protections et CI : **NON RENSEIGNES**.
-- Conditions bloquantes / risques refuses : **NON RENSEIGNES**.
-- Reservations, restrictions de deploiement et expiration : **NON RENSEIGNEES**.
-- Auteur de la decision, role, date, lien officiel : **NON RENSEIGNES**.
-- Autorisation de merge : **NON DONNEE**.
-- Autorisation de publication PyPI : **NON DONNEE**.
-
-**Ce fichier ne peut etre utilise pour simuler une signature. Une edition documentaire ne fait pas evoluer GATE27-05.**
+**NO-GO / NOT FORMALLY ADJUDICATED.** Les tests techniques ne remplacent
+ni les owners ni la revue independante. Pas de fusion ni de release sans
+decisions reelles, verifiables et rattachees au SHA exact.
