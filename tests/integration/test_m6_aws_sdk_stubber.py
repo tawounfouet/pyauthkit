@@ -14,7 +14,7 @@ from pyauthkit.adapters.secrets_aws import ApprovedAwsSecret, AwsSecretsManagerR
 from pyauthkit.configuration.secrets import SecretResolutionUnavailable
 from pyauthkit.domain.secret import SecretRef
 
-VERSION = "0123456789abcdef0123456789abcdef"
+VERSION = "0123456789abcdef" * 2
 ARN = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:tenant-a/hmac-QWERTY"
 REF = SecretRef("aws-secrets-manager", "tenant-a", "hmac", VERSION, "verify")
 REQUEST = {"SecretId": ARN, "VersionId": VERSION, "VersionStage": "AWSCURRENT"}
@@ -22,12 +22,9 @@ REQUEST = {"SecretId": ARN, "VersionId": VERSION, "VersionStage": "AWSCURRENT"}
 
 def client():
     # All calls are intercepted by Stubber; synthetic credentials are test-only.
-    return get_session().create_client(
-        "secretsmanager",
-        region_name="eu-west-1",
-        aws_access_key_id="synthetic",
-        aws_secret_access_key="synthetic",
-    )
+    sdk_session = get_session()
+    sdk_session.set_credentials("synthetic", "synthetic")
+    return sdk_session.create_client("secretsmanager", region_name="eu-west-1")
 
 
 def adapter(sdk_client):
