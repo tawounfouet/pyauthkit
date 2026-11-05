@@ -35,7 +35,6 @@ class SignedTokenVerifier(Protocol):
     ) -> dict[str, object] | None: ...
 
 
-
 class ApprovedJwksFetcher(Protocol):
     """Host-operated HTTPS transport with DNS/egress/TLS/redirect enforcement.
 
