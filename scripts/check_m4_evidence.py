@@ -48,7 +48,10 @@ def evaluate(root: Path) -> list[str]:
         errors.append("manifest must be explicitly labelled candidate")
     if manifest.get("formal_gate") != "NO-GO":
         errors.append("gate promotion requires independent external adjudication")
-    if manifest.get("reviewer_identity") is not None or manifest.get("acceptance_signature") is not None:
+    if (
+        manifest.get("reviewer_identity") is not None
+        or manifest.get("acceptance_signature") is not None
+    ):
         errors.append("a machine-authored candidate file must not invent signatures")
     if manifest.get("merged") is not False or manifest.get("released") is not False:
         errors.append("candidate must not assert merge or release")
@@ -98,7 +101,12 @@ def evaluate(root: Path) -> list[str]:
         oid = item.get("id", "unknown")
         if item.get("independent_adjudication") != "PENDING":
             errors.append(f"{oid}: unsanctioned adjudication")
-        if item.get("evidence_tier") not in {"CODE_TEST", "REFERENCE_HOST", "CI_RUN", "NOT_OBSERVED"}:
+        if item.get("evidence_tier") not in {
+            "CODE_TEST",
+            "REFERENCE_HOST",
+            "CI_RUN",
+            "NOT_OBSERVED",
+        }:
             errors.append(f"{oid}: unknown evidence tier")
         tests = item.get("test_nodes")
         if not isinstance(tests, list):
@@ -111,24 +119,40 @@ def evaluate(root: Path) -> list[str]:
                 errors.append(f"{oid}: missing test function {node!r}")
     for criterion in gates:
         cid = criterion.get("id", "unknown")
-        if criterion.get("review_status") != "PENDING" or criterion.get("approval") != "NOT_RECORDED":
+        if (
+            criterion.get("review_status") != "PENDING"
+            or criterion.get("approval") != "NOT_RECORDED"
+        ):
             errors.append(f"{cid}: no signed acceptance available")
         links = criterion.get("oracle_links", [])
-        if not isinstance(links, list) or not links or any(x not in expected_oracles for x in links):
+        if (
+            not isinstance(links, list)
+            or not links
+            or any(x not in expected_oracles for x in links)
+        ):
             errors.append(f"{cid}: missing/unknown mapped oracle")
     for doc in manifest.get("adrs", []):
         path = doc.get("path", "")
-        if not isinstance(path, str) or not path.startswith("docs/adr/") or not (root / path).is_file():
+        if (
+            not isinstance(path, str)
+            or not path.startswith("docs/adr/")
+            or not (root / path).is_file()
+        ):
             errors.append("missing ADR file")
         if doc.get("decision") != "PROPOSED":
             errors.append("ADR acceptance is not recorded")
-    for source in [manifest.get("source_of_candidate_oracles"), manifest.get("source_of_candidate_gates")]:
+    for source in [
+        manifest.get("source_of_candidate_oracles"),
+        manifest.get("source_of_candidate_gates"),
+    ]:
         if not isinstance(source, str) or not (root / source).is_file():
             errors.append("missing candidate registry")
     oracle_source = root / "docs/qualification/M4_PR07_SECURITY_ORACLES.md"
     gate_source = root / "docs/qualification/GATE27-05_M4_API_KEY_DECISION.md"
     if oracle_source.is_file():
-        rows = re.findall(r"^\| `?(M4-T\d{2})`? \|", oracle_source.read_text(encoding="utf-8"), flags=re.M)
+        rows = re.findall(
+            r"^\| `?(M4-T\d{2})`? \|", oracle_source.read_text(encoding="utf-8"), flags=re.M
+        )
         if rows != expected_oracles:
             errors.append("candidate source oracle count or sequence drift")
     if gate_source.is_file():
