@@ -516,9 +516,7 @@ def test_m4_t23_revoke_between_lookup_and_proof_never_promotes() -> None:
 
     class RevokeBeforeProof:
         async def verify(self, *, scope_ref, presented, record) -> bool:
-            harness.owner.records[:] = [
-                _record(status=ApiKeyRecordStatus.REVOKED, version=2)
-            ]
+            harness.owner.records[:] = [_record(status=ApiKeyRecordStatus.REVOKED, version=2)]
             return await actual_proof.verify(
                 scope_ref=scope_ref, presented=presented, record=record
             )
@@ -532,9 +530,7 @@ def test_m4_t23_revoke_between_lookup_and_proof_never_promotes() -> None:
     registry = AuthenticatorRegistryBuilder()
     registry.register(verifier)
     harness.engine = AuthenticationEngine(
-        policy=AuthenticationPolicyGate(
-            harness.catalog, final_rule=lambda _subject, _entry: True
-        ),
+        policy=AuthenticationPolicyGate(harness.catalog, final_rule=lambda _subject, _entry: True),
         registry=registry.freeze(),
     )
     result = harness.authenticate()
@@ -572,9 +568,7 @@ def test_m4_t33_owner_timeout_cancels_inflight_lookup_without_late_success() -> 
     registry = AuthenticatorRegistryBuilder()
     registry.register(verifier)
     engine = AuthenticationEngine(
-        policy=AuthenticationPolicyGate(
-            harness.catalog, final_rule=lambda _subject, _entry: True
-        ),
+        policy=AuthenticationPolicyGate(harness.catalog, final_rule=lambda _subject, _entry: True),
         registry=registry.freeze(),
         timeout_seconds=0.05,
     )
@@ -606,9 +600,7 @@ def test_m4_t36_registry_with_only_password_never_falls_back() -> None:
     registry = AuthenticatorRegistryBuilder()
     registry.register(PasswordOnly())
     engine = AuthenticationEngine(
-        policy=AuthenticationPolicyGate(
-            harness.catalog, final_rule=lambda _subject, _entry: True
-        ),
+        policy=AuthenticationPolicyGate(harness.catalog, final_rule=lambda _subject, _entry: True),
         registry=registry.freeze(),
     )
     result = asyncio.run(

@@ -55,7 +55,10 @@ def evaluate(root: Path) -> list[str]:
         errors.append("a machine-authored candidate file must not invent signatures")
     if manifest.get("merged") is not False or manifest.get("released") is not False:
         errors.append("candidate must not assert merge or release")
-    if manifest.get("normative_catalog_reconciliation") != "M4_DETAILED_PLAN_SOURCE_MAPPED_PENDING_OWNER_ADOPTION":
+    if (
+        manifest.get("normative_catalog_reconciliation")
+        != "M4_DETAILED_PLAN_SOURCE_MAPPED_PENDING_OWNER_ADOPTION"
+    ):
         errors.append("canonical-plan reconciliation not evidenced")
     checkpoint = manifest.get("immutable_technical_checkpoint", {})
     if not isinstance(checkpoint, dict):

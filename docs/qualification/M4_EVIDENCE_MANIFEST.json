@@ -100,7 +100,8 @@
       "technical_status": "EVIDENCE_REFERENCED",
       "test_nodes": [
         "tests/integration/test_m4_api_key_engine.py::test_malformed_bearer_is_guarded_but_never_looked_up",
-        "tests/unit/test_m4_api_key_parser.py::test_parser_never_returns_a_truncated_secret"
+        "tests/unit/test_m4_api_key_parser.py::test_parser_never_returns_a_truncated_secret",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t04_selector_only_never_reaches_credential_owner"
       ],
       "external_evidence": [],
       "independent_adjudication": "PENDING",
@@ -255,14 +256,15 @@
       "expected_behavior": "Aucun succès et aucun fallback",
       "source_status": "M4_PLAN_SPECIFIED",
       "evidence_tier": "CODE_TEST",
-      "technical_status": "PARTIAL",
+      "technical_status": "EVIDENCE_REFERENCED",
       "test_nodes": [
         "tests/security/test_m4_api_key_engine_adversarial.py::test_verifier_rejects_method_mismatch_before_guard",
-        "tests/security/test_m2_engine_adversarial.py::test_m2_t11_foreign_positive_outcomes_fail_before_final_gate"
+        "tests/security/test_m2_engine_adversarial.py::test_m2_t11_foreign_positive_outcomes_fail_before_final_gate",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t14_foreign_host_context_is_rejected_before_key_access"
       ],
       "external_evidence": [],
       "independent_adjudication": "PENDING",
-      "unproven_scope": "Le contexte étranger est testé via le gate M2 et une incohérence de méthode. Une falsification complète de contexte validée par le host catalog n'a pas de mécanisme de trust autonome côté SPI."
+      "unproven_scope": "Ciblage du cas explicite en test local; signoff indépendant, host réel et validation du périmètre restent requis."
     },
     {
       "id": "M4-T15",
@@ -399,13 +401,14 @@
       "expected_behavior": "is_current refuse l'ancien record",
       "source_status": "M4_PLAN_SPECIFIED",
       "evidence_tier": "CODE_TEST",
-      "technical_status": "PARTIAL",
+      "technical_status": "EVIDENCE_REFERENCED",
       "test_nodes": [
-        "tests/integration/test_m4_api_key_engine.py::test_post_hmac_revocation_version_change_blocks_verified_outcome"
+        "tests/integration/test_m4_api_key_engine.py::test_post_hmac_revocation_version_change_blocks_verified_outcome",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t23_revoke_between_lookup_and_proof_never_promotes"
       ],
       "external_evidence": [],
       "independent_adjudication": "PENDING",
-      "unproven_scope": "Les tests actuels révoquent après preuve, pas explicitement entre lookup et comparaison. Test de course dédié à ajouter."
+      "unproven_scope": "Ciblage du cas explicite en test local; signoff indépendant, host réel et validation du périmètre restent requis."
     },
     {
       "id": "M4-T24",
@@ -553,7 +556,8 @@
       "technical_status": "PARTIAL",
       "test_nodes": [
         "tests/security/test_m4_api_key_engine_adversarial.py::test_guard_cancellation_is_propagated_not_translated_to_rejection",
-        "tests/security/test_m2_engine_adversarial.py::test_m2_t15_timeout_cannot_late_authenticate"
+        "tests/security/test_m2_engine_adversarial.py::test_m2_t15_timeout_cannot_late_authenticate",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t33_owner_timeout_cancels_inflight_lookup_without_late_success"
       ],
       "external_evidence": [],
       "independent_adjudication": "PENDING",
@@ -586,7 +590,8 @@
       "technical_status": "PARTIAL",
       "test_nodes": [
         "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_closed_postgresql_owner_yields_503_not_success",
-        "tests/integration/test_m4_api_key_engine.py::test_freshness_source_outage_is_technical"
+        "tests/integration/test_m4_api_key_engine.py::test_freshness_source_outage_is_technical",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_no_stale_positive_cache_after_postgresql_shutdown"
       ],
       "external_evidence": [],
       "independent_adjudication": "PENDING",
@@ -601,7 +606,8 @@
       "evidence_tier": "CODE_TEST",
       "technical_status": "EVIDENCE_REFERENCED",
       "test_nodes": [
-        "tests/contract/test_authenticator_spi_contract.py::test_m2_t06_empty_registry_is_rejected_at_bootstrap"
+        "tests/contract/test_authenticator_spi_contract.py::test_m2_t06_empty_registry_is_rejected_at_bootstrap",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t36_registry_with_only_password_never_falls_back"
       ],
       "external_evidence": [],
       "independent_adjudication": "PENDING",
