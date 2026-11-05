@@ -65,23 +65,18 @@ class TrustedJwtVerificationProfile:
             raise ValueError("invalid approved audience")
         if self.expected_typ not in ("at+jwt", "application/at+jwt"):
             raise ValueError("only explicit access JWT type is supported in M5")
-        if (
-            type(self.allowed_algorithms) is not frozenset
-            or self.allowed_algorithms != frozenset({"RS256"})
+        if type(self.allowed_algorithms) is not frozenset or self.allowed_algorithms != frozenset(
+            {"RS256"}
         ):
             raise ValueError("M5 baseline admits RS256 only")
         if not isinstance(self.principal_type, PrincipalType):
             raise ValueError("invalid host-approved principal kind")
         if type(self.max_token_bytes) is not int or not 512 <= self.max_token_bytes <= 8192:
             raise ValueError("invalid token size limit")
-        if (
-            type(self.clock_skew_seconds) is not int
-            or not 0 <= self.clock_skew_seconds <= 120
-        ):
+        if type(self.clock_skew_seconds) is not int or not 0 <= self.clock_skew_seconds <= 120:
             raise ValueError("invalid clock leeway")
         if self.max_age_seconds is not None and (
-            type(self.max_age_seconds) is not int
-            or not 1 <= self.max_age_seconds <= 86400
+            type(self.max_age_seconds) is not int or not 1 <= self.max_age_seconds <= 86400
         ):
             raise ValueError("invalid JWT maximum age")
 
@@ -159,10 +154,7 @@ def _decode_segment(segment: bytes, *, maximum: int) -> bytes:
         decoded = base64.urlsafe_b64decode(segment + b"=" * (-len(segment) % 4))
     except (ValueError, binascii.Error) as error:
         raise ValueError("invalid JWS encoding") from error
-    if (
-        len(decoded) > maximum
-        or base64.urlsafe_b64encode(decoded).rstrip(b"=") != segment
-    ):
+    if len(decoded) > maximum or base64.urlsafe_b64encode(decoded).rstrip(b"=") != segment:
         raise ValueError("noncanonical JWS encoding")
     return decoded
 
