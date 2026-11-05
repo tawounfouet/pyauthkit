@@ -20,8 +20,7 @@ from pyauthkit.domain.trust import TrustProfileRef
 def _jwk(kid: str, change: int = 0) -> dict[str, object]:
     modulus = bytes([change + 1]) + bytes(range(1, 255)) + b"\x07"
     n = base64.urlsafe_b64encode(modulus).rstrip(b"=").decode()
-    return {"kty": "RSA", "kid": kid, "use": "sig", "alg": "RS256",
-            "n": n, "e": "AQAB"}
+    return {"kty": "RSA", "kid": kid, "use": "sig", "alg": "RS256", "n": n, "e": "AQAB"}
 
 
 class Mono:
@@ -92,9 +91,10 @@ def test_100_unknown_kids_coalesce_into_single_fetch_per_profile() -> None:
     )
 
     async def run():
-        candidates = [resolver.resolve_key(
-            profile=profile, kid_hint=f"unknown-{i}", algorithm_hint="RS256"
-        ) for i in range(100)]
+        candidates = [
+            resolver.resolve_key(profile=profile, kid_hint=f"unknown-{i}", algorithm_hint="RS256")
+            for i in range(100)
+        ]
         return await asyncio.gather(*candidates)
 
     assert asyncio.run(run()) == [None] * 100
@@ -151,9 +151,7 @@ def test_ambiguous_jwks_and_corrupted_json_fail_closed() -> None:
     profile, source = _profile("a")
     network = FakeApprovedTransport()
     network.keys["a"] = [_jwk("shared"), _jwk("shared")]
-    resolver = CachedApprovedJwksKeyResolver(
-        sources={profile.profile_ref: source}, fetcher=network
-    )
+    resolver = CachedApprovedJwksKeyResolver(sources={profile.profile_ref: source}, fetcher=network)
     with pytest.raises(DomainTechnicalError) as error:
         asyncio.run(
             resolver.resolve_key(profile=profile, kid_hint="shared", algorithm_hint="RS256")
@@ -173,9 +171,7 @@ def test_cancelled_resolution_propagates_without_caching() -> None:
     profile, source = _profile("a")
     network = FakeApprovedTransport()
     network.wait = True
-    resolver = CachedApprovedJwksKeyResolver(
-        sources={profile.profile_ref: source}, fetcher=network
-    )
+    resolver = CachedApprovedJwksKeyResolver(sources={profile.profile_ref: source}, fetcher=network)
 
     async def cancel():
         task = asyncio.create_task(
@@ -188,7 +184,10 @@ def test_cancelled_resolution_propagates_without_caching() -> None:
 
     asyncio.run(cancel())
     network.wait = False
-    assert asyncio.run(
-        resolver.resolve_key(profile=profile, kid_hint="shared", algorithm_hint="RS256")
-    ) is not None
+    assert (
+        asyncio.run(
+            resolver.resolve_key(profile=profile, kid_hint="shared", algorithm_hint="RS256")
+        )
+        is not None
+    )
     assert len(network.calls) == 2
