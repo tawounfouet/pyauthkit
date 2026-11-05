@@ -25,6 +25,7 @@ class PyJwtRs256Verifier:
             return None
         try:
             import jwt
+            from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
         except ImportError:
             raise DomainTechnicalError(TechnicalErrorCode.INVALID_TRUST_CONFIGURATION) from None
 
@@ -38,7 +39,7 @@ class PyJwtRs256Verifier:
                 return None
             key = jwt.algorithms.RSAAlgorithm.from_jwk(approved_key)
             # An approved JWK is never allowed to carry private key material.
-            if not hasattr(key, "key_size") or key.key_size < 2048:
+            if not isinstance(key, RSAPublicKey) or key.key_size < 2048:
                 return None
             decoded = jwt.decode(
                 compact_jws.decode("ascii"),
