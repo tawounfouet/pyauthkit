@@ -161,3 +161,33 @@ jobs:
           python -m pip install ".[dev]" "asyncpg>=0.30" "redis>=5" "fastapi>=0.110" "uvicorn>=0.30" "httpx>=0.27" "pytest-asyncio>=0.24"
       - name: PostgreSQL CAS Redis atomic and real two-process HTTP tests
         run: python -m pytest -v -s qualification/m4_host/tests
+
+
+  m5_jwt:
+    name: M5 JWT proof and JWKS cache (candidate only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without credentials
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
+        with:
+          python-version: "3.12"
+      - name: Install M5 JOSE qualification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev,jwt]"
+      - name: OpenSSL external signing tool required
+        run: openssl version
+      - name: Verify M5 signed tokens, network boundaries and independent vectors
+        run: |
+          python -m pytest -v tests/integration/test_m5_jwt_authentication.py tests/security/test_m5_jwks_cache.py tests/security/test_m5_jwks_https.py tests/qualification/test_m5_openssl_vectors.py tests/qualification/test_m5_jwks_tls_host.py
+      - name: Build wheel and install optional JOSE extra
+        run: |
+          python -m build
+          python -m venv .m5-wheel
+          .m5-wheel/bin/python -m pip install "$(ls dist/*.whl)[jwt]"
+          .m5-wheel/bin/python -c "import pyauthkit; from pyauthkit.adapters.jwt_crypto import PyJwtRs256Verifier; assert PyJwtRs256Verifier()"
