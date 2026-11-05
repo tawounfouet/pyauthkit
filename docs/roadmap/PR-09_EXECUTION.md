@@ -103,3 +103,18 @@ candidate oracle evidence register and controlled restart runbook.
   handles TLS/DNS/rebinding, but M6 tests do not prove live deployment egress.
 
 Final exact-head CI result: PENDING at time of writing. GATE27-07 remains NO-GO.
+
+## 2026-11-05 development iteration 4 - canonical JSON ambiguity guard
+
+- Add explicit `load_approved_json_configuration(bytes, provenance, policy,
+  generation)` as a JSON-only adapter into the existing strict M6 mapping
+  loader; this is not file discovery or environment reading.
+- Enforce allowlisted source before parsing; reject raw duplicate member names
+  at any depth (including JWT `issuer`), nonfinite numbers, oversized documents,
+  deep structures and malformed encoding. Mapping-only ingestion still cannot
+  retroactively recover JSON duplicate names discarded by the caller's parser.
+- Harden schema v2 issuer URI validation against missing hostname, userinfo,
+  query/fragment and wildcard authority.
+- Add exact negative oracles to the M6 CI job and security tests.
+
+Evidence and GATE27-07: pending exact SHA CI review; no independent sign-off.

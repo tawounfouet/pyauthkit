@@ -211,4 +211,4 @@ jobs:
           python -m pip install ".[dev]"
       - name: Execute M6 negative and integration security oracles
         run: |
-          python -m pytest -v tests/security/test_m6_configuration_trust.py tests/security/test_m6_secret_policy.py tests/integration/test_m6_secret_backed_api_key.py tests/integration/test_m6_jwt_trust_bootstrap.py
+          python -m pytest -v tests/security/test_m6_configuration_trust.py tests/security/test_m6_secret_policy.py tests/integration/test_m6_secret_backed_api_key.py tests/integration/test_m6_jwt_trust_bootstrap.py tests/security/test_m6_json_reader.py

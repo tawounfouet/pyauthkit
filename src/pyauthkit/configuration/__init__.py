@@ -10,7 +10,7 @@ from .models import (
     SourcePolicy,
     SourceProvenance,
 )
-from .sources import load_approved_configuration
+from .sources import load_approved_configuration, load_approved_json_configuration
 
 __all__ = [
     "AuditDeliveryPolicy",
@@ -23,4 +23,5 @@ __all__ = [
     "compose_trusted_jwt_runtime",
     "compose_secret_backed_api_key_runtime",
     "load_approved_configuration",
+    "load_approved_json_configuration",
 ]

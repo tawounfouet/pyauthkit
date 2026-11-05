@@ -1,10 +1,15 @@
-"""Strict MVP host-mapping reader. Never merges unapproved trust sources.
+"""Strict MVP host-mapping and JSON readers. No implicit source merge.
 
 The host controls both the mapping and its provenance. Supplying a
 SourceProvenance inside a client request would not make it trustworthy.
 """
 
+import json
+import math
 from collections.abc import Mapping, Sequence
+
+from typing import cast
+from urllib.parse import urlsplit
 
 from pyauthkit.application.host_context import HostBinding
 from pyauthkit.domain.evidence import EvidenceMethod
@@ -96,7 +101,16 @@ def _parse_jwt_profiles(raw: object) -> tuple[JwtTrustBinding, ...]:
                 _text(item["profile_id"]), _text(item["profile_version"]), scope
             )
             issuer = _text(item["issuer"])
-            if not issuer.startswith("https://") or "*" in issuer:
+            issuer_uri = urlsplit(issuer)
+            if (
+                issuer_uri.scheme != "https"
+                or issuer_uri.hostname is None
+                or issuer_uri.username is not None
+                or issuer_uri.password is not None
+                or issuer_uri.query
+                or issuer_uri.fragment
+                or "*" in issuer
+            ):
                 raise ValueError("invalid host-approved JWT issuer")
             algorithms = _sequence(item["allowed_algorithms"])
             if not algorithms or len(algorithms) != len(set(_text(a) for a in algorithms)):
@@ -232,3 +246,81 @@ def load_approved_configuration(
         )
     except (ValueError, TypeError):
         raise ConfigurationRejected("configuration bootstrap rejected") from None
+_MAX_CONFIG_JSON_BYTES = 262144
+_MAX_CONFIG_JSON_NODES = 8192
+
+
+def _unique_json_members(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Reject duplicates at ANY depth before a dict can erase evidence."""
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ConfigurationRejected("duplicate configuration member")
+        result[key] = value
+    return result
+
+
+def _reject_json_constant(_value: str) -> object:
+    raise ConfigurationRejected("invalid JSON configuration constant")
+
+
+def load_approved_json_configuration(
+    raw: bytes,
+    *,
+    provenance: SourceProvenance,
+    policy: SourcePolicy,
+    generation: ConfigurationGeneration,
+) -> ConfigurationSnapshot:
+    """Safely decode one host-approved JSON document to the strict mapping API.
+
+    An already-materialized dict cannot reveal duplicate JSON member names.
+    Use this entrypoint when JSON ambiguity must be detected before the
+    security-sensitive source/profile validation. No file/env/network reads.
+    """
+    if not isinstance(policy, SourcePolicy):
+        raise ConfigurationRejected("invalid source policy")
+    policy.admit(provenance)
+    if type(raw) is not bytes or not 1 <= len(raw) <= _MAX_CONFIG_JSON_BYTES:
+        raise ConfigurationRejected("invalid JSON configuration byte budget")
+    try:
+        document = cast(
+            object,
+            json.loads(
+                raw.decode("utf-8"),
+                object_pairs_hook=_unique_json_members,
+                parse_constant=_reject_json_constant,
+            ),
+        )
+    except ConfigurationRejected:
+        raise
+    except (ValueError, TypeError, UnicodeError, RecursionError, OverflowError):
+        raise ConfigurationRejected("invalid JSON configuration") from None
+    if not isinstance(document, dict) or not all(
+        isinstance(key, str) for key in document
+    ):
+        raise ConfigurationRejected("expected JSON configuration object")
+    visited = 0
+
+    def visit(node: object, depth: int) -> None:
+        nonlocal visited
+        visited += 1
+        if visited > _MAX_CONFIG_JSON_NODES or depth > 12:
+            raise ConfigurationRejected("JSON configuration complexity exceeded")
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if not isinstance(key, str):
+                    raise ConfigurationRejected("invalid JSON configuration member")
+                visit(value, depth + 1)
+        elif isinstance(node, list):
+            for value in node:
+                visit(value, depth + 1)
+        elif isinstance(node, float) and not math.isfinite(node):
+            raise ConfigurationRejected("invalid JSON configuration number")
+
+    visit(document, 0)
+    return load_approved_configuration(
+        cast(dict[str, object], document),
+        provenance=provenance,
+        policy=policy,
+        generation=generation,
+    )

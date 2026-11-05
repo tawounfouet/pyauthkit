@@ -15,7 +15,7 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 | M6-T02 | COVERED | test_m6_t02_untrusted_provenance_is_denied |
 | M6-T03 | COVERED | v2 signed JWT issuer/audience cannot select a foreign trust profile |
 | M6-T04 | COVERED | test_m6_t04_extra_security_field_is_denied |
-| M6-T05 | PARTIAL | duplicate routes/methods rejected; raw JSON duplicate member parsing is out of reader scope |
+| M6-T05 | COVERED | strict JSON bytes loader rejects duplicate root/route/JWT issuer members; mapping-only caller still responsible for its own parser |
 | M6-T06 | OPEN | single-source reader; multi-source merge scenarios require explicit decision |
 | M6-T07 | COVERED | test_m6_t07_env_override_is_not_a_source |
 | M6-T08 | COVERED | test_m6_t08_unknown_route_has_no_fallback |
@@ -57,8 +57,9 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 - M6 now parses and composes a bounded M5 JWT trust profile with issuer,
   audience and pinned JWKS controls under configuration schema v2. Real
   host network egress and reviewer sign-off are still unqualified.
-- No source-merging policy is admitted by the current reader. It cannot detect
-  duplicate raw JSON keys after another parser has already built a Mapping.
+- No source-merging policy is admitted by the current reader. The new JSON
+  bytes loader detects duplicate members, while a pre-parsed Mapping cannot
+  recover duplicates that a caller's JSON parser already discarded.
 - No metrics exporter exists. Audit events must not be treated as metric labels.
 - Memory audit is best-effort only. No exactly-once, idempotence or persisted
   receipt is asserted; `required` is rejected.
