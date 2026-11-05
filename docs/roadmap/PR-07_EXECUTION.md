@@ -25,13 +25,40 @@
 - Negative parser, fuzz/property, OpenSSL-vector, tamper, cross-scope and
   secret material redaction tests.
 - ADR-0016 PROPOSED; parser/HMAC Design Learning Card.
-- **Code and CI SHA evidence: to be filled only after exact checks.**
+- - Technical checkpoint: SHA `c75e33eec679a49d15d5c96b0e2d8424684cd6fe`
+- CI: https://github.com/tawounfouet/pyauthkit/actions/runs/42051460826
+  **7/7 SUCCESS**. Candidate HMAC proof, not final AuthN; no independent signoff.
 
-## Still excluded, blocking formal gate
+## Slice C - Authenticator, lifecycle and final M2 policy (WP27-025, WP28-052..054)
 
-- Slice C: `ApiKeyAuthenticator` conforming to the M2 SPI; lifecycle, expiry
-  and revocation freshness; final M2 policy result.
-- Slice D: host with real store, distributed abuse guard, cross-tenant
-  adversarial validation, 40 M4 oracles and G5-01..16.
-- Independent ADR/security review, a formal GO, merge, main CI and release
-  remain uncompleted.
+- Added production `ApiKeyAuthenticator` conforming to existing M2 async SPI.
+- Mandatory operator-supplied `ApiKeyAttemptGuard`; fail-closed on refused or
+  unavailable admission.
+- Active status, not-before/required expiry under injected UTC Clock,
+  complete-secret proof and source-freshness read-back before VERIFIED.
+- No authentication outcome bypasses M2 policy. Declined policy never grants
+  AuthenticatedPrincipal. No session/token issuance or IAM permissions.
+- Tests: positive with actual HMAC vector, final deny, lifecycle, malformed
+  bearer, HMAC mutation, guard outage, cross-tenant and post-HMAC revocation.
+- ADR-0018 PROPOSED and Design Learning Card.
+- Technical checkpoint: SHA `d4a2346de60d7f9ca05409dac4b18a6a65eca5c4`.
+- CI: https://github.com/tawounfouet/pyauthkit/actions/runs/42052986729
+  **7/7 SUCCESS; 207 total pytest PASS** in quality job.
+- Documentation-only changes after this checkpoint need their own HEAD CI.
+- Formal status: **not security qualified**.
+
+## Slice D - Qualification and operational host (WP27-026, WP28-055..060)
+
+- Candidate 40-case index: `docs/qualification/M4_PR07_SECURITY_ORACLES.md`.
+- Gate tracker: `docs/qualification/GATE27-05_M4_API_KEY_DECISION.md`.
+- REQUIRED: source-scoped real PostgreSQL adapter, distributed Redis quota,
+  2-host process tests, revocation/rotation CAS consistency, HTTP denial and
+  timing qualification, audit/observability evidence, independent crypto/ADR
+  signoff and G5-01..G5-16.
+- Status: **NOT IMPLEMENTED / NOT RUN / NO-GO** for real-host qualification.
+
+## Blocked final outcome
+
+M3 PR #75 still lacks GATE27-04 signoff. PR-07 #76 remains a draft. No formal
+M4 GO, release, merge into main or production authorization. Neither 207 green
+tests nor this roadmap update can replace real-host and independent evidence.
