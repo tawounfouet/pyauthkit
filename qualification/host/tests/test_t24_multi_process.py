@@ -103,5 +103,5 @@ async def test_t24_two_separate_uvicorn_processes_enforce_shared_redis_source_li
     keys = await infra.redis.keys("m3q:src:*")
     # Both tenants have independent source counters despite two OS processes.
     assert len(keys) == 2
-    values = sorted(int(await infra.redis.get(key)) for key in keys)
+    values = sorted([int(await infra.redis.get(key)) for key in keys])
     assert values == [1, 3]
