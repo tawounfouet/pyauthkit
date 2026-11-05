@@ -121,8 +121,11 @@ ssl_module = ssl
 
 
 def exercise(
-    monkeypatch, scenario: SimulatedInternet, *,
-    source: ApprovedJwksSource = SOURCE, allowed: tuple[str, ...] = (ALLOWED_IP,),
+    monkeypatch,
+    scenario: SimulatedInternet,
+    *,
+    source: ApprovedJwksSource = SOURCE,
+    allowed: tuple[str, ...] = (ALLOWED_IP,),
 ):
     original = asyncio.BaseEventLoop.getaddrinfo
 
@@ -189,18 +192,21 @@ def test_rebinding_to_private_address_after_first_approved_fetch(monkeypatch) ->
 
 
 @pytest.mark.security
-@pytest.mark.parametrize("response", [
-    raw_response(status=301, headers=b"Location: http://127.0.0.1/\r\n"),
-    raw_response(status=307, headers=b"Location: https://other.example.test/keys\r\n"),
-    raw_response(status=500),
-    raw_response(headers=b"Content-Encoding: gzip\r\n"),
-    raw_response(headers=b"Content-Length: 4\r\n"),
-    raw_response(headers=b"Transfer-Encoding: chunked\r\n"),
-    raw_response(headers=b"Content-Type: text/plain\r\n"),
-    b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 99999999\r\n\r\nx",
-    b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{}",
-    b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 6\r\n\r\nxx",
-])
+@pytest.mark.parametrize(
+    "response",
+    [
+        raw_response(status=301, headers=b"Location: http://127.0.0.1/\r\n"),
+        raw_response(status=307, headers=b"Location: https://other.example.test/keys\r\n"),
+        raw_response(status=500),
+        raw_response(headers=b"Content-Encoding: gzip\r\n"),
+        raw_response(headers=b"Content-Length: 4\r\n"),
+        raw_response(headers=b"Transfer-Encoding: chunked\r\n"),
+        raw_response(headers=b"Content-Type: text/plain\r\n"),
+        b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 99999999\r\n\r\nx",
+        b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{}",
+        b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 6\r\n\r\nxx",
+    ],
+)
 def test_redirect_compression_header_smuggling_and_truncation_fail_closed(
     monkeypatch, response: bytes
 ) -> None:
@@ -218,7 +224,9 @@ def test_valid_chunked_jwks_is_bounded(monkeypatch) -> None:
         b"HTTP/1.1 200 OK\r\n"
         b"Content-Type: application/jwk-set+json\r\n"
         b"Transfer-Encoding: chunked\r\n\r\n"
-        + f"{len(BODY):x}\r\n".encode() + BODY + b"\r\n0\r\n\r\n"
+        + f"{len(BODY):x}\r\n".encode()
+        + BODY
+        + b"\r\n0\r\n\r\n"
     )
     fetcher = exercise(monkeypatch, internet)
     assert asyncio.run(fetcher.fetch(source=SOURCE)) == BODY
@@ -250,13 +258,12 @@ def test_unverified_tls_context_and_private_allowlist_refused_at_bootstrap() -> 
     ctx.check_hostname = False
     with pytest.raises(ValueError, match="verified TLS"):
         PinnedHttpsJwksFetcher(
-            sources={PROFILE: SOURCE}, allowed_ips={PROFILE: (ALLOWED_IP,)},
+            sources={PROFILE: SOURCE},
+            allowed_ips={PROFILE: (ALLOWED_IP,)},
             ssl_context=ctx,
         )
     with pytest.raises(ValueError, match="non-public"):
-        PinnedHttpsJwksFetcher(
-            sources={PROFILE: SOURCE}, allowed_ips={PROFILE: ("127.0.0.1",)}
-        )
+        PinnedHttpsJwksFetcher(sources={PROFILE: SOURCE}, allowed_ips={PROFILE: ("127.0.0.1",)})
 
 
 @pytest.mark.security
@@ -269,9 +276,7 @@ def test_network_failure_and_timeout_redact_cause(monkeypatch) -> None:
     assert "SENSITIVE_NETWORK_ERROR" not in repr(raised.value)
     internet.outage = False
     internet.delay = 1
-    short_source = ApprovedJwksSource(
-        PROFILE, "issuer-1", SOURCE.uri, timeout_seconds=0.1
-    )
+    short_source = ApprovedJwksSource(PROFILE, "issuer-1", SOURCE.uri, timeout_seconds=0.1)
     fetcher = exercise(monkeypatch, internet, source=short_source)
     with pytest.raises(DomainTechnicalError):
         asyncio.run(fetcher.fetch(source=short_source))
@@ -283,15 +288,11 @@ def test_approved_transport_connects_to_scoped_cache_without_jwt_source_control(
 ) -> None:
     internet = SimulatedInternet()
     fetcher = exercise(monkeypatch, internet)
-    resolver = CachedApprovedJwksKeyResolver(
-        sources={PROFILE: SOURCE}, fetcher=fetcher
-    )
+    resolver = CachedApprovedJwksKeyResolver(sources={PROFILE: SOURCE}, fetcher=fetcher)
 
     async def lookups():
         return await asyncio.gather(
-            resolver.resolve_key(
-                profile=PROFILE_CONFIG, kid_hint="r1", algorithm_hint="RS256"
-            ),
+            resolver.resolve_key(profile=PROFILE_CONFIG, kid_hint="r1", algorithm_hint="RS256"),
             resolver.resolve_key(
                 profile=PROFILE_CONFIG, kid_hint="unknown", algorithm_hint="RS256"
             ),
