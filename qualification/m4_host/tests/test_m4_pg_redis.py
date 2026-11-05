@@ -17,7 +17,6 @@ from pyauthkit.domain.result import Rejected
 from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
-
 from qualification.m4_host.app import FixtureProtectionKeySource
 from qualification.m4_host.guard import HOST_PEER, RedisApiKeyAttemptGuard
 from qualification.m4_host.storage import (
@@ -29,8 +28,8 @@ from qualification.m4_host.storage import (
 from .conftest import (
     BUCKET_KEY,
     REFERENCE_KEY,
-    SELECTOR,
     SECRET,
+    SELECTOR,
     Infrastructure,
     encode,
     wire,
