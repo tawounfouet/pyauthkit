@@ -29,6 +29,7 @@ from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
 from pyauthkit.password.capacity import KDFWorkerPool
+from pyauthkit.ports.password_hashing import PasswordHashVerifier
 
 from .guard import HOST_SOURCE, RedisPasswordAttemptGuard
 from .storage import PostgresPasswordCredentialResolver
@@ -52,6 +53,7 @@ def compose_qualification_app(
     max_per_source: int = 200,
     max_per_identity: int = 200,
     window_seconds: int = 60,
+    hash_verifier: PasswordHashVerifier | None = None,
 ) -> FastAPI:
     """Create a reference host with explicit scope mappings.
 
@@ -78,7 +80,7 @@ def compose_qualification_app(
         max_per_identity=max_per_identity,
         window_seconds=window_seconds,
     )
-    crypto = Argon2idPasswordHashVerifier(Argon2idPolicy())
+    crypto = hash_verifier if hash_verifier is not None else Argon2idPasswordHashVerifier(Argon2idPolicy())
     dummy_hash = PasswordHasher(
         memory_cost=19456,
         time_cost=2,
