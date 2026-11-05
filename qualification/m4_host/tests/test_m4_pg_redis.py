@@ -2,7 +2,9 @@
 
 import asyncio
 
+import httpx
 import pytest
+from redis.asyncio import Redis
 
 from pyauthkit.adapters.api_key_authenticator import ApiKeyAuthenticator
 from pyauthkit.adapters.hmac_api_key import HmacApiKeyVerifier
@@ -17,7 +19,7 @@ from pyauthkit.domain.result import Rejected
 from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.temporal import CorrelationId
 from pyauthkit.domain.trust import TrustProfileRef
-from qualification.m4_host.app import FixtureProtectionKeySource
+from qualification.m4_host.app import FixtureProtectionKeySource, compose_app
 from qualification.m4_host.guard import HOST_PEER, RedisApiKeyAttemptGuard
 from qualification.m4_host.storage import (
     PostgresApiKeyCredentialResolver,
@@ -223,3 +225,51 @@ async def test_m4_guard_fails_closed_without_trusted_peer(infra: Infrastructure)
         )
     finally:
         HOST_PEER.reset(token)
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_closed_postgresql_owner_yields_503_not_success(
+    infra: Infrastructure,
+) -> None:
+    await infra.seed()
+    app = infra.app()
+    await infra.pool.close()
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://reference"
+    ) as client:
+        result = await client.post(
+            "/alpha/authenticate", headers={"Authorization": "ApiKey " + wire()}
+        )
+    assert result.status_code == 503
+    assert result.json() == {"error": "temporarily_unavailable"}
+    assert "service-alpha" not in result.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_unreachable_redis_quota_yields_503_not_success(
+    infra: Infrastructure,
+) -> None:
+    await infra.seed()
+    unavailable = Redis.from_url(
+        "redis://127.0.0.1:1/15", socket_connect_timeout=0.2, socket_timeout=0.2
+    )
+    try:
+        app = compose_app(
+            pool=infra.pool,
+            redis=unavailable,
+            verifier_key=REFERENCE_KEY,
+            bucket_key=BUCKET_KEY,
+            routes={"alpha": "tenant-alpha"},
+        )
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://reference"
+        ) as client:
+            result = await client.post(
+                "/alpha/authenticate", headers={"Authorization": "ApiKey " + wire()}
+            )
+        assert result.status_code == 503
+        assert result.json() == {"error": "temporarily_unavailable"}
+    finally:
+        await unavailable.aclose()

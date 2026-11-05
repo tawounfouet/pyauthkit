@@ -205,9 +205,18 @@ async def test_m4_two_uvicorn_os_processes_share_redis_and_pg(infra: Infrastruct
         httpx.AsyncClient(base_url=first_url, timeout=4) as one,
         httpx.AsyncClient(base_url=second_url, timeout=4) as two,
     ):
-        first = await one.post("/alpha/authenticate", headers=auth_header(OTHER_SECRET))
-        second = await two.post("/alpha/authenticate", headers=auth_header(OTHER_SECRET))
-        third = await one.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
+        first = await one.post(
+            "/alpha/authenticate",
+            headers={**auth_header(OTHER_SECRET), "X-Forwarded-For": "203.0.113.1"},
+        )
+        second = await two.post(
+            "/alpha/authenticate",
+            headers={**auth_header(OTHER_SECRET), "X-Forwarded-For": "203.0.113.2"},
+        )
+        third = await one.post(
+            "/alpha/authenticate",
+            headers={**auth_header(bytes(range(32))), "X-Forwarded-For": "203.0.113.3"},
+        )
         separate = await two.post("/beta/authenticate", headers=auth_header(OTHER_SECRET))
         assert first.status_code == second.status_code == third.status_code == 401
         assert refusal_signature(first) == refusal_signature(second)
@@ -246,3 +255,22 @@ async def test_m4_loopback_timing_observation_no_equivalence_claim(
     }
     print("M4_HTTP_TIMING_OBSERVATION=" + json.dumps(report, sort_keys=True))
     assert len(times["wrong"]) == len(times["missing"]) == 20
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m4_bearer_replay_is_an_explicit_non_goal_of_api_keys(
+    infra: Infrastructure,
+) -> None:
+    await infra.seed()
+    async with (
+        live_host(infra.app()) as url,
+        httpx.AsyncClient(base_url=url, timeout=4) as client,
+    ):
+        first = await client.post("/alpha/authenticate", headers=auth_header(bytes(range(32))))
+        repeated = await client.post(
+            "/alpha/authenticate", headers=auth_header(bytes(range(32)))
+        )
+    # Both successes expose the natural bearer replay property.
+    # This is NOT replay prevention, session security or a production guarantee.
+    assert first.status_code == repeated.status_code == 200
