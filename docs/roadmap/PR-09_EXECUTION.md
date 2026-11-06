@@ -310,3 +310,41 @@ Exact-head CI: PENDING. GATE27-07 remains NO-GO.
   mandatory audit. Independent G7 security review remains NO-GO.
 
 Exact HEAD CI: PENDING this iteration.
+
+## 2026-11-06 development iteration 12 - explicit HTTP receipt-only reference app
+
+- Added `qualification/m6_http/app.py`, a separate non-packaged FastAPI
+  qualification host. The host selects one exact `ReceiptedDecisionGateway`,
+  one trusted catalog route and one expected evidence method at startup.
+  Only `POST /authenticate` is registered. Direct M2, alternate tenant,
+  framework documentation and verifier management routes are not exposed.
+- Credentials are read exclusively from a single bounded `Authorization`
+  header (ApiKey or Bearer, fixed at composition). Tenant, profile,
+  correlation and attempt IDs are never read from client headers, query
+  parameters, body or JWT authority selection. Cryptographic verification
+  still occurs only in original M4/M5 components. Server generates fresh
+  opaque correlation and attempt IDs for every structurally admitted request.
+- Every structurally admitted HTTP request invokes the experimental receipt
+  gateway. Only `Authenticated` returns HTTP 200 after a matching local
+  commit receipt, `Rejected` returns generic HTTP 401 and storage/runtime
+  `AuthError` returns generic HTTP 503. No subject, token, SQL diagnostics
+  or tenant identity appears in response bodies. No sessions are issued.
+- HTTP framing invalidity (nonempty request body, ambiguous Content-Length
+  or Transfer-Encoding) is rejected **before** the gateway and therefore
+  deliberately **not audited**. This reference does not claim full audit
+  coverage for all network arrivals; future required audit needs an
+  explicit pre-verification rejection-recording policy.
+- Added real loopback TCP Uvicorn+HTTPX tests in
+  `qualification/m6_http/tests`: signed RS256 JWT and real scoped HMAC
+  success/denial, absence of direct/unapproved endpoints, spoofed headers,
+  distinct server-generated attempt IDs, SQLite loss/capacity, concurrent
+  requests and a held SQLite transaction lock preventing premature 200.
+- Added a dedicated CI job with isolated HTTP dependencies. The application
+  remains **qualification-only** and is not included in the PyPI wheel.
+  Tests run on loopback without TLS/reverse proxies or distributed hosts.
+- In-process bypass by a privileged host is still possible via separate M2
+  composition, even if this app exposes no alternate route. Therefore no
+  claim is made that a production framework enforces `required` audit.
+  Public `audit_delivery=required` remains rejected.
+
+Exact-head CI: PENDING at documentation authoring. GATE27-07 remains NO-GO.

@@ -212,3 +212,24 @@ jobs:
       - name: Execute M6 negative and integration security oracles
         run: |
           python -m pytest -v tests/security/test_m6_configuration_trust.py tests/security/test_m6_secret_policy.py tests/integration/test_m6_secret_backed_api_key.py tests/integration/test_m6_jwt_trust_bootstrap.py tests/security/test_m6_json_reader.py tests/security/test_m6_source_precedence.py tests/security/test_m6_metrics_privacy.py tests/integration/test_m6_generation_sqlite.py tests/security/test_m6_aws_secrets.py tests/integration/test_m6_aws_sdk_stubber.py tests/security/test_m6_aws_client_admission.py tests/security/test_m6_aws_live_gate.py tests/integration/test_m6_audit_sqlite.py tests/integration/test_m6_receipted_audit_gateway.py tests/integration/test_m6_receipted_real_m4_m5.py
+
+  m6_http_reference:
+    name: M6 real HTTP receipt boundary (local reference only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout without credentials
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
+        with:
+          python-version: "3.12"
+      - name: Install isolated HTTP qualification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev]" "fastapi>=0.110" "uvicorn>=0.30" "httpx>=0.27" "pytest-asyncio>=0.24"
+      - name: Exercise actual loopback HTTP and SQLite failure oracles
+        run: |
+          python -m pytest -v qualification/m6_http/tests

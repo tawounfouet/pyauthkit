@@ -94,3 +94,21 @@ OPEN and PENDING_SHA are not PASS. No independent reviewer has signed G7.
 - Final JWT v2 CI: PENDING at time of this iteration's authoring.
 - Reviewer: NOT ASSIGNED.
 - GATE27-07: NO-GO / NOT INDEPENDENTLY QUALIFIED.
+
+## Iteration 12 HTTP candidate coverage (not independent G7 approval)
+
+The isolated FastAPI reference exposes one host-selected
+`POST /authenticate` and no direct M2 or documentation/alternate-tenant
+routes. Actual loopback TCP tests use M4 scoped HMAC and M5 signed JWT
+through the receipted gateway, with a local SQLite store. Host-generated
+attempt IDs prevent user-supplied header replay; a held SQLite write lock
+prevents returning HTTP 200 before the local commit completes. A missing or
+full ledger yields 503, never 200. Framing-level HTTP denials are **not**
+durably audited; the tests deliberately prove this coverage boundary.
+These are development assertions only, not proof of exclusive ingress at
+a production reverse proxy or across host processes. M6-T35 and G7 audit
+requirements remain PARTIAL/OPEN for production admission.
+
+A separate CI job validates HTTP qualification at the exact commit and
+must be checked together with all other workflow jobs. No public required
+mode is enabled.
