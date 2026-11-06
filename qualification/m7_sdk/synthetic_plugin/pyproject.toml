@@ -11,6 +11,7 @@ dependencies = ["pyauthkit>=0.1.0a1"]
 
 [project.entry-points."pyauthkit.authenticators.v1"]
 synthetic = "m7_synthetic_plugin.factory:create"
+managed = "m7_synthetic_plugin.factory:create_managed"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/m7_synthetic_plugin"]
