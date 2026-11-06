@@ -18,9 +18,9 @@ from pyauthkit.plugins import (
     PluginAdmissionRejected,
     PluginGrant,
     discover_authenticator_plugins,
+    discovery,
     load_approved_authenticators,
 )
-from pyauthkit.plugins import discovery
 from pyauthkit.sdk import (
     AuditDeliveryPolicy,
     AuthenticationRequest,
