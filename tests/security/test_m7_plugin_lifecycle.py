@@ -7,8 +7,7 @@ import pytest
 
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.outcome import RejectedOutcome
-from pyauthkit.plugins import PluginAdmissionRejected, PluginGrant
-from pyauthkit.plugins import lifecycle
+from pyauthkit.plugins import PluginAdmissionRejected, PluginGrant, lifecycle
 from pyauthkit.plugins.lifecycle import activate_approved_authenticators
 
 

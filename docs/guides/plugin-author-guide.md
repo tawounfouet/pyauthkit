@@ -77,13 +77,14 @@ Le loader synchrone `load_approved_authenticators` est une interface non proprie
 ```python
 from pyauthkit.plugins import activate_approved_authenticators
 
-async def run_host(candidates, grants, snapshot):
-    async with activate_approved_authenticators(candidates, grants=grants) as authenticators:
+async def run_host(candidates, grants, snapshot, serve):
+    async with activate_approved_authenticators(
+        candidates, grants=grants
+    ) as authenticators:
         runtime = compose_authentication_engine(
             snapshot, authenticators=authenticators
         )
-        # Demarrer le host, puis drainer les requetes avant de quitter ce scope.
-        return runtime  # Demonstration de composition, PAS un serveur de production
+        await serve(runtime)  # Stop ingress and drain before leaving the scope.
 ```
 
 Une instance peut exposer `async def aclose(self) -> None`. Les closers sont appeles en ordre inverse, avec un timeout de 3 secondes par instance par defaut et un maximum configurable de 30 secondes. Une methode `close()` synchrone sans `aclose()` n'est pas prise en charge par le scope gere.
