@@ -16,15 +16,15 @@ Rendre le SDK Python consommable sans invention de nouvelle autorite et introdui
 | Package | Travail | Statut |
 | --- | --- | --- |
 | M7-WP-01 | Baseline, inventaire et branche PR-10 | IMPLEMENTED (voir commits de PR) |
-| M7-WP-02 | Surface publique SDK et quickstart | IMPLEMENTED, CI a verifier |
+| M7-WP-02 | Surface publique SDK et quickstart | IMPLEMENTED / TESTED CI head a4e12634 |
 | M7-WP-03 | SPI v1/v2 explicite et port M2 existant | IMPLEMENTED CANDIDATE : declaration positive (#86), injection host-bound v2 (#87), revue requise |
-| M7-WP-04 | Contrats et tests negatifs SPI | PARTIAL, preuve CI requise |
-| M7-WP-05 | Metadata discovery, sans `EntryPoint.load` | IMPLEMENTED, preuve CI requise |
-| M7-WP-06 | Grants hote, versions, collisions, refus | IMPLEMENTED, preuve CI requise |
-| M7-WP-07 | Loader post-admission et registry M6 | IMPLEMENTED, preuve CI requise |
+| M7-WP-04 | Contrats et tests negatifs SPI | IMPLEMENTED / TESTED CI 50 tests M7, revue independante requise |
+| M7-WP-05 | Metadata discovery, sans `EntryPoint.load` | IMPLEMENTED / TESTED CI v1 et v2 |
+| M7-WP-06 | Grants hote, versions, collisions, refus | IMPLEMENTED / TESTED CI, qualification collisions partielle |
+| M7-WP-07 | Loader post-admission et registry M6 | IMPLEMENTED / TESTED CI, scope v2 mono-route |
 | M7-WP-08 | Lifecycle et fermeture de ressources | IMPLEMENTED CANDIDATE : managed async activation, tests et revue requise |
 | M7-WP-09 | Guides d'usage et auteur plugin | IMPLEMENTED, docstests a verifier |
-| M7-WP-10 | Packaging wheel/sdist/extras | PENDING CI |
+| M7-WP-10 | Packaging wheel/sdist/extras | TESTED CI Linux 3.12/3.13/3.14, macOS et Windows 3.12 |
 | M7-WP-11 | ADR, learning cards et oracles | PARTIAL, NO-GO securite |
 | M7-WP-12 | CI, review et dossier de fusion | PENDING, PR DRAFT |
 
@@ -51,3 +51,10 @@ Les mentions IMPLEMENTED correspondent a du code propose dans PR-10, pas a une q
 - Ports hote scopes a qualifier independamment; demo HMAC synthetique non production, absence de sandbox.
 - Obtenir une revue de securite independante avant tout GO de GATE27-08.
 - Pas de merge, pas de release, pas de deploiement sans decision explicite.
+
+## Preuves d'execution SPI v2 (code head `a4e12634`)
+
+- Workflow : https://github.com/tawounfouet/pyauthkit/actions/runs/42314651520, **13/13 jobs SUCCESS**.
+- Quality : 678 tests pytest PASS, Ruff PASS, mypy 85 fichiers PASS.
+- M7 dedicated : 50 tests PASS; wheel independante host-scoped SPI v2 + revocation et tenant croise PASS.
+- Decisions de securite : **non qualifie**; issue #85 ouverte, SPI v2 #87 candidat, ADR 0039 proposed, aucun merge ni publication.

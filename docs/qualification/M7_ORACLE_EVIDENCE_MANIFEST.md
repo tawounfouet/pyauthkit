@@ -68,6 +68,19 @@ Les tests executees utilisent les fakes et fixtures du depot, non une qualificat
 
 ## Extension candidate SPI v2 / issue #87
 
-Le code candidate v2 est livre dans PR #84 : `PluginHostServices` immuable et lie a une route approuvee du snapshot M6, groupe d'entry points v2, SPI_MAJOR=2, injection de ports exacts et wrapper par scope/profil/methode. Tests dedies `tests/security/test_m7_plugin_services.py` et smoke d'une wheel avec port HMAC synthetique. **Ne pas comptabiliser ces nouveaux tests comme PASS CI avant leur execution au SHA final**. Les preuves du manifeste ci-dessus se rapportent au SHA precedent du code v1.
+Le code candidate v2 est livre dans PR #84 : `PluginHostServices` immuable et lie a une route approuvee du snapshot M6, groupe d'entry points v2, SPI_MAJOR=2, injection de ports exacts et wrapper par scope/profil/methode. Tests dedies `tests/security/test_m7_plugin_services.py` et smoke d'une wheel avec port HMAC synthetique. **Ces nouveaux tests ont ete executes en CI au commit `a4e12634c3dae2938516010fbfae022447311ef6` : 13/13 jobs verts, 50/50 tests M7 PASS.** Les preuves du manifeste precedent demeurent valides pour les executions precedentes.
 
 Reste a auditer : restriction multi-tenant liee a la registry par methode, provenance du port fourni, ownership des ressources, statut de la supply chain, review independante. HMAC de demonstration a cle publique = non production.
+
+## Evidence CI SPI v2 - head code 2026-11-07
+
+- **HEAD source valide** : `a4e12634c3dae2938516010fbfae022447311ef6`.
+- **Run** : https://github.com/tawounfouet/pyauthkit/actions/runs/42314651520 . **13/13 jobs SUCCESS** (run GitHub Actions sur PR merge ref pour ce head).
+- **Qualite Ubuntu Python 3.12** : 678 tests globaux PASS, Ruff lint/format PASS (290 fichiers formates), mypy strict PASS (85 fichiers sources), fitness architecture PASS.
+- **Suite M7** : 50 tests PASS, incluant `tests/security/test_m7_plugin_services.py` (absence d'import lors de discovery, admission exacte, absence de services v2, v1 maintenu, coherence group/major, ports bornes, HMAC synthetique revoke, scope cross-tenant refuse).
+- **Smoke wheel independante** : `M7 SPI v2 installed wheel: HOST MAC / REVOCATION / SCOPE CHECKS`; integration avec groupe `pyauthkit.authenticators.v2`, injection par hote, positive interne et final rule, `aclose` gere.
+- **Compatibilite** : wheel/sdist et tests sur Linux Python 3.12/3.13/3.14, macOS 3.12, Windows 3.12; scans de securite et jobs M3-M6 verts.
+
+Les preuves couvrent des fixtures/test doubles de confiance limitee. Le secret HMAC de qualification est PUBLIC et ne prouve ni cryptographie de production, ni supply-chain attestation, ni isolation du plugin.
+
+**Toujours NO-GO GATE27-08** : arbitrage des privileges de ports, limites mono-scope par factory, origine des packages, verification de tous les oracles P0 et signature independante encore necessaires. Voir #85, #86 et #87.
