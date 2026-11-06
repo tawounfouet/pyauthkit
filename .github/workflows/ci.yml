@@ -301,7 +301,7 @@ jobs:
           python -m pip install ".[dev]"
       - name: Execute M7 SDK and plugin admission tests
         run: |
-          python -m pytest -v tests/unit/test_m7_sdk_public_api.py tests/security/test_m7_plugin_admission.py tests/security/test_m7_plugin_lifecycle.py tests/security/test_m7_plugin_scope.py
+          python -m pytest -v tests/unit/test_m7_sdk_public_api.py tests/security/test_m7_plugin_admission.py tests/security/test_m7_plugin_lifecycle.py tests/security/test_m7_plugin_scope.py tests/security/test_m7_plugin_positive_proof.py
       - name: Build wheel and sdist
         run: python -m build
       - name: Isolated wheel import and Python-only quickstart
