@@ -10,7 +10,7 @@ import asyncio
 import inspect
 import math
 import sys
-from collections.abc import AsyncIterator, Awaitable, Callable, Iterable
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterable, Mapping
 from contextlib import asynccontextmanager
 from typing import cast
 
@@ -18,6 +18,7 @@ from pyauthkit.ports.authenticator import Authenticator
 
 from .admission import PluginGrant, _instantiate_approved, _preflight_candidates
 from .discovery import PluginAdmissionRejected, PluginCandidate
+from .services import PluginHostServices
 
 
 def _check_cleanup_contract(instance: object) -> None:
@@ -56,6 +57,7 @@ async def activate_approved_authenticators(
     *,
     grants: Iterable[PluginGrant],
     cleanup_timeout_seconds: float = 3.0,
+    service_bindings: Mapping[PluginGrant, PluginHostServices] | None = None,
 ) -> AsyncIterator[tuple[Authenticator, ...]]:
     """Load approved plugins and attempt reverse-order cleanup on every exit.
 
@@ -75,18 +77,34 @@ async def activate_approved_authenticators(
     ):
         raise PluginAdmissionRejected("invalid plugin cleanup timeout")
 
-    selected = _preflight_candidates(candidates, grants=grants)
+    # Copy the host-owned grant mapping before any factory executes.
+    bindings = {} if service_bindings is None else dict(service_bindings)
+    if service_bindings is None:
+        # Keep v1's original zero-argument preflight interface.
+        selected = _preflight_candidates(candidates, grants=grants)
+    else:
+        selected = _preflight_candidates(
+            candidates, grants=grants, service_bindings=bindings
+        )
     created: list[object] = []
+    admitted: list[Authenticator] = []
     try:
         for candidate, grant in selected:
             try:
-                instance = _instantiate_approved(candidate, grant, on_created=created.append)
-                _check_cleanup_contract(instance)
+                instance = _instantiate_approved(
+                    candidate,
+                    grant,
+                    on_created=created.append,
+                    services=bindings.get(grant),
+                )
+                # The raw verifier owns aclose, not the v2 scope guard wrapper.
+                _check_cleanup_contract(created[-1])
+                admitted.append(instance)
             except Exception:
                 # Factories may raise exceptions containing host credentials.
                 raise PluginAdmissionRejected("plugin activation rejected") from None
 
-        yield tuple(cast(Authenticator, instance) for instance in created)
+        yield tuple(admitted)
     finally:
         # Cleanup is scheduled independently so a cancellation of the caller
         # does not cancel the close task. A second forced cancellation or
