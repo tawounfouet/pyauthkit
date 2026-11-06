@@ -19,7 +19,7 @@ jobs:
   quality:
     name: Lint, types, unit and architecture
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout (actions/checkout v5.0.1, pinned)
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -32,7 +32,7 @@ jobs:
       - name: Install checks
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ".[dev]"
+          python -m pip install ".[dev,password,qualification]"
           python -m pip freeze
       - name: Ruff lint
         run: python -m ruff check .
@@ -78,7 +78,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ".[dev]"
+          python -m pip install ".[dev,password]"
           python -m pytest -v
           python -m build
           python scripts/smoke_wheel.py
@@ -103,7 +103,7 @@ jobs:
         run: |
           python -m venv .audit-venv
           .audit-venv/bin/python -m pip install --upgrade pip
-          .audit-venv/bin/python -m pip install ".[dev,security]"
+          .audit-venv/bin/python -m pip install ".[dev,password,qualification,security]"
           .audit-venv/bin/python -m pip freeze
       - name: Dependency vulnerability scan
         run: |
@@ -233,3 +233,51 @@ jobs:
       - name: Exercise actual loopback HTTP and SQLite failure oracles
         run: |
           python -m pytest -v qualification/m6_http/tests
+
+  m3_host:
+    name: M3 Password PostgreSQL Redis HTTP qualification (reference only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16.6-alpine
+        env:
+          POSTGRES_USER: m3qual
+          POSTGRES_PASSWORD: m3qual_ci_synthetic_only  # pragma: allowlist secret
+          POSTGRES_DB: m3qual
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U m3qual -d m3qual"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 15
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 15
+    steps:
+      - name: Checkout without credentials
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
+        with:
+          python-version: "3.12"
+      - name: Install M3 host qualification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev,password,qualification]"
+      - name: Host PostgreSQL Redis real HTTP and security regression suite
+        env:
+          M3_PG_DSN: postgresql://m3qual:m3qual_ci_synthetic_only@127.0.0.1:5432/m3qual # pragma: allowlist secret
+          M3_REDIS_URL: redis://127.0.0.1:6379/15
+        run: python -m pytest -v -s qualification/host/tests
+      - name: M3 KDF performance study (informational only)
+        run: python scripts/benchmark_m3_password.py

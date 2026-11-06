@@ -74,6 +74,42 @@ def main() -> int:
             env=env,
             check=True,
         )
+        # A second isolated environment installs the optional native verifier.
+        # The first environment above proves core imports without that extra.
+        password_env = temp_path / "password-venv"
+        venv.EnvBuilder(with_pip=True).create(password_env)
+        password_python = password_env / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        subprocess.run(
+            [
+                str(password_python),
+                "-m",
+                "pip",
+                "install",
+                str(wheels[0].resolve()) + "[password]",
+            ],
+            cwd=temp_path,
+            check=True,
+        )
+        password_script = (
+            "from argon2 import PasswordHasher; "
+            "from argon2.low_level import Type; "
+            "from pyauthkit.adapters.password.argon2id import "
+            "Argon2idPasswordHashVerifier, Argon2idPolicy; "
+            "hasher = PasswordHasher(memory_cost=19456, time_cost=2, "
+            "parallelism=1, type=Type.ID); "
+            "encoded = hasher.hash(b'wheel-only-synthetic-fixture'); "
+            "verifier = Argon2idPasswordHashVerifier(Argon2idPolicy()); "
+            "assert verifier.verify("
+            "password=b'wheel-only-synthetic-fixture', encoded_hash=encoded); "
+            "assert not verifier.verify(password=b'incorrect', encoded_hash=encoded); "
+            "print('ISOLATED PASSWORD EXTRA VERIFICATION PASS')"
+        )
+        subprocess.run(
+            [str(password_python), "-c", password_script],
+            cwd=temp_path,
+            env=env,
+            check=True,
+        )
     return 0
 
 
