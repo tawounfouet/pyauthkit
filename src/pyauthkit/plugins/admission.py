@@ -6,21 +6,27 @@ Admission is not code isolation or a supply-chain signature verification.
 """
 
 import inspect
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import cast
 
 from pyauthkit.domain.evidence import EvidenceMethod
-from pyauthkit.ports.authenticator import Authenticator
+from pyauthkit.domain.failure import TechnicalErrorCode
+from pyauthkit.domain.outcome import AuthenticatorOutcome, ErrorOutcome
+from pyauthkit.domain.request import AuthenticationRequest
+from pyauthkit.ports.authenticator import Authenticator, VerificationContext
 
 from .discovery import (
     ENTRY_POINT_GROUP,
+    ENTRY_POINT_GROUP_V2,
     SPI_MAJOR,
+    SPI_MAJOR_V2,
     PluginAdmissionRejected,
     PluginCandidate,
     _candidate_for,
     canonical_distribution,
 )
+from .services import PluginHostServices
 
 
 @dataclass(frozen=True, slots=True, repr=False)
@@ -48,9 +54,10 @@ class PluginGrant:
                 or _ENTRY_NAME.fullmatch(self.name) is None
                 or not isinstance(self.target, str)
                 or _TARGET.fullmatch(self.target) is None
-                or self.group != ENTRY_POINT_GROUP
+                or self.group not in (ENTRY_POINT_GROUP, ENTRY_POINT_GROUP_V2)
                 or type(self.spi_major) is not int
-                or self.spi_major != SPI_MAJOR
+                or self.spi_major
+                != (SPI_MAJOR if self.group == ENTRY_POINT_GROUP else SPI_MAJOR_V2)
                 or not isinstance(self.method, EvidenceMethod)
             ):
                 raise PluginAdmissionRejected("invalid host plugin grant")
@@ -64,7 +71,10 @@ class PluginGrant:
 
 
 def _preflight_candidates(
-    candidates: Iterable[PluginCandidate], *, grants: Iterable[PluginGrant]
+    candidates: Iterable[PluginCandidate],
+    *,
+    grants: Iterable[PluginGrant],
+    service_bindings: Mapping[PluginGrant, PluginHostServices] | None = None,
 ) -> tuple[tuple[PluginCandidate, PluginGrant], ...]:
     """Validate all host grants and distribution metadata without executing plugin code."""
     try:
@@ -108,6 +118,18 @@ def _preflight_candidates(
             ):
                 raise PluginAdmissionRejected("plugin distribution or version not approved")
             selected.append((candidate, grant))
+        injected = {} if service_bindings is None else dict(service_bindings)
+        required = {grant for _candidate, grant in selected if grant.spi_major == SPI_MAJOR_V2}
+        if set(injected) != required:
+            raise PluginAdmissionRejected("plugin service grants do not match admissions")
+        for grant, bundle in injected.items():
+            if (
+                not isinstance(grant, PluginGrant)
+                or not isinstance(bundle, PluginHostServices)
+                or grant.method is not bundle.method
+                or grant.group != ENTRY_POINT_GROUP_V2
+            ):
+                raise PluginAdmissionRejected("invalid plugin host services")
     except PluginAdmissionRejected:
         raise
     except Exception:
@@ -121,6 +143,7 @@ def _instantiate_approved(
     grant: PluginGrant,
     *,
     on_created: Callable[[object], None] | None = None,
+    services: PluginHostServices | None = None,
 ) -> Authenticator:
     """Load exactly one preflighted entry point and check its existing SPI."""
     factory: object = candidate._entry_point.load()
@@ -130,7 +153,14 @@ def _instantiate_approved(
         or not callable(factory)
     ):
         raise PluginAdmissionRejected("unsupported plugin SPI")
-    instance: object = cast(Callable[[], object], factory)()
+    if grant.spi_major == SPI_MAJOR:
+        if services is not None:
+            raise PluginAdmissionRejected("legacy plugin cannot receive host services")
+        instance: object = cast(Callable[[], object], factory)()
+    else:
+        if services is None or services.method is not grant.method:
+            raise PluginAdmissionRejected("plugin host services missing")
+        instance = cast(Callable[[PluginHostServices], object], factory)(services)
     # Managed activation observes the instance before post-construction checks,
     # so its aclose hook can run even when its declared method is invalid.
     if on_created is not None:
@@ -139,7 +169,42 @@ def _instantiate_approved(
     verify = getattr(instance, "verify", None)
     if method is not grant.method or not inspect.iscoroutinefunction(verify):
         raise PluginAdmissionRejected("invalid plugin authenticator")
-    return cast(Authenticator, instance)
+    verified_instance = cast(Authenticator, instance)
+    if grant.spi_major == SPI_MAJOR_V2:
+        if services is None:
+            raise PluginAdmissionRejected("plugin host services missing")
+        return _ScopedAuthenticator(verified_instance, services)
+    return verified_instance
+
+
+class _ScopedAuthenticator:
+    """Reject tenant/profile confusion before delegating to admitted v2 code."""
+
+    __slots__ = ("_instance", "_services")
+
+    def __init__(self, instance: Authenticator, services: PluginHostServices) -> None:
+        self._instance = instance
+        self._services = services
+
+    @property
+    def method(self) -> EvidenceMethod:
+        return self._services.method
+
+    async def verify(
+        self, request: AuthenticationRequest, context: VerificationContext
+    ) -> AuthenticatorOutcome:
+        if (
+            request.evidence.method is not self._services.method
+            or context.method is not self._services.method
+            or context.scope_ref != self._services.scope_ref
+            or context.profile_ref != self._services.profile_ref
+            or request.correlation_id != context.correlation_id
+        ):
+            return ErrorOutcome(TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
+        return await self._instance.verify(request, context)
+
+    def __repr__(self) -> str:
+        return "_ScopedAuthenticator(<host-scoped, redacted>)"
 
 
 def load_approved_authenticators(
