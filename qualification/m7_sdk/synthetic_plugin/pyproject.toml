@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyauthkit-m7-synthetic-plugin"
+version = "0.0.1"
+description = "M7 qualification-only rejection plugin, not a credential verifier"
+requires-python = ">=3.12"
+dependencies = ["pyauthkit>=0.1.0a1"]
+
+[project.entry-points."pyauthkit.authenticators.v1"]
+synthetic = "m7_synthetic_plugin.factory:create"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/m7_synthetic_plugin"]
