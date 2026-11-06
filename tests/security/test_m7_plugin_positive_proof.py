@@ -135,9 +135,7 @@ def run_engine(*, allow: bool, stale_attempt: bool = False) -> object:
     builder = AuthenticatorRegistryBuilder()
     builder.register(ProofFixturePlugin(stale_attempt=stale_attempt))
     engine = AuthenticationEngine(
-        policy=AuthenticationPolicyGate(
-            catalog, final_rule=lambda _subject, _entry: allow
-        ),
+        policy=AuthenticationPolicyGate(catalog, final_rule=lambda _subject, _entry: allow),
         registry=builder.freeze(),
     )
     request = AuthenticationRequest(

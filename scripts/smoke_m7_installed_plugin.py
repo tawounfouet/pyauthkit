@@ -165,7 +165,8 @@ def main() -> None:
             PresentedEvidence(EvidenceMethod.API_KEY, b"m7-synthetic-fixture"),
             CorrelationId("m7-foreign-fixture"),
             claimed_identity=ClaimedIdentity(
-                identifier_kind="fixture", identifier_value="synthetic",
+                identifier_kind="fixture",
+                identifier_value="synthetic",
                 claimed_tenant="foreign-tenant",
             ),
         )
