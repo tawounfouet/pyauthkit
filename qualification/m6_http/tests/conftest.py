@@ -34,13 +34,17 @@ from pyauthkit.configuration.receipted_integrations import (
     compose_receipted_jwt_gateway,
 )
 from pyauthkit.configuration.secrets import SecretAccessPolicy, SecretGrant
-from pyauthkit.domain.api_key import ApiKeyFound, ApiKeyMissing, ApiKeyRecordStatus, ApiKeyVerifierRecord
+from pyauthkit.domain.api_key import (
+    ApiKeyFound,
+    ApiKeyMissing,
+    ApiKeyRecordStatus,
+    ApiKeyVerifierRecord,
+)
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.identity import PrincipalType, ScopedSubjectRef
 from pyauthkit.domain.scope import TrustedScopeRef
 from pyauthkit.domain.secret import SecretRef
 from pyauthkit.domain.temporal import CorrelationId, ObservedAt
-
 from qualification.m6_http.app import compose_receipted_http_app
 
 SCOPE = TrustedScopeRef("tenant-a:production")
