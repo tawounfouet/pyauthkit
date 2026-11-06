@@ -27,10 +27,10 @@ Aucun oracle ne reçoit ici de PASS de securite. La colonne `TESTED (CI)` indiqu
 | M7-T16 | Distribution et version pinnees | parametrized mismatch | TESTED (CI) |
 | M7-T17 | Doublons/collision | tests duplicates partiels | PARTIAL (CI) |
 | M7-T18 | Majeure SPI incompatible | test spi mismatch | TESTED (CI) |
-| M7-T19 | Methode/capability inconnue | method enum guard ; autres capabilities absentes | PARTIAL (CI) |
+| M7-T19 | Methode/capability inconnue | Validation des roles host ports SPI v2 et enum; capabilities fines restant a revoir | PARTIAL (CI) |
 | M7-T20 | Freeze registry | tests M2 existants | TESTED (CI) |
 | M7-T21 | Plugin ne change pas final gate | tests/security/test_m7_plugin_positive_proof.py + installed wheel synthetic positive | TESTED (CI) |
-| M7-T22 | Cross-scope/tenant | test_m7_plugin_scope.py + positive declared proof cross-scope tests | TESTED (CI) |
+| M7-T22 | Cross-scope/tenant | M7 SPI v2 host-scope wrapper + positive declared proof cross-scope tests | TESTED (CI) |
 | M7-T23 | Fermeture ressources owned | test_m7_plugin_lifecycle.py (reverse cleanup / failures) | TESTED (CI) |
 | M7-T24 | No secrets dans exceptions | tests partial canary | PARTIAL (CI) |
 | M7-T25 | Docs et API reellement executes | quickstart CI candidat | PARTIAL (CI) |
@@ -65,3 +65,9 @@ Les tests executees utilisent les fakes et fixtures du depot, non une qualificat
 7. **Admission** : le nom de distribution et sa version ne constituent pas une preuve cryptographique de provenance. Les plugins restent du code Python in-process.
 
 **Decision en l'etat : GO DEVELOPPEMENT / NO-GO SECURITE / NO-GO PRODUCTION.** Voir issue #85 et le dossier `GATE27-08_M7_SDK_AND_PLUGIN_DECISION.md`.
+
+## Extension candidate SPI v2 / issue #87
+
+Le code candidate v2 est livre dans PR #84 : `PluginHostServices` immuable et lie a une route approuvee du snapshot M6, groupe d'entry points v2, SPI_MAJOR=2, injection de ports exacts et wrapper par scope/profil/methode. Tests dedies `tests/security/test_m7_plugin_services.py` et smoke d'une wheel avec port HMAC synthetique. **Ne pas comptabiliser ces nouveaux tests comme PASS CI avant leur execution au SHA final**. Les preuves du manifeste ci-dessus se rapportent au SHA precedent du code v1.
+
+Reste a auditer : restriction multi-tenant liee a la registry par methode, provenance du port fourni, ownership des ressources, statut de la supply chain, review independante. HMAC de demonstration a cle publique = non production.

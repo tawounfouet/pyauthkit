@@ -30,3 +30,7 @@ Voir `M7_ORACLE_EVIDENCE_MANIFEST.md` et `PR-10_EXECUTION.md`. Les oracles non e
 Un helper de declaration de resultat interne est propose dans `pyauthkit.plugins.verification` et un verificateur de fixture positif a bytes **publics** est utilise uniquement dans une wheel de qualification. Ce test demontre le chemin du gate final, **pas** une preuve de securite cryptographique, une admission de plugins inconnus ni un GO M7. Les questions d'injection des ports host-owned et de verification cryptographique d'un verificateur tiers restent ouvertes a la revue independante.
 
 Le helper ne retourne jamais un `Authenticated` final. Le moteur refuse les incoherences d'attempt token et la policy finale peut refuser un outcome verifie. Voir ADR 0038 proposee, sans decision d'acceptation.
+
+## SPI v2 host services (#87)
+
+Une evolution candidate introduit un contrat factory v2 distinct de v1, un bundle de ports approuves par l'hote et un refus avant delegation en cas de scope/profil/methode/correlation non conforme. La registry reste indexee par methode et ne permet donc **pas** de router de multiples instances v2 sur des tenants differents sans composition dediee. Le risque in-process et la provenance du code demeurent inchanges. Aucune qualification de cette evolution ne peut etre deduite des seules preuves CI de l'ancienne tranche.

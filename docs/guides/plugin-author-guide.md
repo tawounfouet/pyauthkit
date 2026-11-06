@@ -111,6 +111,62 @@ Les identifiants `verified_scoped_subject`, `verified_principal_type` et `verifi
 Le plugin d'exemple `qualification/m7_sdk/synthetic_plugin` contient un cas positif **synthetique, volontairement forgeable** a partir de bytes publics. Il sert uniquement a verifier la separation outcome/policy et la distribution wheel, **jamais** a authentifier un utilisateur reel. Toute confiance production exige un verifier cryptographique qualifie, ses dependances hote et la revue de l'admission.
 
 Voir `docs/adr/0038-m7-positive-proof-declaration-spi.md` et le blocage d'injection des dependances d'un plugin a factory zero-argument. Aucun droit d'autorisation ou de session n'est produit ici.
+## SPI v2: dependances explicites approuvees par l'hote (candidat #87)
+
+SPI v1 reste **strictement** `pyauthkit.authenticators.v1` avec factory sans argument et `SPI_MAJOR=1`. Pour un plugin exigeant des ports hote, declarer un **nouvel entry point** dans `pyauthkit.authenticators.v2`, avec factory `create(services: PluginHostServices)` et `SPI_MAJOR=2`. Aucune conversion automatique v1/v2 ni fallback d'activation n'est admis.
+
+```toml
+[project.entry-points."pyauthkit.authenticators.v2"]
+host-scoped = "my_extension.factory:create"
+```
+
+```python
+from pyauthkit.domain.evidence import EvidenceMethod
+from pyauthkit.plugins import (
+    ENTRY_POINT_GROUP_V2,
+    PluginGrant,
+    PluginHostServices,
+    activate_approved_authenticators,
+    discover_authenticator_plugins,
+)
+
+# host_snapshot et verifier_approuve proviennent d'une configuration operateur
+# HORS donnees HTTP; verifier_approuve est un port objet, PAS une cle brute.
+grant = PluginGrant(
+    distribution="my-extension",
+    version="1.2.3",
+    group=ENTRY_POINT_GROUP_V2,
+    spi_major=2,
+    name="host-scoped",
+    target="my_extension.factory:create",
+    method=EvidenceMethod.API_KEY,
+)
+services = PluginHostServices.from_snapshot(
+    host_snapshot,
+    route_id="host-approved-route",
+    method=EvidenceMethod.API_KEY,
+    ports={"hash_verifier": verifier_approuve},
+)
+candidates = discover_authenticator_plugins(
+    enabled=True, group=ENTRY_POINT_GROUP_V2
+)
+async with activate_approved_authenticators(
+    candidates,
+    grants=(grant,),
+    service_bindings={grant: services},
+) as authenticators:
+    # Composer via M6, demarrer le host et attendre le drain des requetes
+    # avant de quitter ce scope. Aucun chargement de plugin a la requete.
+    ...
+```
+
+Le mapping de ports est copie en dictionnaire immuable. Les roles candidats sont `record_resolver.resolve`, `attempt_guard.admit`, `hash_verifier.verify`, `key_resolver.resolve`, `clock.now`, `event_sink.emit`. Les objets doivent etre livres et scopes par l'hote. Une valeur `str`/`bytes` ne constitue pas un port de confiance. Le bundle n'exporte ni credentials bruts ni valeurs dans son `repr`.
+
+Le wrapper ajoute avant la composition refuse toute tentative dont methode, scope, profil ou correlation ne correspond pas au binding hote. **Limite majeure :** un authenticator v2 est lie a une route/un scope; la registry M2 reste indexee par methode. Ne pas reutiliser le meme plugin v2 dans un autre tenant via une seconde route. Pour plusieurs tenants, composer des runtimes distincts ou attendre un routage explicitement revu. Une API multi-tenant generale n'est pas fournie par ce SPI.
+
+Le groupe v2 n'est pas une sandbox ni une signature de distribution. Le port host-owned peut conserver un secret ou un handle; le code du plugin s'execute dans le processus hote et peut y acceder. Un `PluginHostServices` cree par un client ou un header HTTP n'acquiert aucune autorite. L'hote valide provenance, permissions, revocation, timeout et fermeture de ses propres ports. La factory v2 n'est activable que dans le scope **gere**; le chargeur synchrone v1 rejette v2.
+
+Le smoke de la wheel `qualification/m7_sdk/synthetic_plugin` emploie un port HMAC avec cle fixe **publique et synthetique** uniquement pour le test du mecanisme : validite du MAC, refus de revocation, blocage tenant croise et policy finale. Ce n'est pas un verifier de credentials pour la production.
 ## Frontieres et risques
 
 1. Discovery est desactivee par defaut et lit uniquement les metadonnees des `EntryPoint`. Aucun `EntryPoint.load()` n'est appele dans cette phase.
