@@ -10,7 +10,9 @@ from dataclasses import dataclass, field
 from importlib.metadata import EntryPoint, entry_points
 
 ENTRY_POINT_GROUP = "pyauthkit.authenticators.v1"
+ENTRY_POINT_GROUP_V2 = "pyauthkit.authenticators.v2"
 SPI_MAJOR = 1
+SPI_MAJOR_V2 = 2
 
 _DISTRIBUTION = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 _ENTRY_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z")
@@ -53,7 +55,7 @@ class PluginCandidate:
 def _candidate_for(point: EntryPoint) -> PluginCandidate:
     """Read metadata and bound it before treating a candidate as selectable."""
     try:
-        if not isinstance(point, EntryPoint) or point.group != ENTRY_POINT_GROUP:
+        if not isinstance(point, EntryPoint) or point.group not in (ENTRY_POINT_GROUP, ENTRY_POINT_GROUP_V2):
             raise PluginAdmissionRejected("invalid plugin entry point")
         distribution = point.dist
         if distribution is None:
@@ -78,7 +80,9 @@ def _candidate_for(point: EntryPoint) -> PluginCandidate:
         raise PluginAdmissionRejected("plugin metadata inspection failed") from None
 
 
-def discover_authenticator_plugins(*, enabled: bool = False) -> tuple[PluginCandidate, ...]:
+def discover_authenticator_plugins(
+    *, enabled: bool = False, group: str = ENTRY_POINT_GROUP
+) -> tuple[PluginCandidate, ...]:
     """List installed candidates only when enabled by an authoritative host.
 
     This function never imports plugin modules, calls EntryPoint.load(), or
@@ -86,11 +90,15 @@ def discover_authenticator_plugins(*, enabled: bool = False) -> tuple[PluginCand
     """
     if type(enabled) is not bool:
         raise PluginAdmissionRejected("invalid discovery switch")
+    if group not in (ENTRY_POINT_GROUP, ENTRY_POINT_GROUP_V2):
+        raise PluginAdmissionRejected("unsupported plugin SPI group")
     if not enabled:
         return ()
     try:
-        points = entry_points(group=ENTRY_POINT_GROUP)
+        points = entry_points(group=group)
         candidates = tuple(_candidate_for(point) for point in points)
+        if any(candidate.group != group for candidate in candidates):
+            raise PluginAdmissionRejected("plugin group mismatch")
         identities = [(candidate.group, candidate.name) for candidate in candidates]
         if len(identities) != len(set(identities)):
             raise PluginAdmissionRejected("ambiguous plugin entry point")
