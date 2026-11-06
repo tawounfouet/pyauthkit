@@ -47,9 +47,7 @@ def main() -> int:
                 result_status="REJECTED",
                 duration_ms=0.0,
             ),
-            profile=TrustProfileRef(
-                "api-auth", "v1", TrustedScopeRef("tenant-a:production")
-            ),
+            profile=TrustProfileRef("api-auth", "v1", TrustedScopeRef("tenant-a:production")),
         )
         try:
             asyncio.run(committer.commit(rejected))
