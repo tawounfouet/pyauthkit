@@ -1,4 +1,5 @@
 """M6 HTTP qualification fixtures: real HMAC M4, RS256 M5, local SQLite."""
+
 from __future__ import annotations
 
 import asyncio
@@ -124,25 +125,31 @@ def snapshot(raw: dict[str, object]):
 
 async def api_gateway(store: SqliteRequiredAuditCommitter):
     return await compose_receipted_api_key_gateway(
-        snapshot({
-            "schema_version": 1,
-            "routes": [{
-                "route_id": "api",
-                "scope": SCOPE.value,
-                "profile_id": "api-auth",
-                "profile_version": "v1",
-                "allowed_methods": ["api_key"],
-            }],
-            "timeout_seconds": 3.0,
-            "audit_delivery": "best_effort",
-            "secrets": [{
-                "provider": REF.provider,
-                "namespace": REF.namespace,
-                "key_id": REF.key_id,
-                "version": REF.version,
-                "purpose": REF.purpose,
-            }],
-        }),
+        snapshot(
+            {
+                "schema_version": 1,
+                "routes": [
+                    {
+                        "route_id": "api",
+                        "scope": SCOPE.value,
+                        "profile_id": "api-auth",
+                        "profile_version": "v1",
+                        "allowed_methods": ["api_key"],
+                    }
+                ],
+                "timeout_seconds": 3.0,
+                "audit_delivery": "best_effort",
+                "secrets": [
+                    {
+                        "provider": REF.provider,
+                        "namespace": REF.namespace,
+                        "key_id": REF.key_id,
+                        "version": REF.version,
+                        "purpose": REF.purpose,
+                    }
+                ],
+            }
+        ),
         bindings={(SCOPE, "hmac-v1"): REF},
         access_policy=SecretAccessPolicy(
             frozenset({SecretGrant("unit-vault", SCOPE.value, "verify")})
@@ -158,33 +165,39 @@ async def api_gateway(store: SqliteRequiredAuditCommitter):
 
 def jwt_gateway(store: SqliteRequiredAuditCommitter, public: str):
     return compose_receipted_jwt_gateway(
-        snapshot({
-            "schema_version": 2,
-            "routes": [{
-                "route_id": "jwt",
-                "scope": SCOPE.value,
-                "profile_id": "jwt-auth",
-                "profile_version": "v1",
-                "allowed_methods": ["jwt"],
-            }],
-            "timeout_seconds": 3.0,
-            "audit_delivery": "best_effort",
-            "secrets": [],
-            "jwt_profiles": [{
-                "scope": SCOPE.value,
-                "profile_id": "jwt-auth",
-                "profile_version": "v1",
-                "issuer": ISSUER,
-                "audience": AUDIENCE,
-                "expected_typ": "at+jwt",
-                "allowed_algorithms": ["RS256"],
-                "principal_type": "service",
-                "max_token_bytes": 8192,
-                "clock_skew_seconds": 0,
-                "max_age_seconds": None,
-                "key_source": {"kind": "static", "keyset_ref": KEYSET},
-            }],
-        }),
+        snapshot(
+            {
+                "schema_version": 2,
+                "routes": [
+                    {
+                        "route_id": "jwt",
+                        "scope": SCOPE.value,
+                        "profile_id": "jwt-auth",
+                        "profile_version": "v1",
+                        "allowed_methods": ["jwt"],
+                    }
+                ],
+                "timeout_seconds": 3.0,
+                "audit_delivery": "best_effort",
+                "secrets": [],
+                "jwt_profiles": [
+                    {
+                        "scope": SCOPE.value,
+                        "profile_id": "jwt-auth",
+                        "profile_version": "v1",
+                        "issuer": ISSUER,
+                        "audience": AUDIENCE,
+                        "expected_typ": "at+jwt",
+                        "allowed_algorithms": ["RS256"],
+                        "principal_type": "service",
+                        "max_token_bytes": 8192,
+                        "clock_skew_seconds": 0,
+                        "max_age_seconds": None,
+                        "key_source": {"kind": "static", "keyset_ref": KEYSET},
+                    }
+                ],
+            }
+        ),
         approved_static_keysets={KEYSET: (public,)},
         committer=store,
         final_rule=lambda _subject, _entry: True,
@@ -201,14 +214,16 @@ def rsa_keys() -> tuple[rsa.RSAPrivateKey, str]:
         raw = n.to_bytes((n.bit_length() + 7) // 8, "big")
         return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
 
-    public = json.dumps({
-        "kty": "RSA",
-        "kid": "test-approved-kid",
-        "use": "sig",
-        "alg": "RS256",
-        "n": encoded(numbers.n),
-        "e": encoded(numbers.e),
-    })
+    public = json.dumps(
+        {
+            "kty": "RSA",
+            "kid": "test-approved-kid",
+            "use": "sig",
+            "alg": "RS256",
+            "n": encoded(numbers.n),
+            "e": encoded(numbers.e),
+        }
+    )
     return private, public
 
 
