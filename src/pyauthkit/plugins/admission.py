@@ -133,10 +133,9 @@ def load_approved_authenticators(
             ):
                 raise PluginAdmissionRejected("unsupported plugin SPI")
             instance: object = cast(Callable[[], object], factory)()
-            if (
-                getattr(instance, "method", None) is not grant.method
-                or not inspect.iscoroutinefunction(getattr(instance, "verify", None))
-            ):
+            method = getattr(instance, "method", None)
+            verify = getattr(instance, "verify", None)
+            if method is not grant.method or not inspect.iscoroutinefunction(verify):
                 raise PluginAdmissionRejected("invalid plugin authenticator")
             instances.append(cast(Authenticator, instance))
         except Exception:

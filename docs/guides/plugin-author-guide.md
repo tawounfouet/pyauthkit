@@ -18,6 +18,7 @@ Le symbole `create` est un callable sans argument. Il expose `SPI_MAJOR = 1` et 
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.outcome import RejectedOutcome
 
+
 class AlwaysReject:
     @property
     def method(self) -> EvidenceMethod:
@@ -26,8 +27,10 @@ class AlwaysReject:
     async def verify(self, request, context) -> RejectedOutcome:
         return RejectedOutcome()
 
+
 def create() -> AlwaysReject:
     return AlwaysReject()
+
 
 create.SPI_MAJOR = 1
 ```
@@ -39,14 +42,18 @@ Un plugin ne produit ni `Authenticated` ni des permissions PyIAMKit. Il ne chois
 ```python
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.plugins import (
-    PluginGrant, discover_authenticator_plugins, load_approved_authenticators
+    PluginGrant,
+    discover_authenticator_plugins,
+    load_approved_authenticators,
 )
 
 # Configuration host-owned, pas des headers ou des claims JWT.
 grants = (
     PluginGrant(
-        distribution="my-extension", version="1.2.3",
-        name="synthetic", target="my_extension.authenticator:create",
+        distribution="my-extension",
+        version="1.2.3",
+        name="synthetic",
+        target="my_extension.authenticator:create",
         method=EvidenceMethod.API_KEY,
     ),
 )

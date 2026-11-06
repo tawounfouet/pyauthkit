@@ -75,8 +75,7 @@ def installed_plugin(
         "Metadata-Version: 2.1\nName: M7.Approved_Plugin\nVersion: 1.0.0\n", encoding="utf-8"
     )
     (dist_info / "entry_points.txt").write_text(
-        "[pyauthkit.authenticators.v1]\n"
-        "synthetic = m7_fixture_plugin:create\n",
+        "[pyauthkit.authenticators.v1]\nsynthetic = m7_fixture_plugin:create\n",
         encoding="utf-8",
     )
     package = next(iter(distributions(path=[str(site)])))
@@ -130,9 +129,7 @@ def test_discovery_disabled_makes_no_metadata_call(monkeypatch: pytest.MonkeyPat
     assert discover_authenticator_plugins() == ()
 
 
-def test_discovery_only_inspects_metadata(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_discovery_only_inspects_metadata(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     installed_plugin(monkeypatch, tmp_path)
     candidates = discover_authenticator_plugins(enabled=True)
     assert len(candidates) == 1
@@ -142,20 +139,21 @@ def test_discovery_only_inspects_metadata(
     assert "private" not in repr(candidates[0])
 
 
-def test_unapproved_plugin_is_not_loaded(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_unapproved_plugin_is_not_loaded(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _, marker = installed_plugin(monkeypatch, tmp_path)
     candidates = discover_authenticator_plugins(enabled=True)
     assert load_approved_authenticators(candidates, grants=[]) == ()
     assert not marker.exists()
 
 
-@pytest.mark.parametrize("field,value", [
-    ("distribution", "attacker-package"),
-    ("version", "2.0.0"),
-    ("target", "other_module:entry"),
-])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("distribution", "attacker-package"),
+        ("version", "2.0.0"),
+        ("target", "other_module:entry"),
+    ],
+)
 def test_metadata_mismatch_fails_before_import(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, field: str, value: str
 ) -> None:
@@ -166,9 +164,7 @@ def test_metadata_mismatch_fails_before_import(
     assert not marker.exists()
 
 
-def test_missing_grant_does_not_fallback(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_missing_grant_does_not_fallback(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _, marker = installed_plugin(monkeypatch, tmp_path)
     with pytest.raises(PluginAdmissionRejected):
         load_approved_authenticators([], grants=[grant()])

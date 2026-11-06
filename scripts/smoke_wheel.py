@@ -25,7 +25,11 @@ def main() -> int:
         names = zf.namelist()
         if not any(n == "pyauthkit/__init__.py" for n in names):
             raise RuntimeError("wheel has no package init")
-        for required_m7 in ("pyauthkit/py.typed", "pyauthkit/sdk/__init__.py", "pyauthkit/plugins/admission.py"):
+        for required_m7 in (
+            "pyauthkit/py.typed",
+            "pyauthkit/sdk/__init__.py",
+            "pyauthkit/plugins/admission.py",
+        ):
             if required_m7 not in names:
                 raise RuntimeError(f"M7 wheel contract missing: {required_m7}")
         if any(n.startswith(("tests/", "docs/", "scripts/")) or "/fixtures/" in n for n in names):
