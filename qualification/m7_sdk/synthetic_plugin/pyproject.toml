@@ -14,5 +14,8 @@ synthetic = "m7_synthetic_plugin.factory:create"
 managed = "m7_synthetic_plugin.factory:create_managed"
 positive-test-only = "m7_synthetic_plugin.factory:create_positive_test_only"
 
+[project.entry-points."pyauthkit.authenticators.v2"]
+host-scoped = "m7_synthetic_plugin.v2:create_host_scoped"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/m7_synthetic_plugin"]
