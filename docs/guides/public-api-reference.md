@@ -10,6 +10,7 @@ Statut : API de developpement pre-alpha. L'absence d'une API dans ce manifeste n
 | `pyauthkit.sdk` | `compose_authentication_engine`, `M6Runtime` | Composition M6 re-utilisee et preflights conserves |
 | `pyauthkit.sdk` | `AuthenticatorRegistryBuilder`, `AuthenticatorRegistry` | Registration explicite, snapshot gele |
 | `pyauthkit.plugins` | `PluginCandidate`, `PluginGrant`, discovery et admission | Surface SPI pre-alpha, opt-in |
+| `pyauthkit.plugins.verification` | `issue_verified_outcome`, `PluginProofDeclarationRejected` | Declaration de preuve interne par plugin approuve et correctement verifie ; ni proof verifier ni `Authenticated` final |
 | `pyauthkit.ports.authenticator` | `Authenticator`, `VerificationContext` | SPI existant, compatibilite majeure 1 pour plugins M7 |
 | `pyauthkit.application._verification`, `configuration.bootstrap._compose_approved_runtime` | Helpers internes | NON publics |
 | `pyauthkit.configuration.receipted_audit` | Audit avec recu experimental M6 | NON integre au SDK public, NO-GO production |

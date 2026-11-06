@@ -29,8 +29,8 @@ Aucun oracle ci-dessous n'est marque PASS sur la base de la seule presence de so
 | M7-T18 | Majeure SPI incompatible | test spi mismatch | NOT VERIFIED |
 | M7-T19 | Methode/capability inconnue | method enum guard ; autres capabilities absentes | PARTIAL |
 | M7-T20 | Freeze registry | tests M2 existants | NOT VERIFIED |
-| M7-T21 | Plugin ne change pas final gate | tests M2, revue composition requise | PARTIAL |
-| M7-T22 | Cross-scope/tenant | test_m7_plugin_scope.py et tests M2 | NOT VERIFIED |
+| M7-T21 | Plugin ne change pas final gate | tests/security/test_m7_plugin_positive_proof.py + installed wheel synthetic positive | NOT VERIFIED |
+| M7-T22 | Cross-scope/tenant | test_m7_plugin_scope.py + positive declared proof cross-scope tests | NOT VERIFIED |
 | M7-T23 | Fermeture ressources owned | test_m7_plugin_lifecycle.py (reverse cleanup / failures) | NOT VERIFIED |
 | M7-T24 | No secrets dans exceptions | tests partial canary | PARTIAL |
 | M7-T25 | Docs et API reellement executes | quickstart CI candidat | NOT VERIFIED |

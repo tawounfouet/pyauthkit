@@ -17,7 +17,7 @@ Rendre le SDK Python consommable sans invention de nouvelle autorite et introdui
 | --- | --- | --- |
 | M7-WP-01 | Baseline, inventaire et branche PR-10 | IMPLEMENTED (voir commits de PR) |
 | M7-WP-02 | Surface publique SDK et quickstart | IMPLEMENTED, CI a verifier |
-| M7-WP-03 | SPI v1 via port M2 existant | IMPLEMENTED, revue requise |
+| M7-WP-03 | SPI v1 via port M2 existant | IMPLEMENTED CANDIDATE : declaration d'outcome positive bornee, revue #86 requise |
 | M7-WP-04 | Contrats et tests negatifs SPI | PARTIAL, preuve CI requise |
 | M7-WP-05 | Metadata discovery, sans `EntryPoint.load` | IMPLEMENTED, preuve CI requise |
 | M7-WP-06 | Grants hote, versions, collisions, refus | IMPLEMENTED, preuve CI requise |
@@ -39,11 +39,12 @@ Les mentions IMPLEMENTED correspondent a du code propose dans PR-10, pas a une q
 - Metadata seule : pas d'attestation de signature / digest, pas de sandbox.
 - `SPI_MAJOR=1` et factory zero-argument; methode `EvidenceMethod` du domaine existant.
 - La composition M6 continue de refuser les paths secret/JWT generiques non admis.
+- Le SPI positif reutilise `_issue_verified_outcome` uniquement via un helper explicite pour plugins deja admis. Il n'effectue aucune preuve cryptographique.
 - Les gates GATE27-04 a GATE27-07 demeurent NO-GO independant de la CI M7.
 
 ## Limites et chantiers ouverts
 
-- Implementer et qualifier les oracles encore non couverts, en particulier resource cleanup/cancellation et couverture M3/M4/M5 specialisee.
+- Qualifier les oracles encore non couverts : notamment trust review du SPI positif, provenance supply chain, couverture M3/M4/M5 specialisee et authenticators externes de production. Le plugin positif actuel est une fixture non sure.
 - Verifier les artefacts wheel installes sur Python 3.12/3.13/3.14 et les OS prevus.
 - Revue de supply chain et plugin authenticity hors de la seule metadata.
 - Obtenir une revue de securite independante avant tout GO de GATE27-08.

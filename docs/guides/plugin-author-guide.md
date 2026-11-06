@@ -87,6 +87,30 @@ async def run_host(candidates, grants, snapshot, serve):
 Une instance peut exposer `async def aclose(self) -> None`. Les closers sont appeles en ordre inverse, avec un timeout de 3 secondes par instance par defaut et un maximum configurable de 30 secondes. Une methode `close()` synchrone sans `aclose()` n'est pas prise en charge par le scope gere.
 
 Une erreur durant l'import ou la factory peut deja avoir produit des effets collateraux. Un closer non cooperatif, une deuxieme annulation forcee ou un crash peut empecher la fermeture. Le host est responsable d'arreter l'ingress et de laisser finir les requetes en cours avant de liberer les instances. Ni le cleanup ni le SPI ne fournissent une sandbox, une annulation atomique ou une isolation de processus.
+## Contrat de preuve positive pour plugin admis (candidat SPI v1)
+
+Un authenticator approuve qui a **reellement verifie sa preuve et sa validite temporelle** peut appeler `pyauthkit.plugins.verification.issue_verified_outcome` avec `request`, `context` host, `subject`, `principal_type` et `verified_at`. Cette fonction ne verifie **aucun** mot de passe, signature, MAC, nonce ni revocation. Elle ne renvoie que le `VerifiedOutcome` **interne** du moteur, jamais un `Authenticated` final.
+
+La declaration refuse toute incoherence entre la methode de l'evidence et celle du contexte, les correlation IDs, le scope du sujet et le scope/profil de confiance. Le moteur controle ensuite la liaison au **meme** `attempt_token` et la policy finale de l'hote. Un test prouve qu'un resultat `VerifiedOutcome` valide reste `REJECTED` lorsque la policy finale refuse.
+
+```python
+from pyauthkit.plugins.verification import issue_verified_outcome
+
+# Uniquement APRES verification cryptographique, revocation et fraicheur.
+outcome = issue_verified_outcome(
+    request=request,
+    context=context,
+    subject=verified_scoped_subject,
+    principal_type=verified_principal_type,
+    verified_at=verified_timestamp,
+)
+```
+
+Les identifiants `verified_scoped_subject`, `verified_principal_type` et `verified_timestamp` sont des resultats de verification de l'authenticator, pas des claims client convertis en identite. Le code ci-dessus est un extrait de SPI, pas un tutorial autonome ni une recette cryptographique.
+
+Le plugin d'exemple `qualification/m7_sdk/synthetic_plugin` contient un cas positif **synthetique, volontairement forgeable** a partir de bytes publics. Il sert uniquement a verifier la separation outcome/policy et la distribution wheel, **jamais** a authentifier un utilisateur reel. Toute confiance production exige un verifier cryptographique qualifie, ses dependances hote et la revue de l'admission.
+
+Voir `docs/adr/0038-m7-positive-proof-declaration-spi.md` et le blocage d'injection des dependances d'un plugin a factory zero-argument. Aucun droit d'autorisation ou de session n'est produit ici.
 ## Frontieres et risques
 
 1. Discovery est desactivee par defaut et lit uniquement les metadonnees des `EntryPoint`. Aucun `EntryPoint.load()` n'est appele dans cette phase.

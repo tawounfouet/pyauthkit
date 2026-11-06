@@ -24,3 +24,9 @@ GO DEV pour la proposition code et les tests de PR-10. Aucun GO SECURITE ni GO P
 Le code d'un plugin approuve s'execute dans le processus hote avec ses privileges. Un `PluginGrant` ne constitue ni une signature cryptographique, ni une sandbox, ni une verification de securite de l'algorithme. L'execution d'une factory ne peut pas etre annulee retroactivement. Les verifications structurelles ne suffisent pas a etablir que l'authenticator realise une vraie verification cryptographique.
 
 Voir `M7_ORACLE_EVIDENCE_MANIFEST.md` et `PR-10_EXECUTION.md`. Les oracles non executes ne doivent jamais recevoir le statut PASS.
+
+## Evolution candidate du SPI positif (issue #86)
+
+Un helper de declaration de resultat interne est propose dans `pyauthkit.plugins.verification` et un verificateur de fixture positif a bytes **publics** est utilise uniquement dans une wheel de qualification. Ce test demontre le chemin du gate final, **pas** une preuve de securite cryptographique, une admission de plugins inconnus ni un GO M7. Les questions d'injection des ports host-owned et de verification cryptographique d'un verificateur tiers restent ouvertes a la revue independante.
+
+Le helper ne retourne jamais un `Authenticated` final. Le moteur refuse les incoherences d'attempt token et la policy finale peut refuser un outcome verifie. Voir ADR 0038 proposee, sans decision d'acceptation.
