@@ -7,9 +7,9 @@ from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.result import Rejected
 from pyauthkit.plugins import (
     PluginGrant,
+    activate_approved_authenticators,
     discover_authenticator_plugins,
     load_approved_authenticators,
-    activate_approved_authenticators,
 )
 from pyauthkit.sdk import (
     AuditDeliveryPolicy,
@@ -87,9 +87,7 @@ def main() -> None:
             target="m7_synthetic_plugin.factory:create_managed",
             method=EvidenceMethod.API_KEY,
         )
-        async with activate_approved_authenticators(
-            managed, grants=(managed_grant,)
-        ) as admitted:
+        async with activate_approved_authenticators(managed, grants=(managed_grant,)) as admitted:
             if len(admitted) != 1 or getattr(admitted[0], "closed", None) is not False:
                 raise RuntimeError("managed wheel plugin did not activate")
             managed_runtime = compose_authentication_engine(snapshot, authenticators=admitted)
