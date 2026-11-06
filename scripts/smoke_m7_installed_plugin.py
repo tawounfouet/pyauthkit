@@ -27,9 +27,7 @@ from pyauthkit.sdk import (
 
 def main() -> None:
     candidates = discover_authenticator_plugins(enabled=True)
-    selected = tuple(
-        c for c in candidates if c.distribution == "pyauthkit-m7-synthetic-plugin"
-    )
+    selected = tuple(c for c in candidates if c.distribution == "pyauthkit-m7-synthetic-plugin")
     if len(selected) != 1 or "m7_synthetic_plugin.factory" in sys.modules:
         raise RuntimeError("plugin discovery executed code or missed installed distribution")
     if load_approved_authenticators(selected, grants=()):
