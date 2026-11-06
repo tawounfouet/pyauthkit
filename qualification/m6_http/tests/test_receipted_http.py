@@ -238,9 +238,10 @@ async def test_m6_http_auth_body_is_not_alternative_trust_input(tmp_path: Path) 
                 "/authenticate", headers=api_headers(), content=b"untrusted-content"
             )
             assert response.status_code == 401
-            # Early HTTP framing refusal is outside the receipt gate.
-            # This reference does NOT prove full-attempt audit coverage.
-            assert stored_rows(tmp_path / "receipt.sqlite") == []
+            # Application-observable framing rejection commits before 401.
+            assert [outcome for _, outcome in stored_rows(tmp_path / "receipt.sqlite")] == [
+                "REJECTED"
+            ]
 
 
 def test_m6_http_factory_fails_closed_on_direct_m2_and_wrong_route(tmp_path: Path) -> None:
@@ -276,3 +277,55 @@ async def test_m6_http_write_lock_prevents_premature_positive_response(
                 result = await pending
                 assert result.status_code == 200
             assert len(stored_rows(tmp_path / "receipt.sqlite")) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+@pytest.mark.parametrize("mechanism", ["m4", "m5"])
+async def test_m6_http_framing_refusal_audited_without_cryptographic_verification(
+    tmp_path: Path, rsa_keys, mechanism: str
+) -> None:
+    private, public = rsa_keys
+    committer = store(tmp_path)
+    if mechanism == "m4":
+        gateway = await api_gateway(committer)
+        method, route, headers = EvidenceMethod.API_KEY, "api", api_headers()
+    else:
+        gateway = jwt_gateway(committer, public)
+        method, route, headers = EvidenceMethod.JWT, "jwt", jwt_headers(jwt_wire(private))
+    async with tcp_host(gateway, route=route, method=method) as url:
+        async with httpx.AsyncClient(base_url=url, timeout=4) as client:
+            refused = await client.post(
+                "/authenticate",
+                headers=headers,
+                content=b"untrusted-credential-and-tenant-body",
+            )
+            assert signature(refused) == (
+                401,
+                {"error": "invalid_credentials"},
+                "no-store",
+                "nosniff",
+            )
+            assert [outcome for _, outcome in stored_rows(tmp_path / "receipt.sqlite")] == [
+                "REJECTED"
+            ]
+            raw = (tmp_path / "receipt.sqlite").read_bytes()
+            assert b"untrusted-credential-and-tenant-body" not in raw
+
+
+@pytest.mark.asyncio
+@pytest.mark.security
+async def test_m6_http_framing_refusal_fails_closed_when_local_audit_is_unavailable(
+    tmp_path: Path,
+) -> None:
+    committer = store(tmp_path)
+    gateway = await api_gateway(committer)
+    async with tcp_host(gateway, route="api", method=EvidenceMethod.API_KEY) as url:
+        (tmp_path / "receipt.sqlite").unlink()
+        async with httpx.AsyncClient(base_url=url, timeout=4) as client:
+            result = await client.post(
+                "/authenticate", headers=api_headers(), content=b"untrusted-body"
+            )
+            assert result.status_code == 503
+            assert result.json() == {"error": "temporarily_unavailable"}
+            assert not (tmp_path / "receipt.sqlite").exists()

@@ -144,6 +144,49 @@ class ReceiptedDecisionGateway:
             return AuthError(request.correlation_id, TechnicalErrorCode.DEPENDENCY_UNAVAILABLE)
         return result
 
+    async def reject_untrusted_transport(
+        self,
+        request: AuthenticationRequest,
+        *,
+        entry: TrustedEntryContext,
+        attempt_id: AuditAttemptId,
+    ) -> AuthenticationResult:
+        """Commit a host-bound HTTP framing denial without running a verifier.
+
+        Only the reference HTTP adapter uses this operation for requests
+        rejected before credential parsing. A refusal is not an
+        authentication decision, and cannot yield an Authenticated result.
+        Every admitted invocation needs a distinct server-generated attempt
+        ID. A missing, invalid or ambiguous receipt returns AuthError.
+        """
+        if not isinstance(request, AuthenticationRequest):
+            raise ValueError("invalid authentication request")
+        if not isinstance(attempt_id, AuditAttemptId) or not self.catalog.owns(entry):
+            return AuthError(request.correlation_id, TechnicalErrorCode.INVALID_TRUST_CONFIGURATION)
+        try:
+            record = AuditDecisionRecord(
+                attempt_id=attempt_id,
+                event=AuthenticationEvent(
+                    correlation_id=request.correlation_id,
+                    method=request.evidence.method,
+                    result_status="REJECTED",
+                    duration_ms=0.0,
+                ),
+                profile=entry.profile_ref,
+            )
+            receipt = await self._committer.commit(record)
+            if (
+                not isinstance(receipt, AuditCommitReceipt)
+                or receipt.attempt_id != attempt_id
+                or receipt.result_status != "REJECTED"
+            ):
+                raise ValueError("invalid transport audit receipt")
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            return AuthError(request.correlation_id, TechnicalErrorCode.DEPENDENCY_UNAVAILABLE)
+        return Rejected(request.correlation_id)
+
 
 def compose_receipted_audit_gateway(
     snapshot: ConfigurationSnapshot,

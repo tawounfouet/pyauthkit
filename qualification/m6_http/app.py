@@ -79,23 +79,22 @@ def compose_receipted_http_app(
     async def authenticate(request: Request) -> JSONResponse:
         """No dynamic tenant resolution and no direct M2 endpoint.
 
-        Auth metadata syntax errors are sent to the real gateway with the
-        invalid synthetic proof and are therefore recorded as rejections.
-        Requests with bodies are rejected at the HTTP framing boundary
-        without consuming the body; no full-attempt audit claim is made.
+        Auth syntax errors and application-observable framing refusals
+        are recorded via the trusted gateway, without reading the body.
+        Network/proxy/ASGI parser errors before this handler are NOT covered.
         """
-        # Content-Length is controlled by HTTP framing, not an auth proof.
+        # HTTP framing is untrusted; do not let a valid Authorization
+        # header bypass a body/Transfer-Encoding rejection.
         lengths = request.headers.getlist("content-length")
-        if (
+        framing_invalid = (
             len(lengths) > 1
             or (lengths and lengths != ["0"])
-            or request.headers.getlist("transfer-encoding")
-        ):
-            return response(401, REFUSAL)
+            or bool(request.headers.getlist("transfer-encoding"))
+        )
 
         values = request.headers.getlist("authorization")
         evidence = b"invalid"
-        if len(values) == 1 and values[0].startswith(required_scheme):
+        if not framing_invalid and len(values) == 1 and values[0].startswith(required_scheme):
             raw = values[0][len(required_scheme) :]
             try:
                 candidate = raw.encode("ascii")
@@ -119,11 +118,18 @@ def compose_receipted_http_app(
         )
         attempt = AuditAttemptId(secrets.token_hex(16))
         try:
-            result = await gateway.authenticate(
-                request_data,
-                entry=entry,
-                attempt_id=attempt,
-            )
+            if framing_invalid:
+                result = await gateway.reject_untrusted_transport(
+                    request_data,
+                    entry=entry,
+                    attempt_id=attempt,
+                )
+            else:
+                result = await gateway.authenticate(
+                    request_data,
+                    entry=entry,
+                    attempt_id=attempt,
+                )
         except asyncio.CancelledError:
             raise
         except Exception:
