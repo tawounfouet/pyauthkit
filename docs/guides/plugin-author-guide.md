@@ -70,6 +70,25 @@ authenticators = load_approved_authenticators(candidates, grants=grants)
 
 Le code ci-dessus suppose une distribution approuvee et une version exacte reellement installee. L'exemple `AlwaysReject` reste intentionnellement non positif. La composition M6 generique refuse les chemins de secrets et JWT qui exigent des compositions specialisees : **ne pas contourner ces preflights** pour brancher un plugin.
 
+## Cycle de vie des plugins avec ressources
+
+Le loader synchrone `load_approved_authenticators` est une interface non proprietaire des ressources. Il convient exclusivement aux plugins volontairement stateless ou a ceux dont le host assume integralement le cleanup. Pour un plugin possedant des ressources, preferer `activate_approved_authenticators` qui expose un scope asynchrone gere.
+
+```python
+from pyauthkit.plugins import activate_approved_authenticators
+
+async def run_host(candidates, grants, snapshot):
+    async with activate_approved_authenticators(candidates, grants=grants) as authenticators:
+        runtime = compose_authentication_engine(
+            snapshot, authenticators=authenticators
+        )
+        # Demarrer le host, puis drainer les requetes avant de quitter ce scope.
+        return runtime  # Demonstration de composition, PAS un serveur de production
+```
+
+Une instance peut exposer `async def aclose(self) -> None`. Les closers sont appeles en ordre inverse, avec un timeout de 3 secondes par instance par defaut et un maximum configurable de 30 secondes. Une methode `close()` synchrone sans `aclose()` n'est pas prise en charge par le scope gere.
+
+Une erreur durant l'import ou la factory peut deja avoir produit des effets collateraux. Un closer non cooperatif, une deuxieme annulation forcee ou un crash peut empecher la fermeture. Le host est responsable d'arreter l'ingress et de laisser finir les requetes en cours avant de liberer les instances. Ni le cleanup ni le SPI ne fournissent une sandbox, une annulation atomique ou une isolation de processus.
 ## Frontieres et risques
 
 1. Discovery est desactivee par defaut et lit uniquement les metadonnees des `EntryPoint`. Aucun `EntryPoint.load()` n'est appele dans cette phase.

@@ -19,7 +19,7 @@ Aucun oracle ci-dessous n'est marque PASS sur la base de la seule presence de so
 | M7-T08 | Authenticator composable sans edit domain | test_m7_plugin_admission.py | NOT VERIFIED |
 | M7-T09 | Outcome malforme | test_m7_plugin_admission.py | NOT VERIFIED |
 | M7-T10 | Exception plugin expurgee | test_m7_plugin_admission.py | NOT VERIFIED |
-| M7-T11 | Timeout/cancellation | test timeout partiel ; cancellation a ajouter | PARTIAL |
+| M7-T11 | Timeout/cancellation | test_m7_plugin_lifecycle.py + test_m7_plugin_scope.py | NOT VERIFIED |
 | M7-T12 | Discovery n'importe aucun code | import sentinel | NOT VERIFIED |
 | M7-T13 | Discovery OFF | test no metadata call | NOT VERIFIED |
 | M7-T14 | Plugin non admis non execute | test deny/sentinel | NOT VERIFIED |
@@ -30,8 +30,8 @@ Aucun oracle ci-dessous n'est marque PASS sur la base de la seule presence de so
 | M7-T19 | Methode/capability inconnue | method enum guard ; autres capabilities absentes | PARTIAL |
 | M7-T20 | Freeze registry | tests M2 existants | NOT VERIFIED |
 | M7-T21 | Plugin ne change pas final gate | tests M2, revue composition requise | PARTIAL |
-| M7-T22 | Cross-scope/tenant | tests M2, tests tiers a ajouter | PARTIAL |
-| M7-T23 | Fermeture ressources owned | ownership documente, tests a ajouter | NOT RUN |
+| M7-T22 | Cross-scope/tenant | test_m7_plugin_scope.py et tests M2 | NOT VERIFIED |
+| M7-T23 | Fermeture ressources owned | test_m7_plugin_lifecycle.py (reverse cleanup / failures) | NOT VERIFIED |
 | M7-T24 | No secrets dans exceptions | tests partial canary | PARTIAL |
 | M7-T25 | Docs et API reellement executes | quickstart CI candidat | NOT VERIFIED |
 | M7-T26 | PEP561 / extras wheel | smoke wheel candidat | NOT VERIFIED |

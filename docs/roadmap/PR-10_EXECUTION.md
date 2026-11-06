@@ -22,7 +22,7 @@ Rendre le SDK Python consommable sans invention de nouvelle autorite et introdui
 | M7-WP-05 | Metadata discovery, sans `EntryPoint.load` | IMPLEMENTED, preuve CI requise |
 | M7-WP-06 | Grants hote, versions, collisions, refus | IMPLEMENTED, preuve CI requise |
 | M7-WP-07 | Loader post-admission et registry M6 | IMPLEMENTED, preuve CI requise |
-| M7-WP-08 | Lifecycle et fermeture de ressources | PARTIAL : ownership documente, cleanup async differe |
+| M7-WP-08 | Lifecycle et fermeture de ressources | IMPLEMENTED CANDIDATE : managed async activation, tests et revue requise |
 | M7-WP-09 | Guides d'usage et auteur plugin | IMPLEMENTED, docstests a verifier |
 | M7-WP-10 | Packaging wheel/sdist/extras | PENDING CI |
 | M7-WP-11 | ADR, learning cards et oracles | PARTIAL, NO-GO securite |
