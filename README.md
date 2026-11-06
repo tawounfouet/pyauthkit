@@ -1,91 +1,47 @@
 # PyAuthKit
 
-A modular, framework-agnostic authentication engine for the Python ecosystem.
+Modular, framework-agnostic Python authentication library. **Pre-alpha developer integration only**.
 
-> **Current main:** M2 engine and ports qualified for their limited scope. Main is
-> **not a production authentication system**.
->
-> **M3 candidate:** Password Authentication in [PR #75 ready for security review](https://github.com/tawounfouet/pyauthkit/pull/75).
-> [GATE27-04 #74](https://github.com/tawounfouet/pyauthkit/issues/74)
-> remains OPEN / NOT QUALIFIED. No release or deployment is authorized.
+## Current development scope
 
-## Architecture and trust
+- **M0-M2**: package/bootstrap, immutable domain results, async AuthenticationEngine, host-bound trust catalog and final policy gate. Limited milestone gates GO.
+- **M3 Password**: Argon2id PHC verification, scoped credential resolver, bounded KDF work and mandatory host-supplied attempt guard. Candidate development integration, **GATE27-04 NO-GO** pending independent security approval and deployment-specific qualification.
+- **M4 API Key**: real scoped HMAC verification and revocation guard, merged for pre-alpha development only. **GATE27-05 security NO-GO**.
+- **M5 JWT**: host-approved RS256/JOSE/JWKS verification, merged for pre-alpha development only. **GATE27-06 security NO-GO**.
+- **M6 Configuration & Audit**: immutable snapshots, scoped secrets, adapters and local experimental receipted audit/HTTP reference. Merged for pre-alpha development only. **GATE27-07 NO-GO**. Public `audit_delivery=required` is deliberately rejected.
+- **M7-M9**: public SDK/plugin contract, independent global qualification and release governance remain open.
 
-PyAuthKit separates **proof of authentication** from IAM identity mapping,
-authorization, sessions, tokens and delegation. A request's username and
-password are untrusted. The application host establishes approved
-`TrustedEntryContext`, `TrustedScopeRef` and policy before the engine may
-select a verifier. Only the M2 `AuthenticationPolicyGate` issues the final
-`Authenticated` result.
+**Not approved for production, use with real credentials, an auth gateway, IAM authorization or a PyPI publication.** A passing CI and merge are not independent security qualification.
 
-M3's proposed password path uses:
+## Installation and test
 
-1. A **source-scoped** `PasswordCredentialResolver` returning explicit
-   `Found | Missing | Ambiguous | Unavailable` variants.
-2. A real `argon2-cffi` **Argon2id-only** verifier with strict PHC
-   algorithm/version/parameter bounds.
-3. A bounded per-process `KDFWorkerPool`, retaining capacity after async
-   cancellation until native work actually completes.
-4. A **required host-supplied** `PasswordAttemptGuard` with no permissive
-   production default. Network rate limiting, distributed quotas and
-   response shaping remain the host's responsibility.
-5. A `PasswordAuthenticator` implementing the M2 async SPI, with state,
-   expiry, scope and optional source-freshness checks before returning an
-   internal positive outcome. M2 still applies its mandatory final policy.
+Requires Python 3.12 or newer in the tested combinations. Core imports without unconditional Argon2, JWT, AWS or web-framework dependencies. Optional extras may be explicitly installed:
 
-M3 has no password registration, reset, change, local SQL store, MFA,
-session/token issuance, IAM permission, automatic rehash write or HTTP login UI.
-The in-memory resolver is a test/demo snapshot, not a persistent auth store.
-
-## Development
-
-Python >=3.12; install core development dependencies:
-
-```sh
-python -m pip install -e '.[dev]'
+```bash
+python -m pip install -e '.[dev,password,qualification]'
 python -m pytest
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy src/pyauthkit
+python -m build
 ```
 
-For the opt-in M3 cryptographic implementation and its tests:
+Use `pyauthkit[password]` for the optional Argon2id implementation, `pyauthkit[jwt]` for the optional JWT/cryptographic verifier and `pyauthkit[aws]` for optional boto3. The `qualification` extra is for isolated host validation, not a production deployment contract.
 
-```sh
-python -m pip install -e '.[dev,password]'
-python -m pytest -v
-```
+## Trust model
 
-The core package has **no unconditional Argon2 dependency**. Building a wheel
-does not qualify a verifier or a specific deployment. A host must provide an
-approved, scoped credential source, a mandatory admission guard, an approved
-dummy Argon2id hash, bounded workers, final policy, audit integration and
-security review before any live usage.
+The application host selects an approved scope/profile; no credential, JWT claim, HTTP header or plugin can grant trusted tenant selection. The M2 policy gate controls issuance of `Authenticated`. Authentication is not authorization, identity provisioning, a session, an access-token issuance or a PyIAMKit permission grant.
 
-## Source documents
+Audit events, attempt guards, provider consistency and external network/host controls must be qualified for each admitted use case. In-process Python private attributes are not a sandbox. The experimental M6 receipt gateway is not proof of an exclusive deployment ingress or a tamper-evident distributed ledger.
 
-- [Product and system specifications](docs/specs/README.md)
-- [Software Design & Learning convention](docs/specs/PYAUTHKIT_SOFTWARE_DESIGN_LEARNING_CONVENTION.md)
+## References
+
 - [Roadmap M0-M9](docs/specs/27_PYAUTHKIT_IMPLEMENTATION_ROADMAP.md)
-- [PR-06 execution record](docs/roadmap/PR-06_EXECUTION.md)
-- [M3 security oracles](docs/qualification/M3_PR06_SECURITY_ORACLES.md)
-- [M3 GATE27-04 qualification decision](docs/qualification/GATE27-04_M3_PASSWORD_AUTHENTICATION_DECISION.md) - NO-GO pending deployment-specific limits, ADR and independent review
-- [Reference host qualification](qualification/host/README.md) - FastAPI, PostgreSQL, Redis and localhost HTTP, test fixtures only
-- [M3 technical ADR/security review](docs/qualification/M3_SECURITY_AND_ADR_REVIEW_2026-11-05.md) - independent approval pending
-- [GATE27-04 issue](https://github.com/tawounfouet/pyauthkit/issues/74)
-
-## Security status and limitations
-
-M2 qualification does **not** automatically qualify M3. Even when all CI
-checks pass, production suitability requires review of 40 M3 scenarios,
-deployment-specific rate limiting, actual credential-store consistency,
-benchmarking of Argon2 memory/latency and a signed gate. A verifier in a Python
-process is not a sandbox against malicious host code. Failed attempts must
-not emit raw passwords, hashes or untrusted identifiers into audit channels.
-
-See [SECURITY.md](SECURITY.md) for private security reporting. Do not post
-credentials or personal data in public issues.
+- [Design & Learning convention](docs/specs/PYAUTHKIT_SOFTWARE_DESIGN_LEARNING_CONVENTION.md)
+- [M3 PR #75](https://github.com/tawounfouet/pyauthkit/pull/75), [GATE27-04 #74](https://github.com/tawounfouet/pyauthkit/issues/74)
+- [M4 gate #77](https://github.com/tawounfouet/pyauthkit/issues/77), [M5 gate #81](https://github.com/tawounfouet/pyauthkit/issues/81), [M6 PR #82](https://github.com/tawounfouet/pyauthkit/pull/82)
+- [Security policy](SECURITY.md) and [implementation documentation](docs/roadmap/README.md)
 
 ## License
 
-PyAuthKit is licensed under the [MIT License](LICENSE).
+MIT. See [LICENSE](LICENSE).

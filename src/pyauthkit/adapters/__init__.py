@@ -1,1 +1,1 @@
-"""Explicitly composed adapters; importing the core does not import providers."""
+"""Optional, explicitly composed outbound adapters. No automatic registration."""

@@ -1,0 +1,954 @@
+{
+  "schema_version": "1.0",
+  "kind": "M4_CANDIDATE_EVIDENCE_INDEX_NOT_CERTIFICATION",
+  "created_on": "2026-11-05",
+  "convention": "TESTED != QUALIFIED; DOCUMENTED != IMPLEMENTED",
+  "repository": "tawounfouet/pyauthkit",
+  "pull_request": "https://github.com/tawounfouet/pyauthkit/pull/76",
+  "issue": "https://github.com/tawounfouet/pyauthkit/issues/77",
+  "source_of_candidate_oracles": "docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md",
+  "source_of_candidate_gates": "docs/qualification/M4_2026_11_05_SOURCE_MATRIX.md",
+  "normative_catalog_reconciliation": "M4_DETAILED_PLAN_SOURCE_MAPPED_OWNER_ADOPTED_FOR_DEV",
+  "immutable_technical_checkpoint": {
+    "run_id": 42060406108,
+    "workflow_url": "https://github.com/tawounfouet/pyauthkit/actions/runs/42060406108",
+    "status_observed": "SUCCESS",
+    "ci_jobs_observed": 8,
+    "core_tests_passed_observed": 207,
+    "reference_host_tests_passed_observed": 12,
+    "job_ids": {
+      "quality": 127360160012,
+      "security": 127360159499,
+      "m4_host": 127360160208,
+      "ubuntu_py312": 127360160070,
+      "ubuntu_py313": 127360160034,
+      "ubuntu_py314": 127360160080,
+      "macos_py312": 127360160028,
+      "windows_py312": 127360160074
+    },
+    "run_log_retention": "GitHub retention policy unknown. Archive and hash logs before expiry; NOT DONE.",
+    "sha_segments": [
+      "5f908614",
+      "e597ea35",
+      "8b69cd46",
+      "9ee3d5eb",
+      "d30cbb2d"
+    ]
+  },
+  "host_profile": {
+    "kind": "CI_ISOLATED_REFERENCE_ONLY",
+    "postgresql": "PostgreSQL 17 service in GitHub Actions",
+    "redis": "Redis 7 service in GitHub Actions",
+    "http": "loopback TCP/HTTP Uvicorn two OS processes; no reverse proxy or TLS",
+    "keys": "synthetic test fixture; not KMS",
+    "audit": "best effort engine events; no durability"
+  },
+  "oracles": [
+    {
+      "id": "M4-T01",
+      "priority": "P0",
+      "assertion": "Clé complète active, source et scope valides, policy ALLOW",
+      "expected_behavior": "Authenticated seulement après policy M2",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_full_secret_hmac_and_explicit_m2_allow_produce_authenticated"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T02",
+      "priority": "P0",
+      "assertion": "Clé complète valide, policy DENY",
+      "expected_behavior": "Rejected, aucun principal",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_valid_proof_cannot_bypass_final_policy"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T03",
+      "priority": "P0",
+      "assertion": "Secret complet incorrect, selector existant",
+      "expected_behavior": "Rejected, aucune preuve interne positive",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_one_byte_secret_mutation_never_authenticates",
+        "tests/security/test_m4_api_key_hmac.py::test_one_byte_secret_mutation_never_matches"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T04",
+      "priority": "P0",
+      "assertion": "Selector valide mais secret absent",
+      "expected_behavior": "Rejet avant tentative de promotion",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_malformed_bearer_is_guarded_but_never_looked_up",
+        "tests/unit/test_m4_api_key_parser.py::test_parser_never_returns_a_truncated_secret",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t04_selector_only_never_reaches_credential_owner"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T05",
+      "priority": "P0",
+      "assertion": "Selector inconnu",
+      "expected_behavior": "Rejet générique, aucune fuite de présence",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_missing_selector_never_reaches_proof",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_http_generic_denials_and_host_tenant_binding"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T06",
+      "priority": "P0",
+      "assertion": "Lookup ambigu/collision non admissible",
+      "expected_behavior": "Refus sans arbitrage arbitraire",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_ambiguous_records_cannot_pick_first",
+        "tests/contract/test_m4_api_key_resolver.py::test_ambiguity_is_not_silently_resolved"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T07",
+      "priority": "P0",
+      "assertion": "Clé SUSPENDED/DISABLED",
+      "expected_behavior": "Refus indépendamment du secret",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_inactive_record_fails_before_cryptography"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T08",
+      "priority": "P0",
+      "assertion": "Clé REVOKED",
+      "expected_behavior": "Refus, pas de stale accept",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_inactive_record_fails_before_cryptography",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_http_generic_denials_and_host_tenant_binding"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T09",
+      "priority": "P0",
+      "assertion": "Instant now == expires_at",
+      "expected_behavior": "Refus à la borne exclusive",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_missing_expiry_expired_or_not_yet_valid_rejected"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T10",
+      "priority": "P0",
+      "assertion": "now < not_before puis égalité",
+      "expected_behavior": "Refus puis admission conditionnelle à égalité",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_missing_expiry_expired_or_not_yet_valid_rejected",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_not_before_exact_utc_boundary_is_conditionally_admissible"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T11",
+      "priority": "P0",
+      "assertion": "Clé tenant A sous scope B",
+      "expected_behavior": "Refus malgré selector/secret correct pour A",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_foreign_tenant_record_does_not_pass_scope_guard",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_dev_credential_never_authenticates_production_scope"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T12",
+      "priority": "P0",
+      "assertion": "Même key_id dans A et B",
+      "expected_behavior": "Lookup source-scoped, aucune collision globale",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/contract/test_m4_api_key_resolver.py::test_same_selector_in_two_tenants_has_independent_results",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_source_scoped_sql_same_selector_tenants"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T13",
+      "priority": "P0",
+      "assertion": "claimed_tenant ou X-Tenant forgé",
+      "expected_behavior": "Scope effectif inchangé ou refus préflight",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_mismatched_tenant_claim_rejected_by_m2_preflight",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_http_generic_denials_and_host_tenant_binding"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T14",
+      "priority": "P0",
+      "assertion": "VerificationContext étranger / forgé",
+      "expected_behavior": "Aucun succès et aucun fallback",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_engine_adversarial.py::test_verifier_rejects_method_mismatch_before_guard",
+        "tests/security/test_m2_engine_adversarial.py::test_m2_t11_foreign_positive_outcomes_fail_before_final_gate",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t14_foreign_host_context_is_rejected_before_key_access"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Ciblage du cas explicite en test local; signoff indépendant, host réel et validation du périmètre restent requis."
+    },
+    {
+      "id": "M4-T15",
+      "priority": "P0",
+      "assertion": "Retour illégal Authenticated par adapter",
+      "expected_behavior": "Engine M2 rejette la promotion",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/security/test_m2_engine_adversarial.py::test_m2_t24_verifier_cannot_return_final_authenticated_itself"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T16",
+      "priority": "P0",
+      "assertion": "Record subject_ref.scope_ref étranger",
+      "expected_behavior": "Refus / erreur de trust, jamais succès",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/contract/test_m4_api_key_resolver.py::test_callback_foreign_scope_is_rejected",
+        "tests/security/test_m4_api_key_record.py::test_cross_scope_subject_is_rejected_on_construction"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T17",
+      "priority": "P0",
+      "assertion": "key_ref inconnue, algorithme absent",
+      "expected_behavior": "Refus fail-closed, pas de downgrade",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_unknown_hmac_key_reference_fails_closed_without_lookup",
+        "tests/security/test_m4_api_key_hmac.py::test_unsupported_algorithm_has_no_fallback"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T18",
+      "priority": "P0",
+      "assertion": "MAC/digest 1 bit modifié",
+      "expected_behavior": "Comparaison négative avec vecteurs indépendants",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_hmac.py::test_digest_tampering_is_rejected",
+        "tests/security/test_m4_api_key_hmac.py::test_independent_openssl_vector_accepts_full_key_only"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T19",
+      "priority": "P0",
+      "assertion": "Format non canonique, mauvaise base64url",
+      "expected_behavior": "Refus avant lookup/crypto",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/unit/test_m4_api_key_parser.py::test_parser_rejects_noncanonical_unused_base64_bits",
+        "tests/unit/test_m4_api_key_parser.py::test_noncanonical_truncated_or_modified_input_is_rejected"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T20",
+      "priority": "P0",
+      "assertion": "Clé énorme, vide, Unicode inattendu",
+      "expected_behavior": "Bornes d'entrée, pas d'allocation illimitée",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/unit/test_m4_api_key_parser.py::test_parser_rejects_non_bytes_and_not_single_byte_secrets",
+        "tests/security/test_m2_engine_adversarial.py::test_m2_t01_untrusted_request_payload_limits"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T21",
+      "priority": "P0",
+      "assertion": "Store offline/timeout",
+      "expected_behavior": "AuthError, aucun principal",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_store_unavailable_is_technical_error",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_closed_postgresql_owner_yields_503_not_success",
+        "tests/security/test_m2_engine_adversarial.py::test_m2_t15_timeout_cannot_late_authenticate"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T22",
+      "priority": "P0",
+      "assertion": "Secret manager/verifier indisponible",
+      "expected_behavior": "AuthError, pas de bypass",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_key_source_outage_is_technical",
+        "tests/security/test_m4_api_key_hmac.py::test_missing_approved_hmac_key_is_technical_failure"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T23",
+      "priority": "P0",
+      "assertion": "Révocation entre lookup et full-secret compare",
+      "expected_behavior": "is_current refuse l'ancien record",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_post_hmac_revocation_version_change_blocks_verified_outcome",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t23_revoke_between_lookup_and_proof_never_promotes"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Ciblage du cas explicite en test local; signoff indépendant, host réel et validation du périmètre restent requis."
+    },
+    {
+      "id": "M4-T24",
+      "priority": "P0",
+      "assertion": "Révocation entre compare et relecture autoritative",
+      "expected_behavior": "Refus sur vrai PostgreSQL",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "REFERENCE_HOST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_revocation_between_hmac_and_pg_recheck_denies"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T25",
+      "priority": "P0",
+      "assertion": "Reprise après revoke multi-processus",
+      "expected_behavior": "Pas d'acceptation au-delà de la fenêtre revendiquée",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "REFERENCE_HOST",
+      "technical_status": "PARTIAL",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_two_processes_reject_revoked_bearer_after_commit"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Deux processus et révocation après commit testés dans le banc local; aucune fenêtre de propagation de production revendiquée ni instrumentée."
+    },
+    {
+      "id": "M4-T26",
+      "priority": "P0",
+      "assertion": "Clé de dev présentée sur prod",
+      "expected_behavior": "Refus par scope/env approuvé",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "REFERENCE_HOST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_dev_credential_never_authenticates_production_scope"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T27",
+      "priority": "P0",
+      "assertion": "Ancien secret pendant rotation NO_OVERLAP",
+      "expected_behavior": "Refus après commit de revoke, sous contrat owner",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "REFERENCE_HOST",
+      "technical_status": "PARTIAL",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_no_overlap_rotation_rejects_old_bearer_after_commit",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_pg_versioned_rotation_invalidates_stale_proof"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "La rotation versionnée NO_OVERLAP est simulée dans le propriétaire de test, sans procédure réelle d'émission/rotation KMS."
+    },
+    {
+      "id": "M4-T28",
+      "priority": "P1",
+      "assertion": "Overlap explicitement borné",
+      "expected_behavior": "Deux records acceptés seulement dans fenêtre approuvée",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "NOT_OBSERVED",
+      "technical_status": "MISSING",
+      "test_nodes": [],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Aucun mécanisme BOUNDED_OVERLAP retenu ou approuvé dans le credential owner. P1 non dispensé: choix NOT_APPLICABLE à signer si NO_OVERLAP est adopté."
+    },
+    {
+      "id": "M4-T29",
+      "priority": "P0",
+      "assertion": "Secret canary en repr/exception/log/audit/response",
+      "expected_behavior": "Zéro fuite détectable",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "PARTIAL",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_redacted_event_has_no_secret_or_id_in_repr",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_http_generic_denials_and_host_tenant_binding"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "L'événement M2 et le corps HTTP sont testés, mais pas les logs reverse-proxy/SIEM de production ni l'injection canary de bout en bout."
+    },
+    {
+      "id": "M4-T30",
+      "priority": "P0",
+      "assertion": "HTTP refus missing/wrong/revoked/inactive",
+      "expected_behavior": "Codes/corps/headers host comparables selon profil",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "REFERENCE_HOST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_http_generic_denials_and_host_tenant_binding",
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_inactive_records_match_generic_http_refusal"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T31",
+      "priority": "P0",
+      "assertion": "Timing HTTP missing vs wrong en laboratoire",
+      "expected_behavior": "Rapport statistique reproductible + limites, sans faux claim",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "REFERENCE_HOST",
+      "technical_status": "PARTIAL",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_http.py::test_m4_loopback_timing_observation_no_equivalence_claim"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Rapport local reproductible sur 20+20 réponses, sans équivalence statistique ni proxy réel."
+    },
+    {
+      "id": "M4-T32",
+      "priority": "P0",
+      "assertion": "100+ requêtes concurrentes, store slow",
+      "expected_behavior": "Ressources bornées, aucun succès illégal",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "REFERENCE_HOST",
+      "technical_status": "PARTIAL",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_128_concurrent_attempts_bounded_on_slow_postgresql"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "128 tentatives concurrentes en laboratoire avec store ralenti et sémaphore, pas de SLO charge ni saturation multi-noeuds production."
+    },
+    {
+      "id": "M4-T33",
+      "priority": "P0",
+      "assertion": "Requête annulée/timeout au cours d'un appel externe",
+      "expected_behavior": "Aucune promotion tardive; cleanup connu",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "PARTIAL",
+      "test_nodes": [
+        "tests/security/test_m4_api_key_engine_adversarial.py::test_guard_cancellation_is_propagated_not_translated_to_rejection",
+        "tests/security/test_m2_engine_adversarial.py::test_m2_t15_timeout_cannot_late_authenticate",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t33_owner_timeout_cancels_inflight_lookup_without_late_success"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Annulation de guard et timeout du moteur M2 testés, cleanup pendant une opération PostgreSQL/Redis réelle non prouvé."
+    },
+    {
+      "id": "M4-T34",
+      "priority": "P0",
+      "assertion": "Guard indisponible ou quota épuisé",
+      "expected_behavior": "Fail-closed si guard requis, pas de lookup coûteux après refus",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/integration/test_m4_api_key_engine.py::test_guard_outage_is_technical_not_permissive",
+        "tests/integration/test_m4_api_key_engine.py::test_guard_requires_exact_bool_true",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_unreachable_redis_quota_yields_503_not_success"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T35",
+      "priority": "P0",
+      "assertion": "Cache stale et backend unavailable",
+      "expected_behavior": "Aucun succès sous politique stricte",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "PARTIAL",
+      "test_nodes": [
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_closed_postgresql_owner_yields_503_not_success",
+        "tests/integration/test_m4_api_key_engine.py::test_freshness_source_outage_is_technical",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_no_stale_positive_cache_after_postgresql_shutdown"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Adapter strict sans cache positif, sources PG indisponibles testées. Contrat de cohérence cache/prod non identifié."
+    },
+    {
+      "id": "M4-T36",
+      "priority": "P0",
+      "assertion": "Registry sans API_KEY",
+      "expected_behavior": "Méthode inconnue, pas d'enregistrement implicite",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/contract/test_authenticator_spi_contract.py::test_m2_t06_empty_registry_is_rejected_at_bootstrap",
+        "tests/integration/test_m4_api_key_engine.py::test_m4_t36_registry_with_only_password_never_falls_back"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T37",
+      "priority": "P0",
+      "assertion": "Contract tests sur deux resolvers",
+      "expected_behavior": "Mêmes outcomes et invariants de scope",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "REFERENCE_HOST",
+      "technical_status": "EVIDENCE_REFERENCED",
+      "test_nodes": [
+        "tests/contract/test_m4_api_key_resolver.py::test_same_selector_in_two_tenants_has_independent_results",
+        "qualification/m4_host/tests/test_m4_pg_redis.py::test_m4_two_resolvers_share_source_scope_and_freshness_contract"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Preuve liée au code/labo; revue de l'assertion, de la source et des limites requise avant APPROVED."
+    },
+    {
+      "id": "M4-T38",
+      "priority": "P0",
+      "assertion": "M1/M2/M3 non-régression selon base autorisée",
+      "expected_behavior": "Aucun test d'autorité cassé",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CODE_TEST",
+      "technical_status": "PARTIAL",
+      "test_nodes": [
+        "tests/security/test_m2_engine_adversarial.py::test_m2_t11_foreign_positive_outcomes_fail_before_final_gate"
+      ],
+      "external_evidence": [],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Tests M1/M2 re-exécutés, mais M3 PR #75 non fusionnée sur la base M2 et GATE27-04 pas GO."
+    },
+    {
+      "id": "M4-T39",
+      "priority": "P0",
+      "assertion": "Wheel sans extras",
+      "expected_behavior": "Import core sans FastAPI/Redis/PG/crypto optionnels",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CI_RUN",
+      "technical_status": "PARTIAL",
+      "test_nodes": [],
+      "external_evidence": [
+        "CI-01"
+      ],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Nouveau smoke depuis le wheel installé et sans extras ajouté. Réussite exacte des cinq jobs à revalider sur HEAD après ces commits."
+    },
+    {
+      "id": "M4-T40",
+      "priority": "P0",
+      "assertion": "Wheel + extension API Key sur 5 jobs matrice",
+      "expected_behavior": "Fonctionne avec vrais vecteurs; scans/typing/packaging PASS",
+      "source_status": "M4_PLAN_SPECIFIED",
+      "evidence_tier": "CI_RUN",
+      "technical_status": "PARTIAL",
+      "test_nodes": [],
+      "external_evidence": [
+        "CI-01"
+      ],
+      "independent_adjudication": "PENDING",
+      "unproven_scope": "Nouveau smoke HMAC complet sur wheel installé ajouté. Matrice cinq plateformes et résultats exact-SHA à revalider."
+    }
+  ],
+  "g5": [
+    {
+      "id": "G5-01",
+      "candidate_requirement": "Préconditions M2/M3 satisfaites selon base",
+      "required_evidence": "HEAD main et gates amont",
+      "no_go_if": "Dépendance non qualifiée masquée",
+      "oracle_links": [
+        "M4-T38"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-02",
+      "candidate_requirement": "Scope/source autoritatifs",
+      "required_evidence": "Test SQL/callback et cross-tenant",
+      "no_go_if": "Lookup global permissif",
+      "oracle_links": [
+        "M4-T11",
+        "M4-T12",
+        "M4-T13",
+        "M4-T16",
+        "M4-T37"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-03",
+      "candidate_requirement": "Full-key only",
+      "required_evidence": "Prefix-only et secret incomplet refusés",
+      "no_go_if": "Selector authentifiant seul",
+      "oracle_links": [
+        "M4-T03",
+        "M4-T04",
+        "M4-T18",
+        "M4-T19",
+        "M4-T20"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-04",
+      "candidate_requirement": "Crypto choisie et explicitée",
+      "required_evidence": "ADR, vecteurs HMAC, rotation key_ref",
+      "no_go_if": "Fallback inconnu / digest naïf",
+      "oracle_links": [
+        "M4-T17",
+        "M4-T18",
+        "M4-T27",
+        "M4-T28"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-05",
+      "candidate_requirement": "États et UTC sûrs",
+      "required_evidence": "Active/not-before/expiry/status",
+      "no_go_if": "Révoquée/expirée acceptée",
+      "oracle_links": [
+        "M4-T07",
+        "M4-T08",
+        "M4-T09",
+        "M4-T10"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-06",
+      "candidate_requirement": "Version/révocation cohérentes",
+      "required_evidence": "is_current real store, race tests",
+      "no_go_if": "Garantie revendiquée non démontrée",
+      "oracle_links": [
+        "M4-T23",
+        "M4-T24",
+        "M4-T25",
+        "M4-T27"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-07",
+      "candidate_requirement": "Séparation AuthN/AuthZ et type acteur",
+      "required_evidence": "SPI M2/policy, no RBAC",
+      "no_go_if": "Service key -> permission implicite",
+      "oracle_links": [
+        "M4-T01",
+        "M4-T02",
+        "M4-T15"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-08",
+      "candidate_requirement": "Échecs sûrs et absence de secrets",
+      "required_evidence": "Canary + typed errors + audit",
+      "no_go_if": "Fuite brute ou succès sur erreur",
+      "oracle_links": [
+        "M4-T21",
+        "M4-T22",
+        "M4-T29"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-09",
+      "candidate_requirement": "Anti-abus selon exposition",
+      "required_evidence": "Guard + tests fail-closed",
+      "no_go_if": "Quota revendiqué sans preuve",
+      "oracle_links": [
+        "M4-T32",
+        "M4-T34"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-10",
+      "candidate_requirement": "Isolation multi-tenant",
+      "required_evidence": "2 scopes, 2 processes, collisions",
+      "no_go_if": "Foreign credential accepté",
+      "oracle_links": [
+        "M4-T11",
+        "M4-T12",
+        "M4-T26",
+        "M4-T37"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-11",
+      "candidate_requirement": "Anti-énumération qualifiée selon host",
+      "required_evidence": "HTTP comparateur + timing report",
+      "no_go_if": "Fuite d'identifiant exploitable non traitée",
+      "oracle_links": [
+        "M4-T05",
+        "M4-T30",
+        "M4-T31"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-12",
+      "candidate_requirement": "Concurrence et résilience",
+      "required_evidence": "Stress, timeout, chaos",
+      "no_go_if": "Succès tardif / cache stale",
+      "oracle_links": [
+        "M4-T23",
+        "M4-T24",
+        "M4-T25",
+        "M4-T32",
+        "M4-T33",
+        "M4-T35"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-13",
+      "candidate_requirement": "Qualité CI multi-OS sur SHA final",
+      "required_evidence": "7/7, source, wheel, scans",
+      "no_go_if": "Run SHA incorrect/skipped",
+      "oracle_links": [
+        "M4-T38",
+        "M4-T39",
+        "M4-T40"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-14",
+      "candidate_requirement": "ADR et contrats publics approuvés",
+      "required_evidence": "Review écrite sur ADR et API",
+      "no_go_if": "ADR encore PROPOSED",
+      "oracle_links": [
+        "M4-T17",
+        "M4-T18",
+        "M4-T37"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-15",
+      "candidate_requirement": "Risques et revue indépendante",
+      "required_evidence": "Reviewer éligible, owners signés",
+      "no_go_if": "Auto-approval ou risques sans owner",
+      "oracle_links": [
+        "M4-T29",
+        "M4-T31"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    },
+    {
+      "id": "G5-16",
+      "candidate_requirement": "Décision formelle et post-merge",
+      "required_evidence": "GO signé, merge autorisé, main CI",
+      "no_go_if": "Déclaration « closed » sans preuve",
+      "oracle_links": [
+        "M4-T40"
+      ],
+      "prior_status": "M4_PLAN_SPECIFIED",
+      "review_status": "PENDING",
+      "approval": "NOT_RECORDED"
+    }
+  ],
+  "adrs": [
+    {
+      "path": "docs/adr/0016-m4-api-key-format-and-hmac-verification.md",
+      "decision": "PROPOSED",
+      "owner_review": "PENDING",
+      "security_review": "PENDING"
+    },
+    {
+      "path": "docs/adr/0017-m4-scoped-api-key-credential-resolution.md",
+      "decision": "PROPOSED",
+      "owner_review": "PENDING",
+      "security_review": "PENDING"
+    },
+    {
+      "path": "docs/adr/0018-m4-revocation-time-and-policy-integration.md",
+      "decision": "PROPOSED",
+      "owner_review": "PENDING",
+      "security_review": "PENDING"
+    },
+    {
+      "path": "docs/adr/0019-m4-host-attempt-guard-and-anti-enumeration.md",
+      "decision": "PROPOSED",
+      "owner_review": "PENDING",
+      "security_review": "PENDING"
+    }
+  ],
+  "formal_gate": "NO-GO",
+  "independently_approved_oracles": 0,
+  "approved_gate_criteria": 0,
+  "reviewer_identity": null,
+  "acceptance_signature": null,
+  "merged": false,
+  "released": false,
+  "canonical_source_note": "Detailed project-provided 2026-11-05 M4 implementation plan sections 20 and 22. Source excerpt reproduced in M4_2026_11_05_SOURCE_MATRIX.md. No independent acceptance yet. Maintainer adopted source transcription for DEVELOPMENT BRANCH MERGE ONLY; independent adjudication remains pending.",
+  "maintainer_development_merge_decision": {
+    "date": "2026-11-05",
+    "status": "AUTHORIZED_TO_MERGE_DEVELOPMENT_ONLY",
+    "decision_source": "Explicit sole-maintainer user instruction in ChatGPT conversation; assistant-recorded, not a GitHub independent review.",
+    "decision_file": "docs/qualification/M4_SOLO_MAINTAINER_DEV_MERGE_AUTHORIZATION_2026-11-05.md",
+    "approved_rotation_for_reference_host": "NO_OVERLAP",
+    "bounded_overlap_oracle_M4_T28": "NOT_APPLICABLE_TO_REFERENCE_HOST_BY_OWNER_DEV_SCOPE",
+    "M3_dependency": "M4_ALLOWED_ON_M2_BASE_WITH_M3_PR75_UNMERGED",
+    "independent_security_gate": "NO-GO",
+    "release_and_production": "NOT_AUTHORIZED"
+  }
+}

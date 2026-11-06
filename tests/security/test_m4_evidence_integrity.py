@@ -1,0 +1,81 @@
+"""Offline consistency checks must not create or infer security approvals."""
+
+import json
+from pathlib import Path
+
+from scripts.check_m4_evidence import evaluate
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_m4_candidate_evidence_index_is_structurally_consistent() -> None:
+    assert evaluate(ROOT) == []
+
+
+def test_m4_manifest_explicitly_keeps_all_approvals_pending() -> None:
+    manifest = json.loads(
+        (ROOT / "docs/qualification/M4_EVIDENCE_MANIFEST.json").read_text(encoding="utf-8")
+    )
+    assert manifest["formal_gate"] == "NO-GO"
+    assert len(manifest["oracles"]) == 40
+    assert len(manifest["g5"]) == 16
+    assert all(x["independent_adjudication"] == "PENDING" for x in manifest["oracles"])
+    assert all(x["approval"] == "NOT_RECORDED" for x in manifest["g5"])
+    assert manifest["reviewer_identity"] is None
+    assert manifest["acceptance_signature"] is None
+
+
+def test_m4_candidate_catalog_contains_exactly_40_oracles_and_16_gates() -> None:
+    import re
+
+    text = (ROOT / "docs/qualification/M4_CANDIDATE_ORACLE_CATALOG_V1.md").read_text(
+        encoding="utf-8"
+    )
+    expected_oracles = [f"M4-T{i:02d}" for i in range(1, 41)]
+    expected_gates = [f"G5-{i:02d}" for i in range(1, 17)]
+    assert re.findall(r"^\| (M4-T\d{2}) \|", text, re.M) == expected_oracles
+    assert re.findall(r"^\| (G5-\d{2}) \|", text, re.M) == expected_gates
+    assert "PROPOSED - NOT CANONICAL / NOT APPROVED" in text
+    assert "PENDING" in text
+
+
+def test_m4_decision_packet_keeps_human_governance_outstanding() -> None:
+    text = (ROOT / "docs/qualification/M4_GOVERNANCE_DECISION_PACKET.md").read_text(
+        encoding="utf-8"
+    )
+    assert "Decision A" in text and "Decision B" in text
+    assert "NON RENSEIGNE" in text
+    assert "NO-GO" in text
+    assert "Autorisation de merge" in text
+
+
+def test_m4_source_plan_semantics_not_legacy_catalog() -> None:
+    data = json.loads(
+        (ROOT / "docs/qualification/M4_EVIDENCE_MANIFEST.json").read_text(encoding="utf-8")
+    )
+    assert data["source_of_candidate_oracles"].endswith("M4_2026_11_05_SOURCE_MATRIX.md")
+    assert data["normative_catalog_reconciliation"] == (
+        "M4_DETAILED_PLAN_SOURCE_MAPPED_OWNER_ADOPTED_FOR_DEV"
+    )
+    assert data["oracles"][36]["id"] == "M4-T37"
+    assert data["oracles"][36]["assertion"] == "Contract tests sur deux resolvers"
+    assert data["g5"][13]["candidate_requirement"] == "ADR et contrats publics approuvés"
+    assert sum(row["priority"] == "P0" for row in data["oracles"]) == 39
+    assert data["oracles"][27]["priority"] == "P1"
+    assert all(row["independent_adjudication"] == "PENDING" for row in data["oracles"])
+
+
+def test_m4_owner_development_merge_waiver_never_grants_security_go() -> None:
+    data = json.loads(
+        (ROOT / "docs/qualification/M4_EVIDENCE_MANIFEST.json").read_text(encoding="utf-8")
+    )
+    decision = data["maintainer_development_merge_decision"]
+    assert decision["status"] == "AUTHORIZED_TO_MERGE_DEVELOPMENT_ONLY"
+    assert decision["independent_security_gate"] == "NO-GO"
+    assert decision["release_and_production"] == "NOT_AUTHORIZED"
+    assert decision["approved_rotation_for_reference_host"] == "NO_OVERLAP"
+    assert decision["bounded_overlap_oracle_M4_T28"].startswith("NOT_APPLICABLE")
+    assert data["formal_gate"] == "NO-GO"
+    assert all(row["independent_adjudication"] == "PENDING" for row in data["oracles"])
+    assert data["reviewer_identity"] is None
+    assert data["acceptance_signature"] is None

@@ -1,0 +1,111 @@
+"""Compose an M6 runtime without changing the existing M2 authentication API."""
+
+from collections.abc import Iterable
+from dataclasses import dataclass
+
+from pyauthkit.application.engine import AuthenticationEngine
+from pyauthkit.application.host_context import HostTrustCatalog
+from pyauthkit.application.policy import AuthenticationPolicyGate, FinalRule
+from pyauthkit.composition.registry import AuthenticatorRegistryBuilder
+from pyauthkit.domain.evidence import EvidenceMethod
+from pyauthkit.domain.secret import SecretRef
+from pyauthkit.domain.trust import TrustProfileRef
+from pyauthkit.ports.authenticator import Authenticator
+from pyauthkit.ports.events import AuthenticationEventSink
+
+from .audit import BoundedBestEffortAuditSink
+from .models import ConfigurationRejected, ConfigurationSnapshot
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class M6Runtime:
+    """One generation: catalog and engine are built together and never reloaded."""
+
+    snapshot: ConfigurationSnapshot
+    catalog: HostTrustCatalog
+    engine: AuthenticationEngine
+
+    def __repr__(self) -> str:
+        return "M6Runtime(<one approved generation>)"
+
+
+def compose_authentication_engine(
+    snapshot: ConfigurationSnapshot,
+    *,
+    authenticators: Iterable[Authenticator],
+    final_rule: FinalRule | None = None,
+    event_sink: AuthenticationEventSink | None = None,
+    minimum_generation: int = 1,
+) -> M6Runtime:
+    """Fail before activation if any method is missing or generation is stale.
+
+    `minimum_generation` must be supplied from a trustworthy host-owned
+    external generation ledger to provide anti-rollback across restarts.
+    Without that ledger this function cannot guarantee crash-safe rollback.
+    """
+    if not isinstance(snapshot, ConfigurationSnapshot):
+        raise ConfigurationRejected("invalid configuration snapshot")
+    if type(minimum_generation) is not int or minimum_generation < 1:
+        raise ConfigurationRejected("invalid generation floor")
+    if snapshot.generation.value < minimum_generation:
+        raise ConfigurationRejected("configuration generation is stale")
+    if snapshot.secret_refs:
+        # Generic callers cannot assert a secret consumer by supplying an
+        # already-created authenticator. Use the explicit M4 composition path.
+        raise ConfigurationRejected("secret consumer composition not implemented")
+    return _compose_approved_runtime(
+        snapshot,
+        authenticators=authenticators,
+        final_rule=final_rule,
+        event_sink=event_sink,
+        minimum_generation=minimum_generation,
+        admitted_secret_refs=frozenset(),
+    )
+
+
+def _compose_approved_runtime(
+    snapshot: ConfigurationSnapshot,
+    *,
+    authenticators: Iterable[Authenticator],
+    admitted_secret_refs: frozenset[SecretRef],
+    final_rule: FinalRule | None,
+    event_sink: AuthenticationEventSink | None,
+    minimum_generation: int,
+    admitted_jwt_refs: frozenset[TrustProfileRef] = frozenset(),
+) -> M6Runtime:
+    """Internal composition gate: admit only explicitly consumed trust profiles."""
+    if not isinstance(snapshot, ConfigurationSnapshot):
+        raise ConfigurationRejected("invalid configuration snapshot")
+    if type(minimum_generation) is not int or minimum_generation < 1:
+        raise ConfigurationRejected("invalid generation floor")
+    if snapshot.generation.value < minimum_generation:
+        raise ConfigurationRejected("configuration generation is stale")
+    if admitted_secret_refs != frozenset(snapshot.secret_refs):
+        raise ConfigurationRejected("unapproved secret consumer coverage")
+    expected_jwt_refs = frozenset(binding.profile.profile_ref for binding in snapshot.jwt_profiles)
+    if admitted_jwt_refs != expected_jwt_refs:
+        raise ConfigurationRejected("unapproved JWT trust consumer coverage")
+    if final_rule is not None and not callable(final_rule):
+        raise ConfigurationRejected("invalid final rule")
+    try:
+        catalog = HostTrustCatalog(snapshot.bindings)
+        builder = AuthenticatorRegistryBuilder()
+        for authenticator in authenticators:
+            builder.register(authenticator)
+        registry = builder.freeze()
+        approved: set[EvidenceMethod] = {
+            method for binding in snapshot.bindings for method in binding.allowed_methods
+        }
+        for method in approved:
+            registry.resolve(method)
+        gate = AuthenticationPolicyGate(catalog, final_rule=final_rule)
+        engine = AuthenticationEngine(
+            policy=gate,
+            registry=registry,
+            timeout_seconds=snapshot.timeout_seconds,
+            event_sink=(BoundedBestEffortAuditSink(event_sink) if event_sink is not None else None),
+        )
+    except Exception:
+        # Never expose an adapter's exception text or raw config values.
+        raise ConfigurationRejected("authentication composition rejected") from None
+    return M6Runtime(snapshot, catalog, engine)

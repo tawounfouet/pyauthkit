@@ -33,15 +33,9 @@ def main() -> int:
             for n in names
         ):
             raise RuntimeError("test-only fake or test module leaked into runtime wheel")
-        for required in (
-            "pyauthkit/application/engine.py",
-            "pyauthkit/ports/authenticator.py",
-            "pyauthkit/adapters/password/authenticator.py",
-            "pyauthkit/adapters/password/argon2id.py",
-            "pyauthkit/ports/password_guard.py",
-        ):
+        for required in ("pyauthkit/application/engine.py", "pyauthkit/ports/authenticator.py"):
             if required not in names:
-                raise RuntimeError(f"runtime contract missing from wheel: {required}")
+                raise RuntimeError(f"M2 runtime contract missing from wheel: {required}")
     with tarfile.open(archives[0], "r:gz") as tf:
         names = tf.getnames()
         if not any(name.endswith("/pyproject.toml") for name in names):
@@ -72,6 +66,14 @@ def main() -> int:
         env = os.environ.copy()
         env.pop("PYTHONPATH", None)
         subprocess.run([str(binary), "-c", script], cwd=temp_path, env=env, check=True)
+        # Execute a real PR-07 verifier in the isolated wheel environment on every OS.
+        # No optional FastAPI/PostgreSQL/Redis package is installed in that venv.
+        subprocess.run(
+            [str(binary), str(root / "scripts" / "smoke_m4_wheel.py")],
+            cwd=temp_path,
+            env=env,
+            check=True,
+        )
         # A second isolated environment installs the optional native verifier.
         # The first environment above proves core imports without that extra.
         password_env = temp_path / "password-venv"
