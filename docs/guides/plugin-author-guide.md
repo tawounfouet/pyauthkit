@@ -77,13 +77,10 @@ Le loader synchrone `load_approved_authenticators` est une interface non proprie
 ```python
 from pyauthkit.plugins import activate_approved_authenticators
 
+
 async def run_host(candidates, grants, snapshot, serve):
-    async with activate_approved_authenticators(
-        candidates, grants=grants
-    ) as authenticators:
-        runtime = compose_authentication_engine(
-            snapshot, authenticators=authenticators
-        )
+    async with activate_approved_authenticators(candidates, grants=grants) as authenticators:
+        runtime = compose_authentication_engine(snapshot, authenticators=authenticators)
         await serve(runtime)  # Stop ingress and drain before leaving the scope.
 ```
 
