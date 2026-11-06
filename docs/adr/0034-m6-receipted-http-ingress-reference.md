@@ -60,3 +60,30 @@ storage outage, concurrency and held SQL write locks.
 An additional CI job keeps FastAPI/Uvicorn/HTTPX out of the PyAuthKit
 runtime dependency surface. This proposal is NOT a production HTTP SDK,
 not a ratified mandatory-audit design and not evidence of GATE27-07 PASS.
+
+## Iteration 13 addendum - application-observable framing denial
+
+The reference host now sends malformed or unexpected HTTP framing observed
+inside `POST /authenticate` through a separate
+`ReceiptedDecisionGateway.reject_untrusted_transport` operation. It creates
+a server-owned attempt and correlation identifier, commits a bounded REJECTED
+event for the host-approved route and method, and returns 401 only after a
+matching local receipt. Failure to commit yields a fixed 503, not an unaudited
+401. It does NOT run a credential verifier or parse the untrusted request
+body; valid Authorization cannot override malformed framing.
+
+This corrects the previous early-return gap for requests reaching the
+FastAPI handler. **It does not cover** HTTP/ASGI parsing failures that are
+rejected before FastAPI dispatch, invalid HTTP methods, unknown routes,
+server crashes before an attempt is allocated, disconnected clients
+before dispatch, infrastructure errors, or proxy-layer denials.
+
+An independent OS-process qualification probe reopens a test SQLite store
+after a successful HTTP response and verifies the consumed attempt ID cannot
+produce a second receipt. A separate deterministic test cancels an awaiting
+coroutine while the SQLite worker is blocked, then observes that the local
+transaction can commit later, without returning `Authenticated` to the
+cancelled caller. These tests do not establish power-loss durability or an
+exactly-once transport response.
+
+GATE27-07 remains NO-GO. The public `required` mode is still rejected.

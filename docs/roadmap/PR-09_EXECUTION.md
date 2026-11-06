@@ -348,3 +348,30 @@ Exact HEAD CI: PENDING this iteration.
   Public `audit_delivery=required` remains rejected.
 
 Exact-head CI: PENDING at documentation authoring. GATE27-07 remains NO-GO.
+
+## 2026-11-06 development iteration 13 - refusal receipts and restart evidence
+
+- Closed one specific previously documented HTTP gap: framing denial
+  after the handler is entered now calls a gateway operation dedicated
+  to recording REJECTED before returning 401. It never verifies the
+  supplied Authorization header when the framing is invalid. SQLite
+  commit failure returns 503. The request body is never read as proof.
+- Added real TCP tests for a valid M4 or M5 credential accompanying an
+  untrusted request body: both are denied and receive a persisted
+  REJECTED audit event. A missing audit DB yields 503, not unaudited 401.
+- Added a separate local OS-process restart probe to reopen the SQLite
+  store, inspect one committed attempt, and verify its unique ID cannot
+  be committed a second time in the fresh process. No production key or
+  live AWS identity is involved.
+- Added a deterministic SQLite writer-lock/cancellation test demonstrating
+  an in-flight to_thread worker may commit *after* its awaiter was cancelled.
+  The cancelled caller never receives an authenticated result; reuse of
+  the consumed attempt ID is refused.
+- Explicitly OUT OF SCOPE: HTTP parser or reverse-proxy rejections before
+  application dispatch, unmatched routes/verbs, network disconnects before
+  dispatch, unauthenticated ledger identity, power-loss durability,
+  host-wide non-bypassable ingress and multi-replica fencing.
+- No public `audit_delivery=required` enablement. All candidate
+  behavioral proof remains test-only pending independent G7 review.
+
+Exact final-head workflow status: PENDING at documentation authoring.

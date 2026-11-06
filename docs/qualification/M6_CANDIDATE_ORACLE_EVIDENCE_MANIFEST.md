@@ -112,3 +112,18 @@ requirements remain PARTIAL/OPEN for production admission.
 A separate CI job validates HTTP qualification at the exact commit and
 must be checked together with all other workflow jobs. No public required
 mode is enabled.
+
+## Iteration 13 supplemental local oracles
+
+- FastAPI-handler-visible bad framing now generates a REJECTED receipt,
+  not a silent pre-gateway denial. If the local store is missing, HTTP 503
+  is returned rather than an unaudited HTTP 401.
+- The new separate-process probe verifies receipt visibility and
+  attempted-ID replay denial across a normal OS process restart.
+- A held SQLite lock plus coroutine cancellation demonstrates a worker
+  may finish the commit later while the cancelled caller receives no
+  positive response; repeated use of its ID fails.
+- Pre-handler proxy/HTTP parser errors, other routes and HTTP methods
+  remain outside the audit receipt boundary. This is NOT full-attempt
+  production coverage, exactly-once delivery or proof of crash safety.
+  Relevant G7 oracles remain PARTIAL, and GATE27-07 remains NO-GO.
