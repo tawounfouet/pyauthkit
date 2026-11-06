@@ -192,9 +192,7 @@ def main() -> None:
             self.calls = 0
 
         def token(self) -> bytes:
-            return hmac.new(
-                self.key, self.scope_ref.value.encode(), hashlib.sha256
-            ).digest()
+            return hmac.new(self.key, self.scope_ref.value.encode(), hashlib.sha256).digest()
 
         def verify(self, payload: bytes, *, scope_ref: TrustedScopeRef) -> bool:
             self.calls += 1
@@ -205,14 +203,11 @@ def main() -> None:
             )
 
     async def check_v2() -> None:
-        candidates_v2 = discover_authenticator_plugins(
-            enabled=True, group=ENTRY_POINT_GROUP_V2
-        )
+        candidates_v2 = discover_authenticator_plugins(enabled=True, group=ENTRY_POINT_GROUP_V2)
         selected_v2 = tuple(
             c
             for c in candidates_v2
-            if c.distribution == "pyauthkit-m7-synthetic-plugin"
-            and c.name == "host-scoped"
+            if c.distribution == "pyauthkit-m7-synthetic-plugin" and c.name == "host-scoped"
         )
         if len(selected_v2) != 1 or "m7_synthetic_plugin.v2" in sys.modules:
             raise RuntimeError("v2 discovery imported plugin code")
@@ -240,11 +235,13 @@ def main() -> None:
             if "m7_synthetic_plugin.v2" not in sys.modules:
                 raise RuntimeError("host-admitted v2 factory did not load")
             allowed = compose_authentication_engine(
-                snapshot, authenticators=loaded,
+                snapshot,
+                authenticators=loaded,
                 final_rule=lambda _subject, _entry: True,
             )
             denied = compose_authentication_engine(
-                snapshot, authenticators=loaded,
+                snapshot,
+                authenticators=loaded,
                 final_rule=lambda _subject, _entry: False,
             )
             correct = AuthenticationRequest(

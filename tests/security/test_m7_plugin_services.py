@@ -137,9 +137,7 @@ def installed_v2(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     return marker
 
 
-def services(
-    snapshot: ConfigurationSnapshot, verifier: HostHmacVerifier
-) -> PluginHostServices:
+def services(snapshot: ConfigurationSnapshot, verifier: HostHmacVerifier) -> PluginHostServices:
     return PluginHostServices.from_snapshot(
         snapshot,
         route_id="approved-route",
@@ -183,7 +181,8 @@ def test_spi2_requires_exact_preapproved_services_before_import(
                 pytest.fail("missing v2 services must never activate")
         with pytest.raises(PluginAdmissionRejected):
             async with activate_approved_authenticators(
-                approved, grants=(replace(grant(), version="2.0.0"),),
+                approved,
+                grants=(replace(grant(), version="2.0.0"),),
                 service_bindings=binding,
             ):
                 pytest.fail("wrong version must never activate")
@@ -221,8 +220,10 @@ def test_spi2_host_port_snapshot_is_immutable_and_redacted() -> None:
         )
     with pytest.raises(PluginAdmissionRejected):
         PluginHostServices.from_snapshot(
-            snapshot, route_id="approved-route",
-            method=EvidenceMethod.API_KEY, ports={"hash_verifier": b"raw-secret"},
+            snapshot,
+            route_id="approved-route",
+            method=EvidenceMethod.API_KEY,
+            ports={"hash_verifier": b"raw-secret"},
         )
 
 

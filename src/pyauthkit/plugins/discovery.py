@@ -55,7 +55,10 @@ class PluginCandidate:
 def _candidate_for(point: EntryPoint) -> PluginCandidate:
     """Read metadata and bound it before treating a candidate as selectable."""
     try:
-        if not isinstance(point, EntryPoint) or point.group not in (ENTRY_POINT_GROUP, ENTRY_POINT_GROUP_V2):
+        if not isinstance(point, EntryPoint) or point.group not in (
+            ENTRY_POINT_GROUP,
+            ENTRY_POINT_GROUP_V2,
+        ):
             raise PluginAdmissionRejected("invalid plugin entry point")
         distribution = point.dist
         if distribution is None:

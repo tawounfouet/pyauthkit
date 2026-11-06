@@ -147,9 +147,7 @@ services = PluginHostServices.from_snapshot(
     method=EvidenceMethod.API_KEY,
     ports={"hash_verifier": verifier_approuve},
 )
-candidates = discover_authenticator_plugins(
-    enabled=True, group=ENTRY_POINT_GROUP_V2
-)
+candidates = discover_authenticator_plugins(enabled=True, group=ENTRY_POINT_GROUP_V2)
 async with activate_approved_authenticators(
     candidates,
     grants=(grant,),

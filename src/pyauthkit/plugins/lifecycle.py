@@ -83,9 +83,7 @@ async def activate_approved_authenticators(
         # Keep v1's original zero-argument preflight interface.
         selected = _preflight_candidates(candidates, grants=grants)
     else:
-        selected = _preflight_candidates(
-            candidates, grants=grants, service_bindings=bindings
-        )
+        selected = _preflight_candidates(candidates, grants=grants, service_bindings=bindings)
     created: list[object] = []
     admitted: list[Authenticator] = []
     try:

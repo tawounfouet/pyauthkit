@@ -42,9 +42,7 @@ class PluginHostServices:
     ports: Mapping[str, object]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.binding, HostBinding) or not isinstance(
-            self.method, EvidenceMethod
-        ):
+        if not isinstance(self.binding, HostBinding) or not isinstance(self.method, EvidenceMethod):
             raise PluginAdmissionRejected("invalid plugin host binding")
         if self.method not in self.binding.allowed_methods:
             raise PluginAdmissionRejected("plugin method not approved for host route")
@@ -73,9 +71,7 @@ class PluginHostServices:
         """Bind to an EXACT operator-approved M6 route, never a caller claim."""
         if not isinstance(snapshot, ConfigurationSnapshot) or not isinstance(route_id, str):
             raise PluginAdmissionRejected("invalid host plugin snapshot")
-        matches = [
-            binding for binding in snapshot.bindings if binding.route_id == route_id
-        ]
+        matches = [binding for binding in snapshot.bindings if binding.route_id == route_id]
         if len(matches) != 1:
             raise PluginAdmissionRejected("plugin host route not configured")
         return cls(matches[0], method, ports)
