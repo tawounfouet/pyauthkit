@@ -79,6 +79,7 @@ def main() -> None:
     )
     if not isinstance(result, Rejected) or hasattr(result, "principal"):
         raise RuntimeError("unexpected plugin decision")
+
     async def check_managed() -> None:
         managed_grant = PluginGrant(
             distribution="pyauthkit-m7-synthetic-plugin",
