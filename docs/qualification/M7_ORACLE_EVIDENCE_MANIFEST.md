@@ -3,7 +3,7 @@
 Date initiale : 2026-11-06
 Milestone : M7 / PR-10
 Statut : **CANDIDATE / NOT QUALIFIED**
-Reference : \`M7_PYAUTHKIT_IMPLEMENTATION_PLAN.md\` fourni pour PR-10
+Reference : `M7_PYAUTHKIT_IMPLEMENTATION_PLAN.md` fourni pour PR-10
 
 Aucun oracle ci-dessous n'est marque PASS sur la base de la seule presence de son test. Des preuves de CI au SHA exact, logs, OS, Python et artefacts sont necessaires.
 

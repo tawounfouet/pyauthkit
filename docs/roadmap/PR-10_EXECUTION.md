@@ -1,9 +1,9 @@
 # PR-10 - M7 Public SDK & Plugin Admission - Execution Record
 
 > Date : 2026-11-06
-> Branch : \`feat/m7-public-sdk-plugin-admission-pr10\`
+> Branch : `feat/m7-public-sdk-plugin-admission-pr10`
 > Pull request : https://github.com/tawounfouet/pyauthkit/pull/84
-> Baseline : \`main@ac4669e86cd690170ab5f3c2b0c7945258e35f9d\`
+> Baseline : `main@ac4669e86cd690170ab5f3c2b0c7945258e35f9d`
 > Milestone : M7, GATE27-08
 > Statut : DEVELOPMENT IN PROGRESS / SECURITY NOT QUALIFIED
 
@@ -19,7 +19,7 @@ Rendre le SDK Python consommable sans invention de nouvelle autorite et introdui
 | M7-WP-02 | Surface publique SDK et quickstart | IMPLEMENTED, CI a verifier |
 | M7-WP-03 | SPI v1 via port M2 existant | IMPLEMENTED, revue requise |
 | M7-WP-04 | Contrats et tests negatifs SPI | PARTIAL, preuve CI requise |
-| M7-WP-05 | Metadata discovery, sans \`EntryPoint.load\` | IMPLEMENTED, preuve CI requise |
+| M7-WP-05 | Metadata discovery, sans `EntryPoint.load` | IMPLEMENTED, preuve CI requise |
 | M7-WP-06 | Grants hote, versions, collisions, refus | IMPLEMENTED, preuve CI requise |
 | M7-WP-07 | Loader post-admission et registry M6 | IMPLEMENTED, preuve CI requise |
 | M7-WP-08 | Lifecycle et fermeture de ressources | PARTIAL : ownership documente, cleanup async differe |
@@ -32,12 +32,12 @@ Les mentions IMPLEMENTED correspondent a du code propose dans PR-10, pas a une q
 
 ## Decisions de conception
 
-- Pas de nouveau \`SdkAuthenticator\` ni moteur de decision.
-- Surface publique explicite \`pyauthkit.sdk\`; la racine du paquet reste minimale.
-- \`pyauthkit.authenticators.v1\` ne s'active jamais automatiquement.
+- Pas de nouveau `SdkAuthenticator` ni moteur de decision.
+- Surface publique explicite `pyauthkit.sdk`; la racine du paquet reste minimale.
+- `pyauthkit.authenticators.v1` ne s'active jamais automatiquement.
 - Un grant approuve la distribution, la version exacte, l'entry point, la cible et la methode, avant import.
 - Metadata seule : pas d'attestation de signature / digest, pas de sandbox.
-- \`SPI_MAJOR=1\` et factory zero-argument; methode \`EvidenceMethod\` du domaine existant.
+- `SPI_MAJOR=1` et factory zero-argument; methode `EvidenceMethod` du domaine existant.
 - La composition M6 continue de refuser les paths secret/JWT generiques non admis.
 - Les gates GATE27-04 a GATE27-07 demeurent NO-GO independant de la CI M7.
 

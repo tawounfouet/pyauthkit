@@ -281,3 +281,33 @@ jobs:
         run: python -m pytest -v -s qualification/host/tests
       - name: M3 KDF performance study (informational only)
         run: python scripts/benchmark_m3_password.py
+
+  m7_sdk_plugins:
+    name: M7 public SDK and plugin admission (candidate, pre-alpha)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without credentials
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
+        with:
+          python-version: "3.12"
+      - name: Install standalone M7 test tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev]"
+      - name: Execute M7 SDK and plugin admission tests
+        run: |
+          python -m pytest -v tests/unit/test_m7_sdk_public_api.py tests/security/test_m7_plugin_admission.py
+      - name: Build wheel and sdist
+        run: python -m build
+      - name: Isolated wheel import and Python-only quickstart
+        run: |
+          python -m venv .m7-wheel
+          .m7-wheel/bin/python -m pip install --no-deps "$(ls dist/pyauthkit-*.whl)"
+          .m7-wheel/bin/python -c "import pyauthkit.sdk, pyauthkit.plugins; from importlib.metadata import version; assert version('pyauthkit') == pyauthkit.sdk.__version__ if hasattr(pyauthkit.sdk, '__version__') else version('pyauthkit') == '0.1.0a1'"
+          .m7-wheel/bin/python examples/m7_pure_python.py
+          .m7-wheel/bin/python -c "from zipfile import ZipFile; from pathlib import Path; w = next(Path('dist').glob('pyauthkit-*.whl')); z = ZipFile(w); assert 'pyauthkit/py.typed' in z.namelist(); assert 'pyauthkit/plugins/admission.py' in z.namelist()"

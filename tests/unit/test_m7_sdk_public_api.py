@@ -2,6 +2,7 @@
 
 import asyncio
 import runpy
+import subprocess
 import sys
 from pathlib import Path
 
@@ -61,13 +62,13 @@ def test_public_manifest_exports_only_selected_symbols() -> None:
 
 
 def test_importing_sdk_and_plugins_does_not_pull_optional_providers() -> None:
-    import pyauthkit.plugins  # noqa: F401
-    import pyauthkit.sdk  # noqa: F401
-
-    assert not any(
-        name in sys.modules
-        for name in ("django", "fastapi", "boto3", "jwt", "argon2", "redis")
+    # Import in a fresh process: test collection itself may import optional extras.
+    script = (
+        "import sys; import pyauthkit.plugins, pyauthkit.sdk; "
+        "assert not any(name in sys.modules for name in "
+        "('django', 'fastapi', 'boto3', 'jwt', 'argon2', 'redis'))"
     )
+    subprocess.run([sys.executable, "-c", script], check=True)
 
 
 def test_synthetic_quickstart_script_runs(capsys: pytest.CaptureFixture[str]) -> None:

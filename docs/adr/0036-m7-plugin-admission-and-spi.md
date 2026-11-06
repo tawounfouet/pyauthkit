@@ -4,15 +4,15 @@ Status: PROPOSED / PR-10 REVIEW
 Date: 2026-11-06
 
 ## Contexte
-Les entry points installes sont du metadata non fiable. Appeler \`EntryPoint.load()\` durant la decouverte execute potentiellement du code tiers avant toute approbation. L'authenticator M2 existe deja et sa registry peut etre gelee.
+Les entry points installes sont du metadata non fiable. Appeler `EntryPoint.load()` durant la decouverte execute potentiellement du code tiers avant toute approbation. L'authenticator M2 existe deja et sa registry peut etre gelee.
 
 ## Decision proposee
-- Groupe \`pyauthkit.authenticators.v1\`.
+- Groupe `pyauthkit.authenticators.v1`.
 - Decouverte desactivee par defaut; metadata uniquement, taille et formats bornes.
 - Grant hote exact sur nom canonique de distribution, version, groupe, entry point, cible et methode.
 - Preflight de tous les grants avant toute execution; refuser absence, collision et mismatch.
-- Factory sans arguments avec \`SPI_MAJOR=1\`, qui retourne le port existant \`Authenticator\`.
-- Controle post-load de la methode et de \`async verify\`; pas de final result expose au plugin.
+- Factory sans arguments avec `SPI_MAJOR=1`, qui retourne le port existant `Authenticator`.
+- Controle post-load de la methode et de `async verify`; pas de final result expose au plugin.
 - Composer exclusivement via le composition root et la policy M2/M6 existants.
 - Aucune notion de signature de supply chain ou de sandbox dans cette ADR.
 
