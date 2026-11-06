@@ -6,9 +6,9 @@ The bundle is not an OS sandbox, cryptographic capability, or a mechanism for
 authenticating the Python caller. In-process third-party code remains trusted.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Mapping
 
 from pyauthkit.application.host_context import HostBinding
 from pyauthkit.configuration.models import ConfigurationSnapshot
