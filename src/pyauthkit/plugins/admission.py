@@ -63,19 +63,10 @@ class PluginGrant:
         return "PluginGrant(<operator-approved exact identity and method>)"
 
 
-def load_approved_authenticators(
+def _preflight_candidates(
     candidates: Iterable[PluginCandidate], *, grants: Iterable[PluginGrant]
-) -> tuple[Authenticator, ...]:
-    """Preflight ALL allowlisted candidates before executing ANY plugin.
-
-    Unknown installed candidates are ignored. Every requested grant must
-    match exactly one installed distribution/version/group/name/target. Once
-    loaded, the factory SPI and method are checked before returning instances
-    to the existing immutable composition root.
-
-    A failed bootstrap returns no instances; code executed before a failure
-    cannot be rolled back by Python. Do not call during live request handling.
-    """
+) -> tuple[tuple[PluginCandidate, PluginGrant], ...]:
+    """Validate all host grants and distribution metadata without executing plugin code."""
     try:
         available = tuple(candidates)
         approved = tuple(grants)
@@ -122,23 +113,51 @@ def load_approved_authenticators(
     except Exception:
         raise PluginAdmissionRejected("plugin admission preflight failed") from None
 
+    return tuple(selected)
+
+
+def _instantiate_approved(
+    candidate: PluginCandidate,
+    grant: PluginGrant,
+    *,
+    on_created: Callable[[object], None] | None = None,
+) -> Authenticator:
+    """Load exactly one preflighted entry point and check its existing SPI."""
+    factory: object = candidate._entry_point.load()
+    if (
+        type(getattr(factory, "SPI_MAJOR", None)) is not int
+        or getattr(factory, "SPI_MAJOR", None) != grant.spi_major
+        or not callable(factory)
+    ):
+        raise PluginAdmissionRejected("unsupported plugin SPI")
+    instance: object = cast(Callable[[], object], factory)()
+    # Managed activation observes the instance before post-construction checks,
+    # so its aclose hook can run even when its declared method is invalid.
+    if on_created is not None:
+        on_created(instance)
+    method = getattr(instance, "method", None)
+    verify = getattr(instance, "verify", None)
+    if method is not grant.method or not inspect.iscoroutinefunction(verify):
+        raise PluginAdmissionRejected("invalid plugin authenticator")
+    return cast(Authenticator, instance)
+
+
+def load_approved_authenticators(
+    candidates: Iterable[PluginCandidate], *, grants: Iterable[PluginGrant]
+) -> tuple[Authenticator, ...]:
+    """Load approved authenticator instances with caller-owned lifecycle.
+
+    Prefer activate_approved_authenticators for resource-owning plugins.
+    This legacy synchronous API cannot unwind async resources if later
+    factories fail; it is suitable for explicitly stateless plugins only.
+    The host must not invoke it while serving authentication requests.
+    """
+    selected = _preflight_candidates(candidates, grants=grants)
     instances: list[Authenticator] = []
     for candidate, grant in selected:
         try:
-            factory: object = candidate._entry_point.load()
-            if (
-                type(getattr(factory, "SPI_MAJOR", None)) is not int
-                or getattr(factory, "SPI_MAJOR", None) != grant.spi_major
-                or not callable(factory)
-            ):
-                raise PluginAdmissionRejected("unsupported plugin SPI")
-            instance: object = cast(Callable[[], object], factory)()
-            method = getattr(instance, "method", None)
-            verify = getattr(instance, "verify", None)
-            if method is not grant.method or not inspect.iscoroutinefunction(verify):
-                raise PluginAdmissionRejected("invalid plugin authenticator")
-            instances.append(cast(Authenticator, instance))
+            instance = _instantiate_approved(candidate, grant)
+            instances.append(instance)
         except Exception:
-            # Sanitized: plugin exceptions may contain credentials or host settings.
             raise PluginAdmissionRejected("plugin activation rejected") from None
     return tuple(instances)
