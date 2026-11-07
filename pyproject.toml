@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "pyauthkit"
 version = "0.1.0a1"
-description = "Modular Python authentication engine (bootstrap only)"
+description = "Modular Python authentication engine (pre-alpha)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
