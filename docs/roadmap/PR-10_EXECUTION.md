@@ -26,7 +26,7 @@ Rendre le SDK Python consommable sans invention de nouvelle autorite et introdui
 | M7-WP-09 | Guides d'usage et auteur plugin | IMPLEMENTED CANDIDATE : guide capability executable via wheel, couverture documentaire partielle |
 | M7-WP-10 | Packaging wheel/sdist/extras | TESTED CI Linux 3.12/3.13/3.14, macOS et Windows 3.12 |
 | M7-WP-11 | ADR, learning cards et oracles | PARTIAL, NO-GO securite |
-| M7-WP-12 | CI, review et dossier de fusion | PENDING, PR DRAFT |
+| M7-WP-12 | CI, review et dossier de fusion | T30 REVIEW-READY CANDIDATE : CI 13/13, dossier present, revue independante ABSENTE, PR DRAFT |
 
 Les mentions IMPLEMENTED correspondent a du code propose dans PR-10, pas a une qualification de securite. La matrice d'oracles constitue la source de verite du gate.
 
@@ -78,3 +78,11 @@ La fiabilite de l'inventaire des methodes reservees appartient a l'hote. La libr
 - Exemple `docs/guides/m7-capability-contract.md` execute par `scripts/check_m7_doc_examples.py` dans la CI M7 sur wheel isolee.
 - ADR 0041 et learning card ajoutes; evidences et limitations sur les oracles T19/T25.
 - Aucune validation de securite de production, aucun merge ni release.
+
+## Audit T30 de préparation à revue (2026-11-07)
+
+Preuves vérifiées dans `M7_T30_INDEPENDENT_REVIEW_READINESS_2026-11-07.md` : PR #84 au SHA `573334f7fe372ef07659dd6c85e02801ac529891`, run #42320391541 success (13/13), check-runs success (14/14 dont GitGuardian), ruleset main actif, 7 checks obligatoires.
+
+Écart P0 : `required_approving_review_count=0`, aucune revue ou reviewer request ; GitGuardian et job M7 non requis. HTTP 403 sur classic branch protection. Ticket de remédiation #88.
+
+**Décision T30 : PARTIAL (CI). GATE27-08 NO-GO SECURITY.** Le dossier est une entrée pour une revue indépendante, pas un certificat. Ne pas merger ni publier.

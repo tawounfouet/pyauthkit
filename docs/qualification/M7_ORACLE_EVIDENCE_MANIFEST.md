@@ -38,7 +38,7 @@ Aucun oracle ne reçoit ici de PASS de securite. La colonne `TESTED (CI)` indiqu
 | M7-T27 | Installation core sans extras | smoke wheel candidat | TESTED (CI) |
 | M7-T28 | M6 required audit interdit | test_m7_sdk_public_api.py | TESTED (CI) |
 | M7-T29 | Non regression M3-M6 | CI complete a examiner | TESTED (CI) |
-| M7-T30 | Provenance SHA et decision | Ce manifest devra etre actualise | PARTIAL (CI) |
+| M7-T30 | Provenance SHA et decision | M7_T30_INDEPENDENT_REVIEW_READINESS_2026-11-07.md, CI/check-runs et ruleset au SHA exact | PARTIAL (CI) |
 
 Toute mise a jour doit indiquer SHA exact, workflow/job, OS, Python, verdict, preuve et reviewer. Ne pas convertir un test code en PASS sans execution.
 
@@ -107,3 +107,12 @@ Voir `M7_T17_T24_ADVERSARIAL_HARDENING.md` et ADR 0040 PROPOSED.
 - **T25** : `docs/guides/m7-capability-contract.md` fournit un bloc Python autonome. `scripts/check_m7_doc_examples.py` l'execute depuis la wheel isolee dans le job `m7_sdk_plugins`. D'autres extraits de documentation restent illustratifs et ne sont pas des doctests.
 - **Statut** : T19 = PARTIAL (CI), car les permissions reelles de chaque port et son origine fiable ne peuvent pas etre demontrees par la validation de roles. T25 = PARTIAL (CI), car un sous-ensemble cible des guides est execute, pas toute la reference SDK.
 - **Decision** : pas de GO GATE27-08 sur cette seule tranche. Revue independente, supply chain, limites du Python in-process et qualification cryptographique de plugins reels restent ouvertes.
+
+## T30 - Vérification du gate et du SHA (2026-11-07)
+
+- Audit source au SHA `573334f7fe372ef07659dd6c85e02801ac529891`, base `main@ac4669e86cd690170ab5f3c2b0c7945258e35f9d`.
+- CI exacte : https://github.com/tawounfouet/pyauthkit/actions/runs/42320391541 - 13/13 jobs SUCCESS; 14/14 check-runs SUCCESS incluant GitGuardian.
+- 689 tests globaux et 61 tests M7, mypy strict 85 fichiers. Voir `M7_T30_INDEPENDENT_REVIEW_READINESS_2026-11-07.md` pour IDs des jobs et matrice d'oracles.
+- Ruleset `PYAUTHKIT_PROTECT_MAIN` actif pour main, 7 checks requis, mais **0 approbation requise**; `GitGuardian Security Checks` et le job M7 ne sont pas requis; aucune revue PR n'est enregistrée.
+- Endpoint classic branch protection HTTP 403 : configuration additionnelle non vérifiable avec cette intégration.
+- Remédiation issue #88, revue et signature indépendantes en attente. T30 reste PARTIAL (CI). GATE27-08 = NO-GO SECURITY / NO-GO PRODUCTION.

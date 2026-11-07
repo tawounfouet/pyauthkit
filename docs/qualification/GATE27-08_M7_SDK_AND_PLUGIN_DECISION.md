@@ -45,3 +45,11 @@ Preuve technique : code SHA `7a98e4545e7fccfd1c696d2555a7499b61be5394`, run http
 ## T19/T25 - Role allowlist et documentation executable
 
 L'API candidate `PluginGrant.port_roles` borne l'ensemble des ports v2 d'apres la methode d'authentification, puis exige la correspondance exacte du bundle avant import. Un script de CI execute un bloc de guide autonome depuis une wheel installee. Ces controles ameliorent la traçabilite de capabilities et l'exactitude de la documentation, mais ne prouvent ni la securite d'un port, ni la provenance d'un plugin. T19 et T25 demeurent PARTIAL (CI), en attente de revue independante et couverture complementaire. ADR 0041 PROPOSED.
+
+## T30 - Revue de readiness au SHA exact
+
+- Source de preuve : `docs/qualification/M7_T30_INDEPENDENT_REVIEW_READINESS_2026-11-07.md`.
+- PR #84 Draft, non fusionnée, 0 review et 0 reviewer request.
+- Workflow https://github.com/tawounfouet/pyauthkit/actions/runs/42320391541 : 13/13 jobs SUCCESS sur SHA `573334f7fe372ef07659dd6c85e02801ac529891`; 14 check-runs verts.
+- Ruleset de `main` actif, strict, mais zéro approbation requise et GitGuardian non obligatoire. La protection classique n'est pas accessible (403). Voir issue #88.
+- Le dossier est prêt pour examen documentaire, **pas** qualifié par une autorité indépendante. 5 oracles restent PARTIAL (CI) : T17, T19, T24, T25, T30. Statut NO-GO maintenu.
