@@ -36,9 +36,7 @@ snapshot = ConfigurationSnapshot(
     schema_version=1,
     generation=ConfigurationGeneration(1),
     provenance=SourceProvenance("m7-doc", "host", "v1"),
-    bindings=(
-        HostBinding("route-doc", scope, profile, frozenset({EvidenceMethod.API_KEY})),
-    ),
+    bindings=(HostBinding("route-doc", scope, profile, frozenset({EvidenceMethod.API_KEY})),),
     timeout_seconds=1.0,
     audit_delivery=AuditDeliveryPolicy(),
 )

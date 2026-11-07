@@ -61,10 +61,7 @@ class PluginGrant:
                 != (SPI_MAJOR if self.group == ENTRY_POINT_GROUP else SPI_MAJOR_V2)
                 or not isinstance(self.method, EvidenceMethod)
                 or not isinstance(self.port_roles, frozenset)
-                or (
-                    self.spi_major == SPI_MAJOR
-                    and bool(self.port_roles)
-                )
+                or (self.spi_major == SPI_MAJOR and bool(self.port_roles))
                 or (
                     self.spi_major == SPI_MAJOR_V2
                     and (
