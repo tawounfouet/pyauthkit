@@ -164,7 +164,22 @@ def _instantiate_approved(
     on_created: Callable[[object], None] | None = None,
     services: PluginHostServices | None = None,
 ) -> Authenticator:
-    """Load exactly one preflighted entry point and check its existing SPI."""
+    """Revalidate snapshot metadata at load time, then import a granted entry point.
+
+    Detects mutation between the full batch preflight and this load. This does
+    NOT attest that Python will import code owned by the distribution or close
+    an import/filesystem time-of-check to time-of-use race.
+    """
+    observed = _candidate_for(candidate._entry_point)
+    if (
+        observed != candidate
+        or observed.distribution != grant.distribution
+        or observed.version != grant.version
+        or observed.group != grant.group
+        or observed.name != grant.name
+        or observed.target != grant.target
+    ):
+        raise PluginAdmissionRejected("plugin metadata changed before import")
     factory: object = candidate._entry_point.load()
     if (
         type(getattr(factory, "SPI_MAJOR", None)) is not int
