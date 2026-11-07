@@ -278,9 +278,7 @@ def test_entry_point_changed_after_batch_preflight_never_imports(
     point, marker = installed_plugin(monkeypatch, tmp_path)
     candidates = discover_authenticator_plugins(enabled=True)
     original_preflight = admission._preflight_candidates
-    metadata = (
-        tmp_path / "m7-site" / "m7_approved_plugin-1.0.0.dist-info" / "METADATA"
-    )
+    metadata = tmp_path / "m7-site" / "m7_approved_plugin-1.0.0.dist-info" / "METADATA"
 
     def modified_after_preflight(*args: object, **kwargs: object) -> object:
         selected = original_preflight(*args, **kwargs)  # type: ignore[arg-type]
