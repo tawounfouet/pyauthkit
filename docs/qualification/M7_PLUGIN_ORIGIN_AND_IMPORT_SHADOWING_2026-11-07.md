@@ -50,3 +50,7 @@ Décision d'architecture **NON PRISE** : ne pas ajouter une simple vérification
 **M7-T16** conserve la preuve de comparaison de version/distribution, sans attestation de provenance. **M7-T30** reste PARTIAL (CI) car un risque de supply chain démontré et les validations de gouvernance (#88) ne sont pas résolus. GATE27-08 demeure **NO-GO SECURITY / NO-GO PRODUCTION** jusqu'à l'approbation indépendante d'un modèle de provenance.
 
 **CI / SHA :** à rattacher après réussite vérifiée de la nouvelle suite sur le commit de code et sur le HEAD documentaire. Les runs précédents ne prouvent pas cette nouvelle tranche.
+
+## 7. Pré-installation d'une wheel à digest approuvé (candidat ADR 0043)
+
+Le module `pyauthkit.plugins.artifacts.verify_preinstall_wheel_digest` vérifie hors import un digest SHA-256 explicite issu d'une source hôte indépendante, et confronte nom/version et cible d'entry point aux valeurs du `PluginGrant`. Le ZIP n'est jamais extrait ou exécuté. Tests : `tests/security/test_m7_wheel_artifact_identity.py`. **Limite :** cette preuve porte sur le fichier `.whl` fourni au contrôle, pas sur les octets du module réellement importé après installation. Aucune provenance cryptographique n'est établie si l'hôte n'a pas obtenu le digest d'un canal de confiance; les modifications d'environnement, races et shadowing restent ouverts. Issue #89 et GATE27-08 NO-GO.
