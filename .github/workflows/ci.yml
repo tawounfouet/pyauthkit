@@ -310,6 +310,7 @@ jobs:
           .m7-wheel/bin/python -m pip install --no-deps "$(ls dist/pyauthkit-*.whl)"
           .m7-wheel/bin/python -c "import pyauthkit.sdk, pyauthkit.plugins; from importlib.metadata import version; assert version('pyauthkit') == pyauthkit.sdk.__version__ if hasattr(pyauthkit.sdk, '__version__') else version('pyauthkit') == '0.1.0a1'"
           .m7-wheel/bin/python examples/m7_pure_python.py
+          .m7-wheel/bin/python scripts/check_m7_doc_examples.py
           .m7-wheel/bin/python -c "from zipfile import ZipFile; from pathlib import Path; w = next(Path('dist').glob('pyauthkit-*.whl')); z = ZipFile(w); assert 'pyauthkit/py.typed' in z.namelist(); assert 'pyauthkit/plugins/admission.py' in z.namelist()"
       - name: Build and install independent synthetic plugin wheel
         run: |
