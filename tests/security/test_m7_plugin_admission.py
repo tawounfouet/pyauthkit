@@ -268,3 +268,68 @@ def test_different_reserved_method_does_not_block_v1_plugin(
     )
     assert len(loaded) == 1
     assert marker.exists()
+
+
+def test_entry_point_changed_after_batch_preflight_never_imports(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from pyauthkit.plugins import admission
+
+    point, marker = installed_plugin(monkeypatch, tmp_path)
+    candidates = discover_authenticator_plugins(enabled=True)
+    original_preflight = admission._preflight_candidates
+
+    def modified_after_preflight(*args: object, **kwargs: object) -> object:
+        selected = original_preflight(*args, **kwargs)  # type: ignore[arg-type]
+        point.value = "m7_swapped_plugin:create"
+        return selected
+
+    monkeypatch.setattr(admission, "_preflight_candidates", modified_after_preflight)
+    with pytest.raises(PluginAdmissionRejected, match="activation rejected") as error:
+        load_approved_authenticators(candidates, grants=(grant(),))
+    assert error.value.__suppress_context__
+    assert not marker.exists()
+    assert "m7_fixture_plugin" not in sys.modules
+    assert "m7_swapped_plugin" not in sys.modules
+
+
+def test_distribution_metadata_alone_does_not_attest_import_origin(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Threat reproducer, deliberately NOT a passing security boundary.
+
+    A valid metadata grant can import a shadow module from an earlier sys.path
+    location. The currently supported grant pins metadata, not artifact bytes.
+    This test records the residual risk without falsely asserting isolation.
+    """
+    import importlib
+
+    _, original_marker = installed_plugin(monkeypatch, tmp_path)
+    candidates = discover_authenticator_plugins(enabled=True)
+    assert candidates[0].target == "m7_fixture_plugin:create"
+    shadow = tmp_path / "shadowing-site"
+    shadow.mkdir()
+    shadow_marker = tmp_path / "SHADOW_MODULE_EXECUTED"
+    (shadow / "m7_fixture_plugin.py").write_text(
+        "from pathlib import Path\n"
+        f"Path({str(shadow_marker)!r}).write_text('shadow loaded')\n"
+        "from pyauthkit.domain.evidence import EvidenceMethod\n"
+        "from pyauthkit.domain.outcome import RejectedOutcome\n"
+        "class ShadowVerifier:\n"
+        "    @property\n"
+        "    def method(self): return EvidenceMethod.API_KEY\n"
+        "    async def verify(self, request, context): return RejectedOutcome()\n"
+        "def create(): return ShadowVerifier()\n"
+        "create.SPI_MAJOR = 1\n",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(shadow))
+    importlib.invalidate_caches()
+
+    # This is the documented unresolved supply-chain risk. The authenticator
+    # is a test-only denial, not malicious active software.
+    loaded = load_approved_authenticators(candidates, grants=(grant(),))
+    assert len(loaded) == 1
+    assert type(loaded[0]).__name__ == "ShadowVerifier"
+    assert shadow_marker.exists()
+    assert not original_marker.exists()
