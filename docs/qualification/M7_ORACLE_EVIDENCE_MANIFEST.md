@@ -25,14 +25,14 @@ Aucun oracle ne reçoit ici de PASS de securite. La colonne `TESTED (CI)` indiqu
 | M7-T14 | Plugin non admis non execute | test deny/sentinel | TESTED (CI) |
 | M7-T15 | Allowlist hote exacte | tests de grants | TESTED (CI) |
 | M7-T16 | Distribution et version pinnees | parametrized mismatch | TESTED (CI) |
-| M7-T17 | Doublons/collision | tests duplicates partiels | PARTIAL (CI) |
+| M7-T17 | Doublons/collision | test_m7_plugin_admission.py + test_m7_plugin_services.py : reserved_methods avant import | PARTIAL (CI) |
 | M7-T18 | Majeure SPI incompatible | test spi mismatch | TESTED (CI) |
 | M7-T19 | Methode/capability inconnue | Validation des roles host ports SPI v2 et enum; capabilities fines restant a revoir | PARTIAL (CI) |
 | M7-T20 | Freeze registry | tests M2 existants | TESTED (CI) |
 | M7-T21 | Plugin ne change pas final gate | tests/security/test_m7_plugin_positive_proof.py + installed wheel synthetic positive | TESTED (CI) |
 | M7-T22 | Cross-scope/tenant | M7 SPI v2 host-scope wrapper + positive declared proof cross-scope tests | TESTED (CI) |
 | M7-T23 | Fermeture ressources owned | test_m7_plugin_lifecycle.py (reverse cleanup / failures) | TESTED (CI) |
-| M7-T24 | No secrets dans exceptions | tests partial canary | PARTIAL (CI) |
+| M7-T24 | No secrets dans exceptions | tests SPI v2 descriptors/mappings canary et activation/sanitization | PARTIAL (CI) |
 | M7-T25 | Docs et API reellement executes | quickstart CI candidat | PARTIAL (CI) |
 | M7-T26 | PEP561 / extras wheel | smoke wheel candidat | TESTED (CI) |
 | M7-T27 | Installation core sans extras | smoke wheel candidat | TESTED (CI) |
@@ -84,3 +84,16 @@ Reste a auditer : restriction multi-tenant liee a la registry par methode, prove
 Les preuves couvrent des fixtures/test doubles de confiance limitee. Le secret HMAC de qualification est PUBLIC et ne prouve ni cryptographie de production, ni supply-chain attestation, ni isolation du plugin.
 
 **Toujours NO-GO GATE27-08** : arbitrage des privileges de ports, limites mono-scope par factory, origine des packages, verification de tous les oracles P0 et signature independante encore necessaires. Voir #85, #86 et #87.
+
+## Renforcement adversarial T17/T24 - preuve du 7 novembre 2026
+
+- **Code HEAD teste** : `7a98e4545e7fccfd1c696d2555a7499b61be5394`.
+- **Workflow CI** : https://github.com/tawounfouet/pyauthkit/actions/runs/42317026300 ; **13/13 jobs SUCCESS** sur le PR merge ref de ce head.
+- **Tests** : 57/57 tests M7 PASS, 685 tests globaux PASS, Ruff PASS, mypy strict 85 fichiers PASS.
+- **T17** : `reserved_methods` facultatif pour le host est verifie en preflight avant `EntryPoint.load()` (v1 et v2). L'absence d'import lors d'un conflit de methode est demontree par sentinel; les methodes inconnues sont refusees. La registry M2 garde son test final de collision.
+- **T24** : descripteur de port malveillant, mapping de ports malveillant, mapping de service bindings malveillant : exceptions expurgees avant activation. Une exception brute potentiellement sensible n'est pas incluse dans `str(PluginAdmissionRejected)`.
+- **Packaging** : smoke M7 wheel independente et integrations reference M3/M4/M5/M6 PASS, jobs de compatibilite Linux Python 3.12/3.13/3.14, macOS 3.12 et Windows 3.12 PASS.
+
+**Statuts conserves :** M7-T17 = PARTIAL (CI) car l'inventaire des methodes internes doit etre fourni par le host; la composition rejette les doublons meme sans cet inventaire, mais apres une eventuelle execution du plugin. M7-T24 = PARTIAL (CI) car l'expurgation des erreurs aux frontieres connues ne peut ni isoler un plugin in-process ni empecher ses logs ou effets de bord volontaires. La qualification independante GATE27-08 reste NO-GO.
+
+Voir `M7_T17_T24_ADVERSARIAL_HARDENING.md` et ADR 0040 PROPOSED.

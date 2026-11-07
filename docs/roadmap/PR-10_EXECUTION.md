@@ -18,9 +18,9 @@ Rendre le SDK Python consommable sans invention de nouvelle autorite et introdui
 | M7-WP-01 | Baseline, inventaire et branche PR-10 | IMPLEMENTED (voir commits de PR) |
 | M7-WP-02 | Surface publique SDK et quickstart | IMPLEMENTED / TESTED CI head a4e12634 |
 | M7-WP-03 | SPI v1/v2 explicite et port M2 existant | IMPLEMENTED CANDIDATE : declaration positive (#86), injection host-bound v2 (#87), revue requise |
-| M7-WP-04 | Contrats et tests negatifs SPI | IMPLEMENTED / TESTED CI 50 tests M7, revue independante requise |
+| M7-WP-04 | Contrats et tests negatifs SPI | TESTED CI 7a98e454 : 57 tests M7, revue independante requise |
 | M7-WP-05 | Metadata discovery, sans `EntryPoint.load` | IMPLEMENTED / TESTED CI v1 et v2 |
-| M7-WP-06 | Grants hote, versions, collisions, refus | IMPLEMENTED / TESTED CI, qualification collisions partielle |
+| M7-WP-06 | Grants hote, versions, collisions, refus | TESTED CI 7a98e454 : pre-import reserved_methods v1/v2, revue independante requise |
 | M7-WP-07 | Loader post-admission et registry M6 | IMPLEMENTED / TESTED CI, scope v2 mono-route |
 | M7-WP-08 | Lifecycle et fermeture de ressources | IMPLEMENTED CANDIDATE : managed async activation, tests et revue requise |
 | M7-WP-09 | Guides d'usage et auteur plugin | IMPLEMENTED, docstests a verifier |
@@ -58,3 +58,14 @@ Les mentions IMPLEMENTED correspondent a du code propose dans PR-10, pas a une q
 - Quality : 678 tests pytest PASS, Ruff PASS, mypy 85 fichiers PASS.
 - M7 dedicated : 50 tests PASS; wheel independante host-scoped SPI v2 + revocation et tenant croise PASS.
 - Decisions de securite : **non qualifie**; issue #85 ouverte, SPI v2 #87 candidat, ADR 0039 proposed, aucun merge ni publication.
+
+## Tranche T17/T24 - hardening avant revue externe
+
+Source validee : `7a98e4545e7fccfd1c696d2555a7499b61be5394` ; CI : https://github.com/tawounfouet/pyauthkit/actions/runs/42317026300 ; 13/13 SUCCESS, 57 M7 PASS, 685 pytest PASS.
+
+- Preflight `reserved_methods` pour stopper les collisions de methodes deja utilisees par les authenticators host avant import, sur SPI v1 et SPI v2.
+- Erreurs de construction de `PluginHostServices` et de mappings de grants expurgees, tests canary.
+- Nouvelles preuves pour M7-T17 et M7-T24, **statuts PARTIAL** maintenus.
+- ADR 0040 et dossier adversarial proposes. Aucune decision GO securite.
+
+La fiabilite de l'inventaire des methodes reservees appartient a l'hote. La library ne peut pas prouver que le plugin respecte les obligations de confidentialite de maniere generale.

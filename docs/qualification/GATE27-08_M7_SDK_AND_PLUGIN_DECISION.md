@@ -34,3 +34,9 @@ Le helper ne retourne jamais un `Authenticated` final. Le moteur refuse les inco
 ## SPI v2 host services (#87)
 
 Une evolution candidate introduit un contrat factory v2 distinct de v1, un bundle de ports approuves par l'hote et un refus avant delegation en cas de scope/profil/methode/correlation non conforme. La registry reste indexee par methode et ne permet donc **pas** de router de multiples instances v2 sur des tenants differents sans composition dediee. Le risque in-process et la provenance du code demeurent inchanges. Aucune qualification de cette evolution ne peut etre deduite des seules preuves CI de l'ancienne tranche.
+
+## Controle pre-import et exceptions de ports - T17/T24
+
+L'interface candidate ajoute `reserved_methods` avant chargement, avec test sentinel pour prevenir l'import d'un plugin qui collide avec un authenticator reserve par le host. La validite de cet inventaire reste la responsabilite de l'hote. Les exceptions courantes de descripteurs/mappings de ports et services sont expurgees. Les logs arbitraires de plugins in-process ne peuvent pas etre contenus ici.
+
+Preuve technique : code SHA `7a98e4545e7fccfd1c696d2555a7499b61be5394`, run https://github.com/tawounfouet/pyauthkit/actions/runs/42317026300 (13/13 jobs success). **T17/T24 PARTIAL, GATE27-08 NO-GO SECURITE** jusqu'a audit et revue independante.

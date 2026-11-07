@@ -165,6 +165,16 @@ Le wrapper ajoute avant la composition refuse toute tentative dont methode, scop
 Le groupe v2 n'est pas une sandbox ni une signature de distribution. Le port host-owned peut conserver un secret ou un handle; le code du plugin s'execute dans le processus hote et peut y acceder. Un `PluginHostServices` cree par un client ou un header HTTP n'acquiert aucune autorite. L'hote valide provenance, permissions, revocation, timeout et fermeture de ses propres ports. La factory v2 n'est activable que dans le scope **gere**; le chargeur synchrone v1 rejette v2.
 
 Le smoke de la wheel `qualification/m7_sdk/synthetic_plugin` emploie un port HMAC avec cle fixe **publique et synthetique** uniquement pour le test du mecanisme : validite du MAC, refus de revocation, blocage tenant croise et policy finale. Ce n'est pas un verifier de credentials pour la production.
+## Prevention des collisions avant l'import (T17)
+
+Le host doit inventorier les methodes des authenticators deja composes et les transmettre dans le parametre `reserved_methods` du loader synchrone v1 ou de `activate_approved_authenticators` pour le scope gere v1/v2. Exemple de valeur hote : `reserved_methods=(EvidenceMethod.PASSWORD,)`. Ce parametre ne provient jamais des headers, des credentials ou d'un manifeste de plugin non fiable.
+
+Le preflight valide les methodes reservees avec tous les grants **avant** d'appeler `EntryPoint.load()`. Un conflit refuse donc l'activation sans importer le plugin. Sans inventaire de l'hote, la registry M2 refuse toujours la collision a la composition, mais le code tiers peut deja avoir ete execute. Le parametre est une obligation explicite de l'integrateur lorsqu'il combine des authenticators internes et des plugins.
+
+## Confidentialite des exceptions de ports (T24)
+
+`PluginHostServices` capture et expurge les erreurs ordinaires provenant des descripteurs de port et des mappings, y compris les erreurs a la lecture des objets avant chargement d'un plugin. Le scope gere expurge egalement les exceptions des mappings de grants. Les messages publics ne contiennent pas les valeurs d'exception brutes. Ces defenses ne peuvent pas empecher un plugin Python approuve de journaliser des secrets lui-meme, d'effectuer un acces reseau ou de produire des effets de bord. Les ports sensibles doivent etre audites et geres par le host.
+
 ## Frontieres et risques
 
 1. Discovery est desactivee par defaut et lit uniquement les metadonnees des `EntryPoint`. Aucun `EntryPoint.load()` n'est appele dans cette phase.
@@ -172,8 +182,8 @@ Le smoke de la wheel `qualification/m7_sdk/synthetic_plugin` emploie un port HMA
 3. Tous les grants sont controles avant le premier `load()` ; les distributions inconnues sont ignorees, et toute ambiguite ou exigence non satisfaite refuse le bootstrap.
 4. `EntryPoint.load()` execute du code tiers avec les privileges du processus hote. Ce composant ne verifie pas de signature cryptographique d'artefact et n'offre pas d'isolation OS.
 5. Apres chargement, la version SPI, la factory, la methode `EvidenceMethod` et le comportement `async verify` sont controles. Ce sont des controles structurels, pas une qualification de l'algorithme.
-6. La registry existante est construite et gelee avant trafic. Les collisions de methode avec des authenticators internes sont refusees au bootstrap.
-7. Toute exception est expurgee. Une factory ayant deja execute du code peut avoir eu des effets de bord : le host reste responsable de la revue du plugin, des ressources et du shutdown.
+6. Le host transmet `reserved_methods` pour refuser des collisions connues avant import. La registry existante refuse aussi les doublons a la composition, mais potentiellement apres execution du code de la factory si le host a omis cette liste.
+7. Les exceptions traitees par les frontieres d'admission et de ports sont expurgees. Cela ne garantit pas la confidentialite des sorties/logs volontaires du plugin. Les effets d'un import ou d'une factory deja executee ne sont pas annulables.
 8. Ne pas faire de hot reload, de chargement a la requete, de fallback de methode ou de selection de plugin a partir de donnees client.
 
 Une methode au-dela des `EvidenceMethod` existantes demande une evolution distincte du domaine et un nouveau gate. Le SPI v1 ne promet pas de compatibilite globale `1.0`.
