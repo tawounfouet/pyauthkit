@@ -7,7 +7,7 @@ import pytest
 
 from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.domain.outcome import RejectedOutcome
-from pyauthkit.plugins import PluginAdmissionRejected, PluginGrant, lifecycle
+from pyauthkit.plugins import PluginAdmissionRejected, PluginGrant, admission, lifecycle
 from pyauthkit.plugins.lifecycle import activate_approved_authenticators
 
 
@@ -67,6 +67,7 @@ def admitted(
     *results: object,
 ) -> None:
     approved = []
+    metadata: dict[int, SimpleNamespace] = {}
     for index, result in enumerate(results):
         method = EvidenceMethod.API_KEY if index == 0 else EvidenceMethod.JWT
         grant = PluginGrant(
@@ -76,14 +77,24 @@ def admitted(
             target=f"module:factory_{index}",
             method=method,
         )
-        candidate = SimpleNamespace(_entry_point=Point(Factory(result)))
+        point = Point(Factory(result))
+        candidate = SimpleNamespace(
+            _entry_point=point,
+            distribution=grant.distribution,
+            version=grant.version,
+            group=grant.group,
+            name=grant.name,
+            target=grant.target,
+        )
+        metadata[id(point)] = candidate
         approved.append((candidate, grant))
 
     def preflight(_candidates: object, *, grants: object) -> tuple[object, ...]:
         return tuple(approved)
 
-    # This isolates lifecycle tests; real metadata preflight has its own tests.
+    # Isolate lifecycle semantics; integration tests exercise real metadata.
     monkeypatch.setattr(lifecycle, "_preflight_candidates", preflight)
+    monkeypatch.setattr(admission, "_candidate_for", lambda point: metadata[id(point)])
 
 
 def test_managed_lifetime_closes_in_reverse_order(

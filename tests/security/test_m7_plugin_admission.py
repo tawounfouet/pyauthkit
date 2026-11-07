@@ -321,8 +321,7 @@ def test_distribution_metadata_alone_does_not_attest_import_origin(
     shadow.mkdir()
     shadow_marker = tmp_path / "SHADOW_MODULE_EXECUTED"
     (shadow / "m7_fixture_plugin.py").write_text(
-        "from pathlib import Path\n"
-        f"Path({str(shadow_marker)!r}).write_text('shadow loaded')\n",
+        f"from pathlib import Path\nPath({str(shadow_marker)!r}).write_text('shadow loaded')\n",
         encoding="utf-8",
     )
     monkeypatch.syspath_prepend(str(shadow))
