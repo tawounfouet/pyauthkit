@@ -24,6 +24,13 @@ _MAX_META_SIZE = 64 * 1024
 _MAX_MEMBERS = 10000
 
 
+class _CaseSensitiveEntryPoints(ConfigParser):
+    """Keep entry-point names case-sensitive when checking an exact grant."""
+
+    def optionxform(self, optionstr: str) -> str:
+        return optionstr
+
+
 def verify_preinstall_wheel_digest(
     wheel_path: Path, *, expected_sha256: str, grant: PluginGrant
 ) -> None:
@@ -96,8 +103,7 @@ def verify_preinstall_wheel_digest(
             if len(entry_info) != 1 or entry_info[0].file_size > _MAX_META_SIZE:
                 raise PluginAdmissionRejected("wheel entry points missing or ambiguous")
             raw_entries = archive.read(entry_info[0]).decode("utf-8")
-            parser = ConfigParser(interpolation=None, strict=True)
-            parser.optionxform = str
+            parser = _CaseSensitiveEntryPoints(interpolation=None, strict=True)
             parser.read_string(raw_entries)
             if (
                 not parser.has_section(grant.group)
