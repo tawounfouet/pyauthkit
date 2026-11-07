@@ -28,6 +28,22 @@ _PORT_ROLES = {
     "event_sink": "emit",
 }
 
+# Candidate M7 v2 least-privilege compatibility policy. A role's method
+# signature alone does not grant it to every authentication method.
+_METHOD_PORT_ROLES: Mapping[EvidenceMethod, frozenset[str]] = MappingProxyType(
+    {
+        EvidenceMethod.PASSWORD: frozenset(
+            {"record_resolver", "attempt_guard", "hash_verifier", "clock", "event_sink"}
+        ),
+        EvidenceMethod.API_KEY: frozenset(
+            {"record_resolver", "attempt_guard", "hash_verifier", "clock", "event_sink"}
+        ),
+        EvidenceMethod.JWT: frozenset(
+            {"key_resolver", "record_resolver", "attempt_guard", "clock", "event_sink"}
+        ),
+    }
+)
+
 
 @dataclass(frozen=True, slots=True, repr=False)
 class PluginHostServices:
@@ -53,7 +69,11 @@ class PluginHostServices:
                 raise PluginAdmissionRejected("invalid plugin host ports")
             owned: dict[str, object] = {}
             for role, port in self.ports.items():
-                if not isinstance(role, str) or role not in _PORT_ROLES:
+                if (
+                    not isinstance(role, str)
+                    or role not in _PORT_ROLES
+                    or role not in _METHOD_PORT_ROLES.get(self.method, frozenset())
+                ):
                     raise PluginAdmissionRejected("unsupported plugin host port")
                 if not callable(getattr(port, _PORT_ROLES[role], None)):
                     raise PluginAdmissionRejected("invalid plugin host port")

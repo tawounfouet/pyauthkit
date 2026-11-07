@@ -26,7 +26,7 @@ from .discovery import (
     _candidate_for,
     canonical_distribution,
 )
-from .services import PluginHostServices
+from .services import PluginHostServices, _METHOD_PORT_ROLES
 
 
 @dataclass(frozen=True, slots=True, repr=False)
@@ -40,6 +40,7 @@ class PluginGrant:
     method: EvidenceMethod
     group: str = ENTRY_POINT_GROUP
     spi_major: int = SPI_MAJOR
+    port_roles: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
         # Constructing a grant is an operator action, not an admission by itself.
@@ -59,6 +60,20 @@ class PluginGrant:
                 or self.spi_major
                 != (SPI_MAJOR if self.group == ENTRY_POINT_GROUP else SPI_MAJOR_V2)
                 or not isinstance(self.method, EvidenceMethod)
+                or not isinstance(self.port_roles, frozenset)
+                or (
+                    self.spi_major == SPI_MAJOR
+                    and bool(self.port_roles)
+                )
+                or (
+                    self.spi_major == SPI_MAJOR_V2
+                    and (
+                        not self.port_roles
+                        or not self.port_roles.issubset(
+                            _METHOD_PORT_ROLES.get(self.method, frozenset())
+                        )
+                    )
+                )
             ):
                 raise PluginAdmissionRejected("invalid host plugin grant")
         except PluginAdmissionRejected:
@@ -134,6 +149,7 @@ def _preflight_candidates(
                 or not isinstance(bundle, PluginHostServices)
                 or grant.method is not bundle.method
                 or grant.group != ENTRY_POINT_GROUP_V2
+                or grant.port_roles != frozenset(bundle.ports)
             ):
                 raise PluginAdmissionRejected("invalid plugin host services")
     except PluginAdmissionRejected:
