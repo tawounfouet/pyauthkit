@@ -308,7 +308,7 @@ def test_distribution_metadata_alone_does_not_attest_import_origin(
     another module name first. This test PROVES AN UNRESOLVED TRUST GAP,
     not that the plugin origin is secured or an executable exploit occurred.
     """
-    import importlib.util
+    import importlib
 
     _, original_marker = installed_plugin(monkeypatch, tmp_path)
     approved = discover_authenticator_plugins(enabled=True)
@@ -326,7 +326,7 @@ def test_distribution_metadata_alone_does_not_attest_import_origin(
         encoding="utf-8",
     )
     monkeypatch.syspath_prepend(str(shadow))
-    importlib.util.invalidate_caches()
+    importlib.invalidate_caches()
 
     # For a simple top-level module, find_spec reports the path that the
     # import system would resolve WITHOUT calling import_module or exec().
