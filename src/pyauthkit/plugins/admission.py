@@ -1,7 +1,7 @@
 """Host-controlled admission before loading third-party Python code.
 
-A plugin factory is an opt-in zero-argument callable with SPI_MAJOR = 1.
-It returns an existing Authenticator port, never an AuthenticationResult.
+A v1 factory is a zero-argument callable; an explicitly admitted v2 factory
+receives a host-owned service bundle. Neither issues an AuthenticationResult.
 Admission is not code isolation or a supply-chain signature verification.
 """
 
@@ -75,6 +75,7 @@ def _preflight_candidates(
     *,
     grants: Iterable[PluginGrant],
     service_bindings: Mapping[PluginGrant, PluginHostServices] | None = None,
+    reserved_methods: Iterable[EvidenceMethod] = (),
 ) -> tuple[tuple[PluginCandidate, PluginGrant], ...]:
     """Validate all host grants and distribution metadata without executing plugin code."""
     try:
@@ -94,8 +95,13 @@ def _preflight_candidates(
                 raise PluginAdmissionRejected("ambiguous plugin entry point")
             seen_candidates.add(key)
 
+        reserved = tuple(reserved_methods)
+        if not all(isinstance(method, EvidenceMethod) for method in reserved):
+            raise PluginAdmissionRejected("invalid reserved authenticator methods")
         seen_grants: set[tuple[str, str]] = set()
-        seen_methods: set[EvidenceMethod] = set()
+        # Before any EntryPoint.load(), reject methods already owned by the
+        # host's built-in authenticators. The host must supply this inventory.
+        seen_methods: set[EvidenceMethod] = set(reserved)
         selected: list[tuple[PluginCandidate, PluginGrant]] = []
         for grant in approved:
             key = (grant.group, grant.name)
@@ -208,16 +214,23 @@ class _ScopedAuthenticator:
 
 
 def load_approved_authenticators(
-    candidates: Iterable[PluginCandidate], *, grants: Iterable[PluginGrant]
+    candidates: Iterable[PluginCandidate],
+    *,
+    grants: Iterable[PluginGrant],
+    reserved_methods: Iterable[EvidenceMethod] = (),
 ) -> tuple[Authenticator, ...]:
     """Load approved authenticator instances with caller-owned lifecycle.
 
     Prefer activate_approved_authenticators for resource-owning plugins.
     This legacy synchronous API cannot unwind async resources if later
     factories fail; it is suitable for explicitly stateless plugins only.
+    The host may reserve methods of built-in authenticators at preflight
+    to reject collisions before importing any approved plugin module.
     The host must not invoke it while serving authentication requests.
     """
-    selected = _preflight_candidates(candidates, grants=grants)
+    selected = _preflight_candidates(
+        candidates, grants=grants, reserved_methods=reserved_methods
+    )
     instances: list[Authenticator] = []
     for candidate, grant in selected:
         try:
