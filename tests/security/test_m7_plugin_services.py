@@ -82,6 +82,7 @@ def grant() -> PluginGrant:
         name="hmac-synthetic",
         target="m7_spi2_fixture:create",
         method=EvidenceMethod.API_KEY,
+        port_roles=frozenset({"hash_verifier"}),
     )
 
 
@@ -413,3 +414,84 @@ def test_spi2_malicious_service_binding_mapping_is_sanitized(
 
     asyncio.run(scenario())
     assert not marker.exists()
+
+
+def test_spi2_grant_rejects_missing_or_unapproved_roles() -> None:
+    with pytest.raises(PluginAdmissionRejected):
+        replace(grant(), port_roles=frozenset())
+    with pytest.raises(PluginAdmissionRejected):
+        replace(grant(), port_roles=frozenset({"unknown_role"}))
+    with pytest.raises(PluginAdmissionRejected):
+        replace(grant(), method=EvidenceMethod.JWT, port_roles=frozenset({"hash_verifier"}))
+    with pytest.raises(PluginAdmissionRejected):
+        replace(grant(), port_roles=("hash_verifier",))  # type: ignore[arg-type]
+
+
+def test_legacy_grant_cannot_inject_v2_roles() -> None:
+    from pyauthkit.plugins import ENTRY_POINT_GROUP
+
+    with pytest.raises(PluginAdmissionRejected):
+        PluginGrant(
+            distribution="legacy-fixture",
+            version="1.0.0",
+            name="legacy",
+            target="legacy.factory:create",
+            method=EvidenceMethod.API_KEY,
+            group=ENTRY_POINT_GROUP,
+            spi_major=1,
+            port_roles=frozenset({"hash_verifier"}),
+        )
+
+
+def test_spi2_rejects_port_role_incompatible_with_method() -> None:
+    class Resolver:
+        def resolve(self, value: object) -> object:
+            return None
+
+    with pytest.raises(PluginAdmissionRejected, match="unsupported plugin host port"):
+        PluginHostServices.from_snapshot(
+            host_snapshot(),
+            route_id="approved-route",
+            method=EvidenceMethod.API_KEY,
+            ports={"key_resolver": Resolver()},
+        )
+
+
+def test_spi2_grant_and_host_ports_must_match_before_plugin_import(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    marker = installed_v2(monkeypatch, tmp_path)
+    approved = candidates()
+    snapshot = host_snapshot()
+    verifier = HostHmacVerifier(snapshot.bindings[0].scope_ref)
+
+    class Clock:
+        def now(self) -> int:
+            return 0
+
+    ungranted = PluginHostServices.from_snapshot(
+        snapshot,
+        route_id="approved-route",
+        method=EvidenceMethod.API_KEY,
+        ports={"hash_verifier": verifier, "clock": Clock()},
+    )
+    overgranted = replace(grant(), port_roles=frozenset({"hash_verifier", "clock"}))
+
+    async def scenario() -> None:
+        with pytest.raises(PluginAdmissionRejected, match="host services"):
+            async with activate_approved_authenticators(
+                approved, grants=(grant(),), service_bindings={grant(): ungranted}
+            ):
+                pytest.fail("extra port cannot reach plugin factory")
+        assert not marker.exists()
+        with pytest.raises(PluginAdmissionRejected, match="host services"):
+            async with activate_approved_authenticators(
+                approved,
+                grants=(overgranted,),
+                service_bindings={overgranted: services(snapshot, verifier)},
+            ):
+                pytest.fail("missing port cannot reach plugin factory")
+        assert not marker.exists()
+
+    asyncio.run(scenario())
+    assert "m7_spi2_fixture" not in sys.modules

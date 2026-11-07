@@ -140,6 +140,7 @@ grant = PluginGrant(
     name="host-scoped",
     target="my_extension.factory:create",
     method=EvidenceMethod.API_KEY,
+    port_roles=frozenset({"hash_verifier"}),
 )
 services = PluginHostServices.from_snapshot(
     host_snapshot,

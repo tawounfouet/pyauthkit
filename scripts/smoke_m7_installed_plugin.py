@@ -226,6 +226,7 @@ def main() -> None:
             name="host-scoped",
             target="m7_synthetic_plugin.v2:create_host_scoped",
             method=EvidenceMethod.API_KEY,
+            port_roles=frozenset({"hash_verifier"}),
         )
         async with activate_approved_authenticators(
             selected_v2,
