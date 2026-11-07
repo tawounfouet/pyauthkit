@@ -311,3 +311,105 @@ def test_spi2_mismatched_bundle_method_is_rejected_without_import(
         PluginHostServices(snapshot.bindings[0], EvidenceMethod.JWT, {"hash_verifier": verifier})
 
     assert not marker.exists()
+
+
+def test_spi2_reserved_internal_method_rejected_before_import(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    marker = installed_v2(monkeypatch, tmp_path)
+    approved = candidates()
+    snapshot = host_snapshot()
+    verifier = HostHmacVerifier(snapshot.bindings[0].scope_ref)
+
+    async def scenario() -> None:
+        with pytest.raises(PluginAdmissionRejected, match="duplicate"):
+            async with activate_approved_authenticators(
+                approved,
+                grants=(grant(),),
+                service_bindings={grant(): services(snapshot, verifier)},
+                reserved_methods=(EvidenceMethod.API_KEY,),
+            ):
+                pytest.fail("host-reserved method must never execute a plugin")
+
+    asyncio.run(scenario())
+    assert not marker.exists()
+    assert "m7_spi2_fixture" not in sys.modules
+
+
+def test_spi2_port_descriptor_errors_are_sanitized() -> None:
+    class HostilePort:
+        @property
+        def verify(self) -> object:
+            raise RuntimeError("private-port-secret-canary")
+
+    snapshot = host_snapshot()
+    with pytest.raises(PluginAdmissionRejected) as error:
+        PluginHostServices.from_snapshot(
+            snapshot,
+            route_id="approved-route",
+            method=EvidenceMethod.API_KEY,
+            ports={"hash_verifier": HostilePort()},
+        )
+    assert "private-port-secret-canary" not in str(error.value)
+    assert error.value.__suppress_context__
+
+
+def test_spi2_hostile_ports_mapping_is_sanitized() -> None:
+    from collections.abc import Iterator, Mapping
+
+    class HostilePorts(Mapping[str, object]):
+        def __iter__(self) -> Iterator[str]:
+            return iter(("hash_verifier",))
+
+        def __len__(self) -> int:
+            return 1
+
+        def __getitem__(self, key: str) -> object:
+            raise RuntimeError("private-mapping-secret-canary")
+
+        def items(self) -> object:
+            raise RuntimeError("private-mapping-secret-canary")
+
+    snapshot = host_snapshot()
+    with pytest.raises(PluginAdmissionRejected) as error:
+        PluginHostServices.from_snapshot(
+            snapshot,
+            route_id="approved-route",
+            method=EvidenceMethod.API_KEY,
+            ports=HostilePorts(),
+        )
+    assert "private-mapping-secret-canary" not in str(error.value)
+    assert error.value.__suppress_context__
+
+
+def test_spi2_malicious_service_binding_mapping_is_sanitized(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from collections.abc import Iterator, Mapping
+
+    marker = installed_v2(monkeypatch, tmp_path)
+    approved = candidates()
+
+    class HostileBindings(Mapping[PluginGrant, PluginHostServices]):
+        def __iter__(self) -> Iterator[PluginGrant]:
+            raise RuntimeError("private-binding-secret-canary")
+
+        def __len__(self) -> int:
+            return 1
+
+        def __getitem__(self, key: PluginGrant) -> PluginHostServices:
+            raise RuntimeError("private-binding-secret-canary")
+
+    async def scenario() -> None:
+        with pytest.raises(PluginAdmissionRejected) as error:
+            async with activate_approved_authenticators(
+                approved,
+                grants=(grant(),),
+                service_bindings=HostileBindings(),
+            ):
+                pytest.fail("hostile bindings cannot activate")
+        assert "private-binding-secret-canary" not in str(error.value)
+        assert error.value.__suppress_context__
+
+    asyncio.run(scenario())
+    assert not marker.exists()

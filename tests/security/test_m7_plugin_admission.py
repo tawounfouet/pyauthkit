@@ -227,3 +227,44 @@ def test_duplicate_method_grants_prevent_any_load(
 def test_grant_validation_rejects_unknown_method() -> None:
     with pytest.raises(PluginAdmissionRejected):
         replace(grant(), method="unlisted-method")  # type: ignore[arg-type]
+
+
+def test_reserved_builtin_method_rejects_v1_before_import(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _, marker = installed_plugin(monkeypatch, tmp_path)
+    candidates = discover_authenticator_plugins(enabled=True)
+    with pytest.raises(PluginAdmissionRejected, match="duplicate") as err:
+        load_approved_authenticators(
+            candidates, grants=[grant()], reserved_methods=(EvidenceMethod.API_KEY,)
+        )
+    assert "private-canary-value" not in str(err.value)
+    assert "m7_fixture_plugin" not in sys.modules
+    assert not marker.exists()
+
+
+def test_unknown_reserved_method_is_sanitized_and_does_not_import(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _, marker = installed_plugin(monkeypatch, tmp_path)
+    candidates = discover_authenticator_plugins(enabled=True)
+    with pytest.raises(PluginAdmissionRejected, match="reserved") as err:
+        load_approved_authenticators(
+            candidates,
+            grants=[grant()],
+            reserved_methods=["private-canary-method"],  # type: ignore[list-item]
+        )
+    assert "private-canary-method" not in str(err.value)
+    assert not marker.exists()
+
+
+def test_different_reserved_method_does_not_block_v1_plugin(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _, marker = installed_plugin(monkeypatch, tmp_path)
+    candidates = discover_authenticator_plugins(enabled=True)
+    loaded = load_approved_authenticators(
+        candidates, grants=[grant()], reserved_methods=(EvidenceMethod.JWT,)
+    )
+    assert len(loaded) == 1
+    assert marker.exists()
