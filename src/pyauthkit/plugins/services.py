@@ -42,22 +42,28 @@ class PluginHostServices:
     ports: Mapping[str, object]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.binding, HostBinding) or not isinstance(self.method, EvidenceMethod):
-            raise PluginAdmissionRejected("invalid plugin host binding")
-        if self.method not in self.binding.allowed_methods:
-            raise PluginAdmissionRejected("plugin method not approved for host route")
-        if not isinstance(self.ports, Mapping):
-            raise PluginAdmissionRejected("invalid plugin host ports")
-        owned: dict[str, object] = {}
-        for role, port in self.ports.items():
-            if not isinstance(role, str) or role not in _PORT_ROLES:
-                raise PluginAdmissionRejected("unsupported plugin host port")
-            if not callable(getattr(port, _PORT_ROLES[role], None)):
-                raise PluginAdmissionRejected("invalid plugin host port")
-            owned[role] = port
-        if not owned or len(owned) > len(_PORT_ROLES):
-            raise PluginAdmissionRejected("invalid plugin host ports")
-        object.__setattr__(self, "ports", MappingProxyType(owned))
+        try:
+            if not isinstance(self.binding, HostBinding) or not isinstance(self.method, EvidenceMethod):
+                raise PluginAdmissionRejected("invalid plugin host binding")
+            if self.method not in self.binding.allowed_methods:
+                raise PluginAdmissionRejected("plugin method not approved for host route")
+            if not isinstance(self.ports, Mapping):
+                raise PluginAdmissionRejected("invalid plugin host ports")
+            owned: dict[str, object] = {}
+            for role, port in self.ports.items():
+                if not isinstance(role, str) or role not in _PORT_ROLES:
+                    raise PluginAdmissionRejected("unsupported plugin host port")
+                if not callable(getattr(port, _PORT_ROLES[role], None)):
+                    raise PluginAdmissionRejected("invalid plugin host port")
+                owned[role] = port
+            if not owned or len(owned) > len(_PORT_ROLES):
+                raise PluginAdmissionRejected("invalid plugin host ports")
+            object.__setattr__(self, "ports", MappingProxyType(owned))
+        except PluginAdmissionRejected:
+            raise
+        except Exception:
+            # A port descriptor or Mapping.items() can raise with secret text.
+            raise PluginAdmissionRejected("invalid plugin host ports") from None
 
     @classmethod
     def from_snapshot(
@@ -69,12 +75,17 @@ class PluginHostServices:
         ports: Mapping[str, object],
     ) -> "PluginHostServices":
         """Bind to an EXACT operator-approved M6 route, never a caller claim."""
-        if not isinstance(snapshot, ConfigurationSnapshot) or not isinstance(route_id, str):
-            raise PluginAdmissionRejected("invalid host plugin snapshot")
-        matches = [binding for binding in snapshot.bindings if binding.route_id == route_id]
-        if len(matches) != 1:
-            raise PluginAdmissionRejected("plugin host route not configured")
-        return cls(matches[0], method, ports)
+        try:
+            if not isinstance(snapshot, ConfigurationSnapshot) or not isinstance(route_id, str):
+                raise PluginAdmissionRejected("invalid host plugin snapshot")
+            matches = [binding for binding in snapshot.bindings if binding.route_id == route_id]
+            if len(matches) != 1:
+                raise PluginAdmissionRejected("plugin host route not configured")
+            return cls(matches[0], method, ports)
+        except PluginAdmissionRejected:
+            raise
+        except Exception:
+            raise PluginAdmissionRejected("invalid host plugin snapshot") from None
 
     @property
     def scope_ref(self) -> TrustedScopeRef:
