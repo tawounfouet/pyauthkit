@@ -43,7 +43,9 @@ class PluginHostServices:
 
     def __post_init__(self) -> None:
         try:
-            if not isinstance(self.binding, HostBinding) or not isinstance(self.method, EvidenceMethod):
+            if not isinstance(self.binding, HostBinding) or not isinstance(
+                self.method, EvidenceMethod
+            ):
                 raise PluginAdmissionRejected("invalid plugin host binding")
             if self.method not in self.binding.allowed_methods:
                 raise PluginAdmissionRejected("plugin method not approved for host route")

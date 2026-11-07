@@ -228,9 +228,7 @@ def load_approved_authenticators(
     to reject collisions before importing any approved plugin module.
     The host must not invoke it while serving authentication requests.
     """
-    selected = _preflight_candidates(
-        candidates, grants=grants, reserved_methods=reserved_methods
-    )
+    selected = _preflight_candidates(candidates, grants=grants, reserved_methods=reserved_methods)
     instances: list[Authenticator] = []
     for candidate, grant in selected:
         try:
