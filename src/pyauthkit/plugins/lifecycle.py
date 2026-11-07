@@ -14,6 +14,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Iterable, Mappin
 from contextlib import asynccontextmanager
 from typing import cast
 
+from pyauthkit.domain.evidence import EvidenceMethod
 from pyauthkit.ports.authenticator import Authenticator
 
 from .admission import PluginGrant, _instantiate_approved, _preflight_candidates
@@ -58,6 +59,7 @@ async def activate_approved_authenticators(
     grants: Iterable[PluginGrant],
     cleanup_timeout_seconds: float = 3.0,
     service_bindings: Mapping[PluginGrant, PluginHostServices] | None = None,
+    reserved_methods: Iterable[EvidenceMethod] | None = None,
 ) -> AsyncIterator[tuple[Authenticator, ...]]:
     """Load approved plugins and attempt reverse-order cleanup on every exit.
 
@@ -66,7 +68,8 @@ async def activate_approved_authenticators(
     subsequently rejects it. Partial activation and cancellation trigger
     cleanup; any remaining uncertainty is rejected, never authenticated.
 
-    No new verifier may be loaded while the host is processing requests.
+    A host may reserve already-composed method names to reject collisions
+    before import. No verifier may be loaded while serving live requests.
     The host is responsible for draining requests before leaving the scope.
     """
     if (
@@ -77,13 +80,21 @@ async def activate_approved_authenticators(
     ):
         raise PluginAdmissionRejected("invalid plugin cleanup timeout")
 
-    # Copy the host-owned grant mapping before any factory executes.
-    bindings = {} if service_bindings is None else dict(service_bindings)
-    if service_bindings is None:
-        # Keep v1's original zero-argument preflight interface.
+    # A malformed or hostile mapping must not leak a raw value or exception.
+    try:
+        bindings = {} if service_bindings is None else dict(service_bindings)
+    except Exception:
+        raise PluginAdmissionRejected("invalid plugin host service mapping") from None
+    if service_bindings is None and reserved_methods is None:
+        # Preserve the original v1 bootstrap call for existing integrations.
         selected = _preflight_candidates(candidates, grants=grants)
     else:
-        selected = _preflight_candidates(candidates, grants=grants, service_bindings=bindings)
+        selected = _preflight_candidates(
+            candidates,
+            grants=grants,
+            service_bindings=bindings,
+            reserved_methods=() if reserved_methods is None else reserved_methods,
+        )
     created: list[object] = []
     admitted: list[Authenticator] = []
     try:
