@@ -21,7 +21,7 @@ Ce contrôle complète `_preflight_candidates`, qui reste obligatoire pour **tou
 `tests/security/test_m7_plugin_admission.py` :
 
 1. `test_entry_point_changed_after_batch_preflight_never_imports` simule une mutation de l'objet `EntryPoint.value` **après** le preflight batch. Le chargeur doit refuser avant d'exécuter du code tiers. Critère : aucune sentinelle d'import créée.
-2. `test_distribution_metadata_alone_does_not_attest_import_origin` place un module de test homonyme dans un répertoire prioritaire de `sys.path`, sans changer les métadonnées du grant. Le test montre que la résolution peut choisir ce module. Le résultat **illustre une vulnérabilité non résolue**, il ne prouve pas la sécurité du dispositif.
+2. `test_distribution_metadata_alone_does_not_attest_import_origin` place un module homonyme dans un répertoire prioritaire de `sys.path`, sans changer les métadonnées du grant. `find_spec` démontre que le nom résout vers ce chemin, **sans importer ni exécuter le module**. Ce résultat établit une discordance de provenance possible, mais ne constitue ni un exploit exécuté ni un mécanisme de protection.
 
 Les modules sont des fixtures de refus `RejectedOutcome`. Aucun code offensif ou secret de production n'est nécessaire.
 

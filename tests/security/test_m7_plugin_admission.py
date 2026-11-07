@@ -302,66 +302,37 @@ def test_entry_point_changed_after_batch_preflight_never_imports(
 def test_distribution_metadata_alone_does_not_attest_import_origin(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Document the known import-origin gap in a bounded subprocess.
+    """Resolve a shadow path without importing or running third-party code.
 
-    The child resolves a shadow module via sys.path, even though the installed
-    entry-point metadata matches an exact host grant. This is a threat
-    reproducer, NOT evidence of a secured origin. Isolating the child prevents
-    module-cache pollution and limits third-party import side effects.
+    The grant matches installed distribution metadata, but Python would find
+    another module name first. This test PROVES AN UNRESOLVED TRUST GAP,
+    not that the plugin origin is secured or an executable exploit occurred.
     """
-    import subprocess
+    import importlib.util
 
     _, original_marker = installed_plugin(monkeypatch, tmp_path)
-    site = tmp_path / "m7-site"
+    approved = discover_authenticator_plugins(enabled=True)
+    assert len(approved) == 1
+    assert approved[0].distribution == grant().distribution
+    assert approved[0].version == grant().version
+    assert approved[0].target == grant().target
+
     shadow = tmp_path / "shadowing-site"
     shadow.mkdir()
     shadow_marker = tmp_path / "SHADOW_MODULE_EXECUTED"
     (shadow / "m7_fixture_plugin.py").write_text(
         "from pathlib import Path\n"
-        f"Path({str(shadow_marker)!r}).write_text('shadow loaded')\n"
-        "from pyauthkit.domain.evidence import EvidenceMethod\n"
-        "from pyauthkit.domain.outcome import RejectedOutcome\n"
-        "class ShadowVerifier:\n"
-        "    @property\n"
-        "    def method(self): return EvidenceMethod.API_KEY\n"
-        "    async def verify(self, request, context): return RejectedOutcome()\n"
-        "def create(): return ShadowVerifier()\n"
-        "create.SPI_MAJOR = 1\n",
+        f"Path({str(shadow_marker)!r}).write_text('shadow loaded')\n",
         encoding="utf-8",
     )
+    monkeypatch.syspath_prepend(str(shadow))
+    importlib.util.invalidate_caches()
 
-    # Child Python has no stale sys.modules entry; only the host-controlled
-    # ephemeral test paths determine the module loaded by EntryPoint.load().
-    child = f"""
-import sys
-from importlib.metadata import distributions
-sys.path.insert(0, {str(shadow)!r})
-sys.path.insert(1, {str(site)!r})
-from pyauthkit.plugins import PluginGrant, load_approved_authenticators
-from pyauthkit.plugins.discovery import _candidate_for
-from pyauthkit.domain.evidence import EvidenceMethod
-points = tuple(next(iter(distributions(path=[{str(site)!r}]))).entry_points)
-assert len(points) == 1
-candidate = _candidate_for(points[0])
-assert candidate.target == "m7_fixture_plugin:create"
-grant = PluginGrant(
-    distribution="m7-approved-plugin",
-    version="1.0.0",
-    name="synthetic",
-    target="m7_fixture_plugin:create",
-    method=EvidenceMethod.API_KEY,
-)
-loaded = load_approved_authenticators((candidate,), grants=(grant,))
-assert len(loaded) == 1
-assert type(loaded[0]).__name__ == "ShadowVerifier"
-"""
-    completed = subprocess.run(
-        [sys.executable, "-c", child],
-        capture_output=True,
-        text=True,
-        timeout=12,
-        check=False,
-    )
-    assert completed.returncode == 0, completed.stderr[-800:]
-    assert shadow_marker.exists()
+    # For a simple top-level module, find_spec reports the path that the
+    # import system would resolve WITHOUT calling import_module or exec().
+    resolved = importlib.util.find_spec("m7_fixture_plugin")
+    assert resolved is not None
+    assert resolved.origin == str(shadow / "m7_fixture_plugin.py")
     assert not original_marker.exists()
+    assert not shadow_marker.exists()
+    assert "m7_fixture_plugin" not in sys.modules

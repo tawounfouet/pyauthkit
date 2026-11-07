@@ -121,6 +121,6 @@ Voir `M7_T17_T24_ADVERSARIAL_HARDENING.md` et ADR 0040 PROPOSED.
 
 - Changement code candidat : `src/pyauthkit/plugins/admission.py` revalide `_candidate_for` et l'identité du grant immédiatement avant `EntryPoint.load()`, après le preflight de tous les grants.
 - Nouveau test défensif : `test_entry_point_changed_after_batch_preflight_never_imports` vérifie un refus si la cible change entre les deux contrôles, sans importer les modules de fixture.
-- Nouveau **contre-exemple de sécurité** : `test_distribution_metadata_alone_does_not_attest_import_origin` démontre que `sys.path` peut faire charger un module homonyme hors de la distribution qui expose pourtant des metadata conformes. Ce test documente un comportement à corriger et ne doit jamais être décrit comme une attestation de provenance.
+- Nouveau **contre-exemple de provenance** : `test_distribution_metadata_alone_does_not_attest_import_origin` démontre, via `find_spec` sans import, que `sys.path` peut résoudre un module homonyme hors de la distribution aux metadata conformes. Il documente une discordance de chemin, pas une exécution de code ni une attestation d'origine.
 - Dossier `M7_PLUGIN_ORIGIN_AND_IMPORT_SHADOWING_2026-11-07.md` ; ADR 0042 PROPOSED ; issue de blocage #89.
 - T16 reste `TESTED (CI)` uniquement pour la comparaison nom/version/cible; **l'authenticité de l'artefact et de son code n'est pas couverte**. T30 reste `PARTIAL (CI)`. Aucune qualification de sécurité.
