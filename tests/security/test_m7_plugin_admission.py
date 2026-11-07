@@ -278,19 +278,27 @@ def test_entry_point_changed_after_batch_preflight_never_imports(
     point, marker = installed_plugin(monkeypatch, tmp_path)
     candidates = discover_authenticator_plugins(enabled=True)
     original_preflight = admission._preflight_candidates
+    metadata = (
+        tmp_path / "m7-site" / "m7_approved_plugin-1.0.0.dist-info" / "METADATA"
+    )
 
     def modified_after_preflight(*args: object, **kwargs: object) -> object:
         selected = original_preflight(*args, **kwargs)  # type: ignore[arg-type]
-        point.value = "m7_swapped_plugin:create"
+        # EntryPoint.value is immutable. Mutate the underlying *distribution*
+        # metadata instead, which importlib.metadata reads on each access.
+        metadata.write_text(
+            "Metadata-Version: 2.1\nName: M7.Approved_Plugin\nVersion: 2.0.0\n",
+            encoding="utf-8",
+        )
         return selected
 
     monkeypatch.setattr(admission, "_preflight_candidates", modified_after_preflight)
     with pytest.raises(PluginAdmissionRejected, match="activation rejected") as error:
         load_approved_authenticators(candidates, grants=(grant(),))
+    assert point.dist.version == "2.0.0"
     assert error.value.__suppress_context__
     assert not marker.exists()
     assert "m7_fixture_plugin" not in sys.modules
-    assert "m7_swapped_plugin" not in sys.modules
 
 
 def test_distribution_metadata_alone_does_not_attest_import_origin(
