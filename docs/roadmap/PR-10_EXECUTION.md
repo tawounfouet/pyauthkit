@@ -86,3 +86,11 @@ Preuves vérifiées dans `M7_T30_INDEPENDENT_REVIEW_READINESS_2026-11-07.md` : P
 Écart P0 : `required_approving_review_count=0`, aucune revue ou reviewer request ; GitGuardian et job M7 non requis. HTTP 403 sur classic branch protection. Ticket de remédiation #88.
 
 **Décision T30 : PARTIAL (CI). GATE27-08 NO-GO SECURITY.** Le dossier est une entrée pour une revue indépendante, pas un certificat. Ne pas merger ni publier.
+
+## Supply chain - Recontrôle de métadonnées et limite d'import
+
+- La cible du plugin est de nouveau comparée au grant immédiatement avant `EntryPoint.load()`, en plus du preflight global.
+- Tests de dérive entre preflight et import, et **reproduction de risque** par shadowing `sys.path`. Une reproduction de faiblesse n'est pas une garantie de sécurité.
+- Risque P0 provenance de module : issue #89 ; dossier de qualification et ADR 0042 PROPOSED.
+- Aucune pinning cryptographique des octets réellement exécutés, aucune attestation de provenance, aucun isolement processus au stade actuel.
+- **NO-GO SECURITY / NO-GO PRODUCTION** maintenus ; revue externe requise. Le test source et son résultat CI seront consignés au SHA exact une fois exécutés.

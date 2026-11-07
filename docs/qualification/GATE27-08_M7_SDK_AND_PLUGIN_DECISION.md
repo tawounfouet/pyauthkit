@@ -53,3 +53,7 @@ L'API candidate `PluginGrant.port_roles` borne l'ensemble des ports v2 d'apres l
 - Workflow https://github.com/tawounfouet/pyauthkit/actions/runs/42320391541 : 13/13 jobs SUCCESS sur SHA `573334f7fe372ef07659dd6c85e02801ac529891`; 14 check-runs verts.
 - Ruleset de `main` actif, strict, mais zéro approbation requise et GitGuardian non obligatoire. La protection classique n'est pas accessible (403). Voir issue #88.
 - Le dossier est prêt pour examen documentaire, **pas** qualifié par une autorité indépendante. 5 oracles restent PARTIAL (CI) : T17, T19, T24, T25, T30. Statut NO-GO maintenu.
+
+## Risque additionnel - Shadowing de module Python (issue #89)
+
+Des métadonnées de distribution exactes ne constituent pas une preuve d'origine du module exécuté. Une démonstration adversariale du chargement d'un module homonyme via `sys.path` est ajoutée à la suite M7. Le recontrôle juste avant `EntryPoint.load()` limite uniquement la dérive **observable** des métadonnées, pas la substitution de code par le système d'import. Un modèle de provenance des artefacts et de restriction de l'environnement d'import est exigé avant GO. Dossier `M7_PLUGIN_ORIGIN_AND_IMPORT_SHADOWING_2026-11-07.md`, issue #89, ADR 0042 PROPOSED.

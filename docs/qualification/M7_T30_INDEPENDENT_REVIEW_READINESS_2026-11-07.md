@@ -112,7 +112,7 @@ Les preuves `TESTED (CI)` ne sont **pas** des verdicts de sécurité. Un oracle 
 | --- | --- | --- | --- |
 | M7-RISK-T30-01 | Aucun reviewer indépendant ni approbation requise | CRITICAL governance | BLOCKED, issue #88 |
 | M7-RISK-T30-02 | GitGuardian et job M7 non requis par ruleset | HIGH enforcement gap | PROPOSED remédiation admin, #88 |
-| M7-RISK-T30-03 | Provenance code/package plugin non attestée par métadonnées | HIGH supply chain | OPEN, revue #85 |
+| M7-RISK-T30-03 | Provenance code/package plugin non attestée, shadowing `sys.path` reproductible | HIGH supply chain | OPEN, issues #85 et #89 |
 | M7-RISK-T30-04 | Code tiers Python dans le processus host, sans sandbox | HIGH isolation | ACCEPTABLE seulement après décision de trust explicite |
 | M7-RISK-T30-05 | Outcome positif de fixture publique et plugin positif non qualifié | HIGH verification | OPEN, #86 |
 | M7-RISK-T30-06 | Port privileges / scope hôte / registry indexée par méthode | HIGH cross-tenant misuse | OPEN, #87 |
@@ -158,3 +158,7 @@ Anti-pattern : convertir une PR `mergeable_state=clean` ou une ligne `TESTED (CI
 ## 9. Provenance et périmètre de lecture
 
 Requêtes GitHub en lecture seule au 2026-11-07 : PR #84, revue PR, reviewer requests, workflow #42320391541, jobs, check-runs au SHA `573334f7...`, ruleset #26350656, issues #85/#86/#87. Résultats plus récents ou modifications des protections nécessitent un audit renouvelé. L'accès classic branch protection est bloqué par HTTP 403.
+
+## Annexe - Découverte adversariale de provenance (#89)
+
+L'identité et la version d'une distribution installée ne contraignent pas, à elles seules, le système d'import Python à charger les fichiers de cette distribution. Le test M7 de shadowing reproduit ce risque avec un module homonyme de test. Le recontrôle des metadata immédiatement avant import ne ferme pas cette faille de provenance. Une politique d'artefact fiable et des contraintes de déploiement doivent être ratifiées avant la revue indépendante. Dossier : `M7_PLUGIN_ORIGIN_AND_IMPORT_SHADOWING_2026-11-07.md`.

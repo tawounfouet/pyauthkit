@@ -186,6 +186,16 @@ Le preflight valide les methodes reservees avec tous les grants **avant** d'appe
 
 `PluginHostServices` capture et expurge les erreurs ordinaires provenant des descripteurs de port et des mappings, y compris les erreurs a la lecture des objets avant chargement d'un plugin. Le scope gere expurge egalement les exceptions des mappings de grants. Les messages publics ne contiennent pas les valeurs d'exception brutes. Ces defenses ne peuvent pas empecher un plugin Python approuve de journaliser des secrets lui-meme, d'effectuer un acces reseau ou de produire des effets de bord. Les ports sensibles doivent etre audites et geres par le host.
 
+## Périmètre de provenance : metadata != octets importés (P0, #89)
+
+Le contrôle de distribution, de version et de cible confirme uniquement des **métadonnées installées**. Python importe la cible de l'entry point selon `sys.path` et `sys.modules`, pas selon un mécanisme garantissant qu'elle provient des fichiers de la distribution approuvée. Un module homonyme placé plus tôt dans le chemin d'import peut ainsi être exécuté même lorsque le grant est exact.
+
+M7 recontrôle désormais les métadonnées de l'entry point et le grant **immédiatement avant** `EntryPoint.load()`. Ce contrôle refuse les modifications détectables de la cible entre le preflight global et le chargement. Il ne garantit **ni** l'origine du module importé **ni** l'absence de course après ce dernier contrôle.
+
+Pour une exploitation réelle, l'opérateur doit qualifier séparément la chaîne de construction et de déploiement (artefact approuvé, digest hors bande, provenance et permissions du système de fichiers, environnement d'import non modifiable, dépendances vérifiées, revue du code tiers). Un artefact signé, à lui seul, ne garantit pas l'isolation d'un plugin Python in-process. Ce contrat de confiance n'est pas encore implémenté et GATE27-08 est **NO-GO**.
+
+Preuves de développement : `tests/security/test_m7_plugin_admission.py` couvre la dérive de métadonnées avant import et démontre la limite par un module de test homonyme. Dossier : `docs/qualification/M7_PLUGIN_ORIGIN_AND_IMPORT_SHADOWING_2026-11-07.md`. ADR 0042, issue #89. **Ne pas interpréter le test de shadowing comme un test de sécurité réussi.**
+
 ## Frontieres et risques
 
 1. Discovery est desactivee par defaut et lit uniquement les metadonnees des `EntryPoint`. Aucun `EntryPoint.load()` n'est appele dans cette phase.
