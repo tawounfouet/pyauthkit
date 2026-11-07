@@ -26,7 +26,7 @@ from .discovery import (
     _candidate_for,
     canonical_distribution,
 )
-from .services import PluginHostServices, _METHOD_PORT_ROLES
+from .services import _METHOD_PORT_ROLES, PluginHostServices
 
 
 @dataclass(frozen=True, slots=True, repr=False)
