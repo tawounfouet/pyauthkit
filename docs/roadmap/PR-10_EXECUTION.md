@@ -23,7 +23,7 @@ Rendre le SDK Python consommable sans invention de nouvelle autorite et introdui
 | M7-WP-06 | Grants hote, versions, collisions, refus | TESTED CI 7a98e454 : pre-import reserved_methods v1/v2, revue independante requise |
 | M7-WP-07 | Loader post-admission et registry M6 | IMPLEMENTED / TESTED CI, scope v2 mono-route |
 | M7-WP-08 | Lifecycle et fermeture de ressources | IMPLEMENTED CANDIDATE : managed async activation, tests et revue requise |
-| M7-WP-09 | Guides d'usage et auteur plugin | IMPLEMENTED, docstests a verifier |
+| M7-WP-09 | Guides d'usage et auteur plugin | IMPLEMENTED CANDIDATE : guide capability executable via wheel, couverture documentaire partielle |
 | M7-WP-10 | Packaging wheel/sdist/extras | TESTED CI Linux 3.12/3.13/3.14, macOS et Windows 3.12 |
 | M7-WP-11 | ADR, learning cards et oracles | PARTIAL, NO-GO securite |
 | M7-WP-12 | CI, review et dossier de fusion | PENDING, PR DRAFT |
@@ -69,3 +69,12 @@ Source validee : `7a98e4545e7fccfd1c696d2555a7499b61be5394` ; CI : https://githu
 - ADR 0040 et dossier adversarial proposes. Aucune decision GO securite.
 
 La fiabilite de l'inventaire des methodes reservees appartient a l'hote. La library ne peut pas prouver que le plugin respecte les obligations de confidentialite de maniere generale.
+
+
+## T19 et T25 - Livraison de developpement
+
+- `PluginGrant.port_roles` pre-alpha et politique de compatibilite methode-role injectee dans SPI v2.
+- Admission compare grant et bundle avant import; rejette roles inconnus, manquants ou extra.
+- Exemple `docs/guides/m7-capability-contract.md` execute par `scripts/check_m7_doc_examples.py` dans la CI M7 sur wheel isolee.
+- ADR 0041 et learning card ajoutes; evidences et limitations sur les oracles T19/T25.
+- Aucune validation de securite de production, aucun merge ni release.

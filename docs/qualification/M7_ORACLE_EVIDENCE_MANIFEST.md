@@ -27,13 +27,13 @@ Aucun oracle ne reçoit ici de PASS de securite. La colonne `TESTED (CI)` indiqu
 | M7-T16 | Distribution et version pinnees | parametrized mismatch | TESTED (CI) |
 | M7-T17 | Doublons/collision | test_m7_plugin_admission.py + test_m7_plugin_services.py : reserved_methods avant import | PARTIAL (CI) |
 | M7-T18 | Majeure SPI incompatible | test spi mismatch | TESTED (CI) |
-| M7-T19 | Methode/capability inconnue | Validation des roles host ports SPI v2 et enum; capabilities fines restant a revoir | PARTIAL (CI) |
+| M7-T19 | Methode/capability inconnue | tests/security/test_m7_plugin_services.py, role-method allowlist, grant.port_roles et matching exact avant import | PARTIAL (CI) |
 | M7-T20 | Freeze registry | tests M2 existants | TESTED (CI) |
 | M7-T21 | Plugin ne change pas final gate | tests/security/test_m7_plugin_positive_proof.py + installed wheel synthetic positive | TESTED (CI) |
 | M7-T22 | Cross-scope/tenant | M7 SPI v2 host-scope wrapper + positive declared proof cross-scope tests | TESTED (CI) |
 | M7-T23 | Fermeture ressources owned | test_m7_plugin_lifecycle.py (reverse cleanup / failures) | TESTED (CI) |
 | M7-T24 | No secrets dans exceptions | tests SPI v2 descriptors/mappings canary et activation/sanitization | PARTIAL (CI) |
-| M7-T25 | Docs et API reellement executes | quickstart CI candidat | PARTIAL (CI) |
+| M7-T25 | Docs et API reellement executes | scripts/check_m7_doc_examples.py + docs/guides/m7-capability-contract.md depuis wheel et quickstart Python | PARTIAL (CI) |
 | M7-T26 | PEP561 / extras wheel | smoke wheel candidat | TESTED (CI) |
 | M7-T27 | Installation core sans extras | smoke wheel candidat | TESTED (CI) |
 | M7-T28 | M6 required audit interdit | test_m7_sdk_public_api.py | TESTED (CI) |
@@ -97,3 +97,13 @@ Les preuves couvrent des fixtures/test doubles de confiance limitee. Le secret H
 **Statuts conserves :** M7-T17 = PARTIAL (CI) car l'inventaire des methodes internes doit etre fourni par le host; la composition rejette les doublons meme sans cet inventaire, mais apres une eventuelle execution du plugin. M7-T24 = PARTIAL (CI) car l'expurgation des erreurs aux frontieres connues ne peut ni isoler un plugin in-process ni empecher ses logs ou effets de bord volontaires. La qualification independante GATE27-08 reste NO-GO.
 
 Voir `M7_T17_T24_ADVERSARIAL_HARDENING.md` et ADR 0040 PROPOSED.
+
+
+## T19/T25 - Nouvelle tranche candidate de qualification
+
+- **Code SHA propose** : `469c5ea4a6edb8942207aa69646d1056d30cbdb7`.
+- **CI associee** : https://github.com/tawounfouet/pyauthkit/actions/runs/42320213182 . Lire la conclusion reelle du run; cette ligne n'accorde aucun PASS sans execution.
+- **T19** : `PluginGrant.port_roles` non vide pour v2, vide pour v1, compatible avec la methode `EvidenceMethod`. Le preflight compare cet ensemble au mapping exact des ports host-owned avant import. Tests adversariaux pour role inconnu, role non permis, port manquant ou supplementaire, avec sentinelle d'import.
+- **T25** : `docs/guides/m7-capability-contract.md` fournit un bloc Python autonome. `scripts/check_m7_doc_examples.py` l'execute depuis la wheel isolee dans le job `m7_sdk_plugins`. D'autres extraits de documentation restent illustratifs et ne sont pas des doctests.
+- **Statut** : T19 = PARTIAL (CI), car les permissions reelles de chaque port et son origine fiable ne peuvent pas etre demontrees par la validation de roles. T25 = PARTIAL (CI), car un sous-ensemble cible des guides est execute, pas toute la reference SDK.
+- **Decision** : pas de GO GATE27-08 sur cette seule tranche. Revue independente, supply chain, limites du Python in-process et qualification cryptographique de plugins reels restent ouvertes.

@@ -25,3 +25,8 @@ Le point d'entree existant du moteur est `await engine.authenticate(request, ent
 - Extras existants : `password`, `jwt`, `aws`, `qualification`. Les extras ne sont pas importes par `pyauthkit.sdk`.
 - `src/pyauthkit/py.typed` doit etre inclus dans la wheel.
 - Pas de support officiel Django/Flask dans cette milestone ; la reference HTTP M6 est une qualification separee.
+
+
+## T19 - Extension candidate des capabilities v2
+
+`PluginGrant.port_roles` permet a l'hote de declarer explicitement les noms de ports injectes par SPI v2. Ce `frozenset` est valide selon la methode et doit correspondre exactement au mapping `PluginHostServices.ports` avant import. Les plugins v1 doivent conserver un ensemble vide. La signature structurelle de la methode d'un port ne valide pas son comportement de securite. API pre-alpha en attente de revue GATE27-08.

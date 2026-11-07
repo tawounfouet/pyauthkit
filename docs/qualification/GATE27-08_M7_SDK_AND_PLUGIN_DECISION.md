@@ -40,3 +40,8 @@ Une evolution candidate introduit un contrat factory v2 distinct de v1, un bundl
 L'interface candidate ajoute `reserved_methods` avant chargement, avec test sentinel pour prevenir l'import d'un plugin qui collide avec un authenticator reserve par le host. La validite de cet inventaire reste la responsabilite de l'hote. Les exceptions courantes de descripteurs/mappings de ports et services sont expurgees. Les logs arbitraires de plugins in-process ne peuvent pas etre contenus ici.
 
 Preuve technique : code SHA `7a98e4545e7fccfd1c696d2555a7499b61be5394`, run https://github.com/tawounfouet/pyauthkit/actions/runs/42317026300 (13/13 jobs success). **T17/T24 PARTIAL, GATE27-08 NO-GO SECURITE** jusqu'a audit et revue independante.
+
+
+## T19/T25 - Role allowlist et documentation executable
+
+L'API candidate `PluginGrant.port_roles` borne l'ensemble des ports v2 d'apres la methode d'authentification, puis exige la correspondance exacte du bundle avant import. Un script de CI execute un bloc de guide autonome depuis une wheel installee. Ces controles ameliorent la traçabilite de capabilities et l'exactitude de la documentation, mais ne prouvent ni la securite d'un port, ni la provenance d'un plugin. T19 et T25 demeurent PARTIAL (CI), en attente de revue independante et couverture complementaire. ADR 0041 PROPOSED.

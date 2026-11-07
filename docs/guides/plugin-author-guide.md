@@ -166,6 +166,16 @@ Le wrapper ajoute avant la composition refuse toute tentative dont methode, scop
 Le groupe v2 n'est pas une sandbox ni une signature de distribution. Le port host-owned peut conserver un secret ou un handle; le code du plugin s'execute dans le processus hote et peut y acceder. Un `PluginHostServices` cree par un client ou un header HTTP n'acquiert aucune autorite. L'hote valide provenance, permissions, revocation, timeout et fermeture de ses propres ports. La factory v2 n'est activable que dans le scope **gere**; le chargeur synchrone v1 rejette v2.
 
 Le smoke de la wheel `qualification/m7_sdk/synthetic_plugin` emploie un port HMAC avec cle fixe **publique et synthetique** uniquement pour le test du mecanisme : validite du MAC, refus de revocation, blocage tenant croise et policy finale. Ce n'est pas un verifier de credentials pour la production.
+## T19 - Capabilities de ports autorisees par le host
+
+SPI v2 exige maintenant `PluginGrant.port_roles: frozenset[str]` non vide et valide pour `EvidenceMethod`. Le contrat de capabilities est **operateur-owned**, jamais fourni par le plugin ou le request. Le preflight compare l'ensemble exact des roles du grant avec les cles du `PluginHostServices.ports`; aucun port additionnel ou manquant n'est admis avant `EntryPoint.load()`.
+
+Rôles autorises au stade M7 : `PASSWORD` et `API_KEY` peuvent recevoir `record_resolver`, `attempt_guard`, `hash_verifier`, `clock` ou `event_sink`; `JWT` peut recevoir `record_resolver`, `attempt_guard`, `key_resolver`, `clock` ou `event_sink`. L'hote doit choisir seulement le sous-ensemble necessaire. SPI v1 n'accepte aucun `port_roles`.
+
+Une methode Python `verify` ou `resolve` n'est **pas** une garantie de securite ni une attestation de provenance. Les ports host-owned peuvent porter des ressources sensibles, et le plugin s'execute dans le meme processus. Le controle method-role est une restriction de configuration, pas une preuve cryptographique.
+
+Pour un exemple autonome execute depuis la wheel sans extras, voir [le contrat de capabilities](m7-capability-contract.md). Pour l'admission effective d'un plugin externe, utiliser le smoke M7 de distribution synthetique installee en CI. Tous deux restent des exemples non production.
+
 ## Prevention des collisions avant l'import (T17)
 
 Le host doit inventorier les methodes des authenticators deja composes et les transmettre dans le parametre `reserved_methods` du loader synchrone v1 ou de `activate_approved_authenticators` pour le scope gere v1/v2. Exemple de valeur hote : `reserved_methods=(EvidenceMethod.PASSWORD,)`. Ce parametre ne provient jamais des headers, des credentials ou d'un manifeste de plugin non fiable.
