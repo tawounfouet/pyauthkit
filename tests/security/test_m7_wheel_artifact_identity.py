@@ -25,7 +25,8 @@ def grant() -> PluginGrant:
 
 
 def wheel(
-    tmp_path: Path, *,
+    tmp_path: Path,
+    *,
     version: str = "1.0.0",
     target: str = "m7_wheel_fixture:create",
     raw: bool = False,
