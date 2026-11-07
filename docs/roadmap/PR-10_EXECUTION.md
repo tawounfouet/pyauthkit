@@ -94,3 +94,10 @@ Preuves vérifiées dans `M7_T30_INDEPENDENT_REVIEW_READINESS_2026-11-07.md` : P
 - Risque P0 provenance de module : issue #89 ; dossier de qualification et ADR 0042 PROPOSED.
 - Aucune pinning cryptographique des octets réellement exécutés, aucune attestation de provenance, aucun isolement processus au stade actuel.
 - **NO-GO SECURITY / NO-GO PRODUCTION** maintenus ; revue externe requise. Le test source et son résultat CI seront consignés au SHA exact une fois exécutés.
+
+## Livraison candidate - Wheel digest preinstall, ADR 0043
+
+- Code vérifié au SHA `28e0d7ff4ae6b4c59d0080e73c0950a9be7a557a`, CI https://github.com/tawounfouet/pyauthkit/actions/runs/42327812346 : 13/13 jobs, 700 global PASS, 72 M7 PASS, mypy strict 86 sources PASS.
+- `verify_preinstall_wheel_digest` vérifie un fichier wheel à digest approuvé **indépendamment** avec metadata et entry point attendus. Il n'importe ni n'installe le plugin.
+- Le contrôle ne garantit pas le module réellement exécuté après installation. Politique de déploiement, mutation filesystem, shadowing et supply chain restent à qualifier via #89.
+- ADR 0043 PROPOSED, Design Learning Card et dossier de provenance complétés. T30 PARTIAL et GATE27-08 NO-GO. Pas de fusion/publication.

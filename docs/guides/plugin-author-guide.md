@@ -208,3 +208,7 @@ Preuves de développement : `tests/security/test_m7_plugin_admission.py` couvre 
 8. Ne pas faire de hot reload, de chargement a la requete, de fallback de methode ou de selection de plugin a partir de donnees client.
 
 Une methode au-dela des `EvidenceMethod` existantes demande une evolution distincte du domaine et un nouveau gate. Le SPI v1 ne promet pas de compatibilite globale `1.0`.
+
+## Vérification préinstallation d'un artefact wheel (candidat #89)
+
+Avant toute installation d'une distribution tierce, le pipeline hôte peut appeler `pyauthkit.plugins.artifacts.verify_preinstall_wheel_digest(wheel_path, expected_sha256=approved_digest, grant=operator_grant)`; `approved_digest` doit provenir d'un **registre ou canal indépendant approuvé par l'opérateur**, pas de la wheel téléchargée elle-même. Ce helper refuse les SHA divergents, les identités name/version différentes et les cibles d'entry point non approuvées, sans extraire ni importer le plugin. Une wheel validée **n'autorise pas automatiquement l'activation**; la découverte/grant et les contrôles de privilèges restent distincts. Le digest ne prouve pas l'origine du module que `EntryPoint.load()` pourrait réellement exécuter après installation. ADR 0043 et issue #89.

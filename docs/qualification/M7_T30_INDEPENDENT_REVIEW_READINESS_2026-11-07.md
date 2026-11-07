@@ -162,3 +162,7 @@ Requêtes GitHub en lecture seule au 2026-11-07 : PR #84, revue PR, reviewer req
 ## Annexe - Découverte adversariale de provenance (#89)
 
 L'identité et la version d'une distribution installée ne contraignent pas, à elles seules, le système d'import Python à charger les fichiers de cette distribution. Le test M7 de shadowing reproduit ce risque avec un module homonyme de test. Le recontrôle des metadata immédiatement avant import ne ferme pas cette faille de provenance. Une politique d'artefact fiable et des contraintes de déploiement doivent être ratifiées avant la revue indépendante. Dossier : `M7_PLUGIN_ORIGIN_AND_IMPORT_SHADOWING_2026-11-07.md`.
+
+## Annexe de qualification technique : wheel SHA-256 (2026-11-07)
+
+La nouvelle tranche source `28e0d7ff4ae6b4c59d0080e73c0950a9be7a557a` a 13/13 jobs verts sur https://github.com/tawounfouet/pyauthkit/actions/runs/42327812346, dont 700 tests globaux et 72 M7. Un digest SHA-256 externe et la correspondance name/version/entry point sont vérifiés avant installation. **Ni cette preuve ni les 30 oracles de CI n'établissent une revue indépendante**, un chemin d'import immuable ou une signature de provenance. L'ancien snapshot de gouvernance de ce rapport reste historiquement daté; les règles de main doivent être revérifiées par un administrateur avant toute décision GO.

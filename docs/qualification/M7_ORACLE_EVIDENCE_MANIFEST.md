@@ -124,3 +124,12 @@ Voir `M7_T17_T24_ADVERSARIAL_HARDENING.md` et ADR 0040 PROPOSED.
 - Nouveau **contre-exemple de provenance** : `test_distribution_metadata_alone_does_not_attest_import_origin` démontre, via `find_spec` sans import, que `sys.path` peut résoudre un module homonyme hors de la distribution aux metadata conformes. Il documente une discordance de chemin, pas une exécution de code ni une attestation d'origine.
 - Dossier `M7_PLUGIN_ORIGIN_AND_IMPORT_SHADOWING_2026-11-07.md` ; ADR 0042 PROPOSED ; issue de blocage #89.
 - T16 reste `TESTED (CI)` uniquement pour la comparaison nom/version/cible; **l'authenticité de l'artefact et de son code n'est pas couverte**. T30 reste `PARTIAL (CI)`. Aucune qualification de sécurité.
+
+## Preuve supplémentaire - vérification préinstallation de wheel (ADR 0043)
+
+- **Source testée :** `28e0d7ff4ae6b4c59d0080e73c0950a9be7a557a`.
+- **Run GitHub Actions :** https://github.com/tawounfouet/pyauthkit/actions/runs/42327812346, **13/13 jobs SUCCESS**, **700 tests globaux PASS**, **72 M7 PASS**, Ruff PASS, mypy strict **86 fichiers** PASS, wheel/sdist Linux/macOS/Windows PASS.
+- `tests/security/test_m7_wheel_artifact_identity.py` : digest hôte exact et 8 cas candidats de refus/robustesse (wheel modifiée, mauvais digest, mauvaise version/cible, doublon, traversée, format invalide). `src/pyauthkit/plugins/artifacts.py` n'installe ni n'importe aucun plugin.
+- `test_entry_point_changed_after_batch_preflight_never_imports` change le fichier `METADATA` après le preflight; il ne modifie pas l'objet `EntryPoint` immuable.
+- `test_distribution_metadata_alone_does_not_attest_import_origin` utilise `find_spec` sans importer le module. Il **démontre un écart potentiel de résolution**, pas une attaque exécutée ni une preuve de sûreté.
+- L'identité de la wheel contrôlée **ne prouve toujours pas l'origine du code ensuite importé**. La source de confiance du digest doit être indépendante de l'artefact. T30 reste PARTIAL (CI) et GATE27-08 reste NO-GO SECURITY / NO-GO PRODUCTION.

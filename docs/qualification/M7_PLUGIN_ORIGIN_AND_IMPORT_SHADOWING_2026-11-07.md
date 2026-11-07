@@ -20,7 +20,7 @@ Ce contrôle complète `_preflight_candidates`, qui reste obligatoire pour **tou
 
 `tests/security/test_m7_plugin_admission.py` :
 
-1. `test_entry_point_changed_after_batch_preflight_never_imports` simule une mutation de l'objet `EntryPoint.value` **après** le preflight batch. Le chargeur doit refuser avant d'exécuter du code tiers. Critère : aucune sentinelle d'import créée.
+1. `test_entry_point_changed_after_batch_preflight_never_imports` modifie la **version dans le fichier `METADATA`** de la distribution après le preflight batch. `EntryPoint` est immuable et n'est jamais modifié. Le chargeur doit refuser avant d'importer le plugin. Critère : aucune sentinelle d'import créée.
 2. `test_distribution_metadata_alone_does_not_attest_import_origin` place un module homonyme dans un répertoire prioritaire de `sys.path`, sans changer les métadonnées du grant. `find_spec` démontre que le nom résout vers ce chemin, **sans importer ni exécuter le module**. Ce résultat établit une discordance de provenance possible, mais ne constitue ni un exploit exécuté ni un mécanisme de protection.
 
 Les modules sont des fixtures de refus `RejectedOutcome`. Aucun code offensif ou secret de production n'est nécessaire.
@@ -49,8 +49,12 @@ Décision d'architecture **NON PRISE** : ne pas ajouter une simple vérification
 
 **M7-T16** conserve la preuve de comparaison de version/distribution, sans attestation de provenance. **M7-T30** reste PARTIAL (CI) car un risque de supply chain démontré et les validations de gouvernance (#88) ne sont pas résolus. GATE27-08 demeure **NO-GO SECURITY / NO-GO PRODUCTION** jusqu'à l'approbation indépendante d'un modèle de provenance.
 
-**CI / SHA :** à rattacher après réussite vérifiée de la nouvelle suite sur le commit de code et sur le HEAD documentaire. Les runs précédents ne prouvent pas cette nouvelle tranche.
+**Code SHA vérifié :** `28e0d7ff4ae6b4c59d0080e73c0950a9be7a557a`. **CI GitHub Actions :** https://github.com/tawounfouet/pyauthkit/actions/runs/42327812346, 13/13 jobs SUCCESS, 700 tests globaux, 72 M7, Ruff PASS et mypy strict sur 86 fichiers. Cette preuve reste une qualification de développement et non une revue indépendante de sécurité.
 
 ## 7. Pré-installation d'une wheel à digest approuvé (candidat ADR 0043)
 
 Le module `pyauthkit.plugins.artifacts.verify_preinstall_wheel_digest` vérifie hors import un digest SHA-256 explicite issu d'une source hôte indépendante, et confronte nom/version et cible d'entry point aux valeurs du `PluginGrant`. Le ZIP n'est jamais extrait ou exécuté. Tests : `tests/security/test_m7_wheel_artifact_identity.py`. **Limite :** cette preuve porte sur le fichier `.whl` fourni au contrôle, pas sur les octets du module réellement importé après installation. Aucune provenance cryptographique n'est établie si l'hôte n'a pas obtenu le digest d'un canal de confiance; les modifications d'environnement, races et shadowing restent ouverts. Issue #89 et GATE27-08 NO-GO.
+
+## 8. Précondition de provenance indépendante
+
+La valeur `expected_sha256` doit provenir d'une source de confiance indépendante (registre d'artefacts approuvé, manifeste de release signé et vérifié ou autre canal contrôlé par l'opérateur). Une valeur SHA-256 recalculée uniquement sur la wheel téléchargée ne fournit **aucune approbation**. Après contrôle du fichier, le host doit aussi empêcher la substitution de fichiers installés et contraindre le chemin d'import. Aucun de ces derniers contrôles n'est apporté par `verify_preinstall_wheel_digest`.

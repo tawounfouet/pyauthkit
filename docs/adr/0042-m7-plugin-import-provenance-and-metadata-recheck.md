@@ -26,3 +26,7 @@ Using `find_spec` as a universal pre-import origin check is unsound without exam
 - `test_entry_point_changed_after_batch_preflight_never_imports` : boundary improvement.
 - `test_distribution_metadata_alone_does_not_attest_import_origin` : explicit counterexample.
 - Security gate: NO-GO, with source evidence at exact SHA to be recorded after CI.
+
+## Exactitude des tests et preuve source (2026-11-07)
+
+La dérive post-preflight est reproduite par une modification de la version de `METADATA` sur disque, **pas** par mutation de `EntryPoint` (qui est immuable). Le test de shadowing inspecte une origine via `importlib.util.find_spec` sans exécuter de module. Les cas ont passé la CI sur `28e0d7ff4ae6b4c59d0080e73c0950a9be7a557a` (https://github.com/tawounfouet/pyauthkit/actions/runs/42327812346). L'ADR 0043 propose séparément un digest de wheel approuvé hors bande, sans attestation de l'import. NO-GO maintenu.
